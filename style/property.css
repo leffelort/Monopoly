@@ -18,9 +18,12 @@ body {
 }
 
 .propertyCard {
-	width: 520px;
+	width: 522px;
 	height: 600px;
-	padding: 20px;
+/*	-webkit-transform: scale(0.7);
+  	-moz-transform: scale(0.1);
+  	-o-transform: scale(0.1);
+  	-ms-transform: scale(0.1);*/
 }
 
 .titleDeed {
