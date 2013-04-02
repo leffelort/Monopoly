@@ -1,0 +1,71 @@
+@font-face {
+	font-family: 'Kabel-ExtraBold';
+	src: url('../fonts/KabobExtrabold Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Kabel-Light';
+	src: url('../fonts/KabobLight Regular.ttf') format('truetype');
+}
+
+body {
+	min-height: 300px;
+	background-color: #eee;
+}
+
+.title {
+	border: 2px solid #222;
+	background-color: #ED1B24;
+	border-radius: 4px;
+
+	padding: 5px 15px;
+	margin: 3% auto;
+
+	width: 56%;
+}
+
+.titleText {
+	font: 50px 'Kabel-ExtraBold';
+	text-align: center;
+	
+	color: white;
+	text-shadow: -1px 2px 2px black;
+}
+
+form {
+	width: 70%;
+	display: block;
+	margin: 5% auto;
+	text-align: center;
+}
+
+input {
+	display: block;
+	margin: 6% auto;
+}
+
+.formLabel {
+	font: 16px 'Kabel-Light';
+}
+
+.txtinput {
+	width: 40%;
+	border-radius: 3px;
+	font: 20px 'Kabel-Light';
+}
+
+.btn {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 30%;
+	height: 36px;
+	display: block;
+
+	font: 26px 'Kabel-ExtraBold';
+	text-transform: uppercase;
+
+	background-color: #ED1B24;
+	color: white;
+	text-shadow: -1px 1px 1px black;
+	box-shadow: 0px 1px 3px #333;
+}
