@@ -1,0 +1,132 @@
+@font-face {
+  font-family: 'Kabel-ExtraBold';
+  src: url('../fonts/KabobExtrabold Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Kabel-Regular';
+  src: url('../fonts/KabaleMedium-Normal.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Kabel-Light';
+  src: url('../fonts/KabobLight Regular.ttf') format('truetype');
+}
+
+body {
+  min-height: 300px;
+  background-color: #eee;
+}
+
+h1 {
+  font: 36px 'Kabel-ExtraBold';
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h3 {
+  font: 24px 'Kabel-Light';
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+#title {
+  border: 2px solid #222;
+  background-color: #ED1B24;
+  border-radius: 4px;
+
+  padding: 5px 15px;
+  margin: 20px auto;
+
+  width: 600px;
+}
+
+.titleText {
+  font: 50px 'Kabel-ExtraBold';
+  text-align: center;
+  color: white;
+  text-shadow: -1px 2px 2px black;
+}
+
+#content {
+  width: 600px;
+  margin: 0 auto;
+}
+
+.buttons {
+  width: inherit;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.btn {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 200px;
+  height: 50px;
+  display: inline;
+  margin: 0 5px 20px;
+
+  font: 24px 'Kabel-ExtraBold';
+  text-transform: uppercase;
+  text-decoration: none;
+
+  background-color: #ED1B24;
+  color: white;
+  text-shadow: -1px 1px 1px black;
+  box-shadow: 0px 1px 3px #333;
+}
+
+.btn:disabled {
+  background-color: #AAA;
+}
+
+.formLabel {
+	font: 20px 'Kabel-Light';
+}
+
+.textForm {
+  display: block;
+  width: 300px;
+  height: 30px;
+  padding: 5px;
+  margin: 0 auto 1em auto;
+  font: 20px 'Kabel-Light';
+}
+
+table {
+  width: 100%;
+  margin: 0 auto 1em;
+  border-collapse: collapse;
+  border: 1px solid black;
+}
+
+table, th, td {
+}
+
+tr.alt {
+  background-color: #DDD;
+}
+
+tr:hover {
+  background-color: #CCC;
+}
+
+tr.selected {
+  background-color: #BBB;
+}
+
+th {
+  font: 20px 'Kabel-Regular';
+  text-align: left;
+  padding: 10px;
+  background-color: #ED1B24;
+  color: white;
+  text-shadow: -1px 1px 1px black;
+}
+
+td {
+  font: 18px 'Kabel-Light';
+  padding: 10px;
+  vertical-align: middle;
+}

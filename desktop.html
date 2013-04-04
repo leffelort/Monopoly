@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+	<title>CMUOPOLY</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<link rel="stylesheet" type="text/css" href="style/reset.css">
+	<link rel="stylesheet" type="text/css" href="style/desktop.css">
+</head>
+<body>
+	<div id="title">
+		<div class="titleText">CMUOPOLY</div>
+	</div>
+  
+  <div id="content">
+    <div id="homeScreen">
+      <h3>CMUOPOLY is a Carnegie Mellon University version of the classic board game. Start playing online with your friends by choosing one of the options below!</h3>
+      <div class="buttons">
+        <button id="hostBtn" class="btn" type="button">Host Game</button>
+        <button id="joinBtn" class="btn" type="button">Join Game</button>
+      </div>
+    </div>
+    
+    <div id="hostGameScreen">
+      <h1>Host Game</h1>
+      <form id="hostGameForm">
+        <input id="nameInput" class="textForm" type="text" placeholder="Game name" required/>
+        <input id="passwordInput" class="textForm" type="password" placeholder="Password (optional)" />
+        <div class="buttons">
+          <button id="hostCancelBtn" class="btn" type="button">Cancel</button>
+          <input id="hostGameSubmit" class="btn" type="submit" value="Host!" />
+        </div>
+      </form>
+    </div>
+    
+    <div id="joinGameScreen">
+      <h1>Join Game</h1>
+      <table id="gameList" border="1">
+        <thead>
+          <tr>
+            <th>Game name</th>
+            <th>Password?</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tyler's Game of Sassiness</td>
+            <td>Of course</td>
+            <td>In Game</td>
+          </tr>
+          <tr>
+            <td>Peter's game</td>
+            <td>No</td>
+            <td>2/4 Players</td>
+          </tr>
+          <tr>
+            <td>Andrew's Game of Awesomeness</td>
+            <td>Yes</td>
+            <td>4/4 Players</td>
+          </tr>
+          <tr>
+            <td>Random-ass 4th game with a really long title to see what happens</td>
+            <td>No</td>
+            <td>1/2 Players</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="buttons">
+        <button id="joinCancelBtn" class="btn" type="button">Cancel</button>
+        <button id="joinBtn" class="btn" type="button">Join!</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="js/jquery-1.9.1.min.js"></script>
+  <script src="js/desktop.js"></script>
+</body>
+</html>
