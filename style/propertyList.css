@@ -1,0 +1,107 @@
+@font-face {
+	font-family: 'Kabel-Light';
+	src: url('../fonts/KabobLight Regular.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Kabel-Medium';
+	src: url('../fonts/KabaleMedium-Normal.ttf') format('truetype');
+}
+
+@font-face {
+	font-family: 'Kabel-ExtraBold';
+	src: url('../fonts/KabobExtrabold Regular.ttf') format('truetype');
+}
+
+#proplist {
+	width: 200px;
+	border-right: 1px solid #333;
+	border-top: 1px solid #333;
+}
+
+.propertyCell {
+	width: 100%;
+	min-height: 40px;
+	background-color: #eee;
+	position: relative;
+	border-bottom: 1px solid #333;
+}
+
+.selected {
+	background-color: #ccc;
+}
+
+.stripe {
+	width: 20px;
+	height: 100%;
+	border-right: 1px solid #333;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.purple {
+	background-color: #590c38;
+}
+
+.ltblue {
+	background-color: #87a5d6;
+}
+
+.pink {
+	background-color: #ee3878;
+}
+
+.orange {
+	background-color: #f57f23;
+}
+
+.red {
+	background-color: #ef3a24;
+}
+
+.yellow {
+	background-color: #fde703;
+}
+
+.green {
+	background-color: #13a55b;
+}
+
+.blue {
+	background-color: #274ea1;
+}
+
+.proptext {
+	margin-left: 30px;
+}
+
+.propname {
+	font: 16px 'Kabel-Medium';
+}
+
+.price:before {
+	font: 14px 'Kabel-Light';
+	content: 'Price: ';
+}
+
+.price {
+	font: 14px 'Kabel-Light';
+}
+
+.rent {
+	font: 14px 'Kabel-Light';
+}
+
+.rent:before {
+	font: 14px 'Kabel-Light';
+	content: 'Rent: ';
+}
+
+.owner {
+	font: 14px 'Kabel-Light';
+	float: right;
+	padding-right: 10px;
+	text-align: center;
+	min-width: 80px;
+}
