@@ -7,6 +7,7 @@
 	<link rel="stylesheet" type="text/css" href="style/login.css">
 </head>
 <body>
+
 	<div class="titleBorder">
 		<div class="title">
 			<div class="titleText">CMUOPOLY</div>
@@ -15,8 +16,11 @@
 
 	<form id="codeForm">
 		<div class="formLabel">Enter your player code below to join.</div>
-		<input id="codeinput" type="text" class="txtinput" />
-		<input id="codesubmit" type="submit" value="Go!" class="btn" />
+		<input id="codeInput" type="text" class="txtinput" />
+		<input id="codeSubmit" type="submit" value="Go!" class="btn" />
 	</form>
+	<script src="js/jquery-1.9.1.min.js"></script>
+	<script src="http://localhost:8686/socket.io/socket.io.js"></script>
+	<script src="js/mobileLogin.js"></script>
 </body>
 </html>
