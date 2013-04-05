@@ -81,6 +81,9 @@
 
 .price {
 	font: 14px 'Kabel-Light';
+	position: absolute;
+	left: 0;
+	bottom: 0;
 }
 
 .rent {
@@ -94,8 +97,16 @@
 
 .owner {
 	font: 14px 'Kabel-Light';
-	float: right;
 	padding-right: 10px;
 	text-align: center;
-	min-width: 80px;
+	position: absolute;
+	right: 0;
+	bottom: 0;
+}
+
+.cellBottom {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	width: 100%;
 }
