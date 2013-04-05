@@ -1,8 +1,10 @@
 // This will be populated with list of games from the server as JSON objects
-var gameList;
+var gameList = [];
 
 // Index of the currently selected game
 var selectedGame;
+
+var username = "testUser";
 
 function openHomeScreen(prevScreen) {
   prevScreen.hide();
@@ -17,29 +19,83 @@ function openHostScreen() {
 function openJoinScreen() {
   $("#homeScreen").hide();
   $("#joinGameScreen").show();
-  // Grab games from server, and populate the table
-  $("#gameList tbody tr").each(function (index) {
+  
+  getGameList();
+}
+
+function createGameListTable() {
+  var gameTable = $("#gameTable");
+  gameTable.empty();
+  var headerRow = $("<tr>")
+    .append($("<th>").html("Game name"))
+    .append($("<th>").html("Password"))
+    .append($("<th>").html("Status"));
+  gameTable.append(headerRow);
+  
+  gameList.forEach(function (game, index, array) {
+    console.log(game);
+    var row = $("<tr>")
+      .append($("<td>").html(game.name))
+      .append($("<td>").html(game.password))
+      .append($("<td>").html(game.status));
     if (index % 2 === 1) {
-      $(this).addClass("alt");
+      row.addClass("alt");
     }
-    $(this).click(function (event) {
+    row.click(function (event) {
       if (selectedGame !== undefined)
         $("tr.selected").removeClass("selected");
       $(this).addClass("selected");
       selectedGame = index;
     });
+    
+    gameTable.append(row);
   });
 }
 
-$(document).ready(function () {
-  $("#hostGameScreen").hide();
-  $("#joinGameScreen").hide();
-  
+function getGameList() {
+  $.ajax({
+    type: "get",
+    url: "/gameList",
+    success: function(data) {
+      if (data.success) {
+        gameList = data.gameList;
+        console.log(gameList);
+        createGameListTable();
+      }
+    }
+  });
+}
+
+function hostGame() {
+  var gameName = $("#nameInput").val();
+  var password = $("#passwordInput").val();
+  $.ajax({
+    type: "post",
+    url: "/hostGame",
+    data: {
+      hostName: window.username,
+      gameName: gameName,
+      password: password,
+      numPlayers: 4
+    },
+    success: function(data) {
+      if (data.success) {
+        console.log("I MADE A GAME!");
+      }
+    }
+  })
+}
+
+function attachButtonEvents() {
   $("#hostBtn").click(function (event) {
     openHostScreen();
   });
   $("#joinBtn").click(function (event) {
     openJoinScreen();
+  });
+  
+  $("#hostGameSubmit").click(function (event) {
+    hostGame();
   });
   $("#hostCancelBtn").click(function (event) {
     openHomeScreen($("#hostGameScreen"));
@@ -47,4 +103,10 @@ $(document).ready(function () {
   $("#joinCancelBtn").click(function (event) {
     openHomeScreen($("#joinGameScreen"));
   });
+}
+
+$(document).ready(function () {
+  $("#hostGameScreen").hide();
+  $("#joinGameScreen").hide();
+  attachButtonEvents();
 });
