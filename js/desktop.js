@@ -69,6 +69,7 @@ function getGameList() {
 function hostGame() {
   var gameName = $("#nameInput").val();
   var password = $("#passwordInput").val();
+  var numPlayers = $("#numPlayersInput").val();
   $.ajax({
     type: "post",
     url: "/hostGame",
@@ -76,7 +77,7 @@ function hostGame() {
       hostName: window.username,
       gameName: gameName,
       password: password,
-      numPlayers: 4
+      numPlayers: numPlayers
     },
     success: function(data) {
       if (data.success) {
@@ -94,8 +95,9 @@ function attachButtonEvents() {
     openJoinScreen();
   });
   
-  $("#hostGameSubmit").click(function (event) {
+  $("#hostGameForm").submit(function (event) {
     hostGame();
+    event.preventDefault();
   });
   $("#hostCancelBtn").click(function (event) {
     openHomeScreen($("#hostGameScreen"));
