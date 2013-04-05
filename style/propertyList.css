@@ -13,12 +13,6 @@
 	src: url('../fonts/KabobExtrabold Regular.ttf') format('truetype');
 }
 
-#proplist {
-	width: 200px;
-	border-right: 1px solid #333;
-	border-top: 1px solid #333;
-}
-
 .propertyCell {
 	width: 100%;
 	min-height: 40px;
