@@ -1,11 +1,38 @@
-#listOfProperties {
+#propList {
 	width: 200px;
 	height: 320px;
+	-webkit-overflow-scrolling: touch;
+	-moz-overflow-scrolling: touch;
+	-o-overflow-scrolling: touch;
+	-ms-overflow-scrolling: touch;
+	overflow-scrolling: touch;
+	border-right: 1px solid black;
+	border-top: 1px solid black;
+	overflow: auto;
 }
 
-iframe[seamless]{
-    background-color: transparent;
-    border: 0px none transparent;
-    padding: 0px;
-    overflow: hidden;
+#content {
+	position: relative;
+}
+
+#propDetails {
+	top: 0;
+  	right: 0;
+  	position: absolute;
+}
+
+#propDetails .propertyCard {
+	width: 522px;
+	height: 600px;
+	-webkit-transform-origin: 0 0;
+	-moz-transform-origin: 0 0;
+	-o-transform-origin: 0 0;
+	-ms-transform-origin: 0 0;
+	transform-origin: 0 0;
+
+	-webkit-transform: scale(0.49);
+  	-moz-transform: scale(0.49);
+  	-o-transform: scale(0.49);
+  	-ms-transform: scale(0.49);
+  	transform: scale(0.49);
 }
