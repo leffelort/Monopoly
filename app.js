@@ -82,8 +82,8 @@ app.get("/properties", function(req, resp) {
 // ========================
 
 var mongo = require('mongodb');
-var host = 'localhost';
-var port = mongo.Connection.DEFAULT_PORT;
+var host = 'ds037067.mongolab.com';
+var port = 37067;
 
 var options = {w : 1};
 var dbName = 'monopoly';
@@ -101,7 +101,11 @@ function getPropertiesFromDatabase(onOpen) {
 	function onDbReady(error) {
 		if (error) 
 			throw error;
-		client.collection('properties', onPropertyCollectionReady);
+		client.authenticate("thedrick", "thedrick", function(err, res) {
+			if (err)
+				throw err;
+			client.collection('properties', onPropertyCollectionReady);
+		});
 	}
 
 	function logger(error, result) {

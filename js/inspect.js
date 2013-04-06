@@ -25,7 +25,7 @@ function loadDetailedView(property) {
 							   .append($("<h1>").html(property.title))
 							   );
 	var details = $("<div>").addClass("details");
-	details.append($("<div>").addClass("rent")
+	details.append($("<div>").addClass("rentDisplay")
 							 .html(property.rent + "."));
 	var houseCosts = $("<div>").addClass("houseCosts");
 

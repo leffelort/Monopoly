@@ -58,7 +58,7 @@ body {
 	text-transform: uppercase;
 }
 
-.rent:before {
+.rentDisplay:before {
 	content: 'RENT $'
 }
 
