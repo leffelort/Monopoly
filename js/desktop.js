@@ -19,37 +19,43 @@ function openHostScreen() {
 function openJoinScreen() {
   $("#homeScreen").hide();
   $("#joinGameScreen").show();
-  
   getGameList();
 }
 
 function createGameListTable() {
   var gameTable = $("#gameTable");
   gameTable.empty();
-  var headerRow = $("<tr>")
-    .append($("<th>").html("Game name"))
-    .append($("<th>").html("Password"))
-    .append($("<th>").html("Status"));
-  gameTable.append(headerRow);
   
-  gameList.forEach(function (game, index, array) {
-    console.log(game);
-    var row = $("<tr>")
-      .append($("<td>").html(game.name))
-      .append($("<td>").html(game.password))
-      .append($("<td>").html(game.status));
-    if (index % 2 === 1) {
-      row.addClass("alt");
-    }
-    row.click(function (event) {
-      if (selectedGame !== undefined)
-        $("tr.selected").removeClass("selected");
-      $(this).addClass("selected");
-      selectedGame = index;
+  if (gameList.length === 0) {
+    gameTable.hide();
+    $("#noGamesMessage").show();
+  }
+  else {
+    gameTable.show();
+    $("#noGamesMessage").hide();
+    var headerRow = $("<tr>")
+      .append($("<th>").html("Game name"))
+      .append($("<th>").html("Password"))
+      .append($("<th>").html("Status"));
+    gameTable.append(headerRow);
+  
+    gameList.forEach(function (game, index, array) {
+      var row = $("<tr>")
+        .append($("<td>").html(game.name))
+        .append($("<td>").html(game.password))
+        .append($("<td>").html(game.status));
+      if (index % 2 === 1) {
+        row.addClass("alt");
+      }
+      row.click(function (event) {
+        if (selectedGame !== undefined)
+          $("tr.selected").removeClass("selected");
+        $(this).addClass("selected");
+        selectedGame = index;
+      });
+      gameTable.append(row);
     });
-    
-    gameTable.append(row);
-  });
+  }
 }
 
 function getGameList() {

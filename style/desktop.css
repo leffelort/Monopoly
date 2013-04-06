@@ -53,6 +53,14 @@ h3 {
   margin: 0 auto;
 }
 
+#hostGameScreen {
+  display: none;
+}
+
+#joinGameScreen {
+  display: none;
+}
+
 .buttons {
   width: inherit;
   margin: 0 auto;
@@ -94,14 +102,15 @@ h3 {
   font: 20px 'Kabel-Light';
 }
 
+#noGamesMessage {
+  display: none;
+}
+
 table {
   width: 100%;
   margin: 0 auto 1em;
   border-collapse: collapse;
   border: 1px solid black;
-}
-
-table, th, td {
 }
 
 tr.alt {
