@@ -31,13 +31,13 @@ function loadDetailedView(property) {
 
 	var costTable = $("<table>");
 	costTable.append($("<tr>").append($("<td>").html("With 1 House"),
-									  $("<td>").html("$" + property.onehouse + ".")));
+									  $("<td>").html("$ " + property.onehouse + ".")));
 	costTable.append($("<tr>").append($("<td>").html("With 2 Houses"),
-									  $("<td>").html("$" + property.twohouse + ".")));
+									  $("<td>").html(property.twohouse + ".")));
 	costTable.append($("<tr>").append($("<td>").html("With 3 Houses"),
-									  $("<td>").html("$" + property.threehouse + ".")));
+									  $("<td>").html(property.threehouse + ".")));
 	costTable.append($("<tr>").append($("<td>").html("With 4 Houses"),
-									  $("<td>").html("$" + property.fourhouse + ".")));
+									  $("<td>").html(property.fourhouse + ".")));
 	houseCosts.append(costTable);
 	details.append(houseCosts);
 
@@ -95,6 +95,9 @@ function displayProperties(properties) {
 }
 
 $(document).ready(function() {
+	window.addEventListener('load', function() {
+    	new FastClick(document.body);
+	}, false);
 	$("#propDetails").css({
 		"height" : document.documentElement.clientHeight + 60,
 		"width" : document.documentElement.clientWidth - 200

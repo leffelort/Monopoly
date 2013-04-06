@@ -18,8 +18,8 @@ body {
 }
 
 .propertyCard {
-	width: 522px;
-	height: 600px;
+	width: 440px;
+	height: 550px;
 /*	-webkit-transform: scale(0.7);
   	-moz-transform: scale(0.1);
   	-o-transform: scale(0.1);
@@ -28,8 +28,8 @@ body {
 
 .titleDeed {
 	border: 4px solid black;
-	width: 90%;
-	height: 90%;
+	width: 95%;
+	height: 95%;
 	text-align: center;
 }
 
@@ -73,6 +73,8 @@ body {
 .details {
 	font-family: 'Kabel-Light';
 	line-height: 130%;
+	width: 92%;
+	margin: 0 auto;
 }
 
 .houses:before {
@@ -108,7 +110,7 @@ body {
 }
 
 table {
-	margin: 0 15% 0 10%;
+	margin: 0 13% 0 12%;
 	text-align: left;
 	width: 75%;
 }

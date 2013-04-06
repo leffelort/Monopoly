@@ -19,6 +19,7 @@
 	background-color: #eee;
 	position: relative;
 	border-bottom: 1px solid #333;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
 .selected {
