@@ -202,6 +202,22 @@ $(document).ready(function () {
 	window.addEventListener('load', function() {
     	new FastClick(document.body);
 	}, false);
-  socket = io.connect("http://localhost:8686");
+  $(".buttons").hide();
+  $(".facebookLogin").show();
+  $("#facebookLoginButton").click(function() {
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        $(".facebookLogin").hide();
+        $(".buttons").show();
+        socket = io.connect("http://localhost:8686");
+        FB.api('/me', function(me) {
+          window.username = me.name;
+          socket.emit('login', me);
+        });
+      } else {
+        login();
+      }
+    });
+  });
   attachButtonEvents();
 });

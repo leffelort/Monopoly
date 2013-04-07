@@ -136,10 +136,36 @@ function getPropertiesFromDatabase(onOpen) {
 		if (error)
 			throw error;
 		var props = propertyCollection.find({}).toArray(function(err, array) {
-			console.log(array);
 			onOpen(array);
 		});
 	}
+}
+
+function saveObjectToDB(collection, obj) {
+	console.log("saving object ", obj);
+	client.collection(collection, function(error, collec) {
+		if (error)
+			throw error;
+		collec.find({id : obj.id}).toArray(function(e, r) {
+			if (e)
+				throw e;
+			if (r.length === 0) {
+				collec.insert(obj, function(err, res) {
+					if (err) 
+						throw err;
+					console.log(res);
+				});
+			} else if (obj.socketid !== undefined) {
+				console.log("Updating socket id for user");
+				collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
+					if (err) 
+						throw err;
+				});
+			} else {
+				console.log("object already exists in database");
+			}
+		});
+	});
 }
 
 function closeDb() {
@@ -154,9 +180,23 @@ app.listen(11611);
 
 var io = require('socket.io').listen(8686);
 var connections = {};
+var socketToPlayerId = {};
 
 io.sockets.on('connection', function (socket) {
   connections[socket.id] = socket;
+
+  socket.on('login', function (data) {
+  	var user = {};
+  	user.first_name = data.first_name;
+  	user.last_name = data.last_name;
+  	user.id = data.id;
+  	user.gender = data.gender;
+  	user.socketid = socket.id;
+  	user.invites = [];
+  	user.gameInProgress = undefined;
+  	saveObjectToDB('users', user);
+  	socketToPlayerId[socket.id] = user.id;
+  });
   
   socket.on('hostgame', function (data) {
     var game = currentGames[data.gameID];
