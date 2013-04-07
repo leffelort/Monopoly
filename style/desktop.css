@@ -90,6 +90,16 @@ h3 {
   border-radius: 5px;
 }
 
+.btn.fb {
+  width: 400px;
+}
+
+.facebookLogin {
+  width: inherit;
+  margin: 1em auto 0 auto;
+  text-align: center;
+}
+
 .btn:disabled {
   background-color: #AAA;
 }
