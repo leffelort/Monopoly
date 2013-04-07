@@ -10,7 +10,6 @@ function getProperties() {
 				displayProperties(data.props);
 			} else {
 				console.log("error");
-				return undefined;
 			}
 		}
 	});
@@ -56,7 +55,11 @@ function loadDetailedView(property) {
 
 	titleDeed.append(details);
 	detailedView.append(titleDeed);
+	detailedView.hide();
 	$("#propDetails").append(detailedView);
+	var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
+	$("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
+	detailedView.show();
 }
 
 function displayProperties(properties) {
@@ -100,7 +103,7 @@ $(document).ready(function() {
 	}, false);
 	$("#propDetails").css({
 		"height" : document.documentElement.clientHeight + 60,
-		"width" : document.documentElement.clientWidth - 200
+		"width" : document.documentElement.clientWidth - $("#propList").width()
 	});
 	// get property data from the database.
 	getProperties();
