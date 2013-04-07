@@ -32,14 +32,21 @@ function hostGame() {
       type: "post",
       url: "/hostGame",
       data: {
-        hostName: window.username,
         gameName: gameName,
         password: password,
         numPlayers: numPlayers
       },
       success: function(data) {
         if (data.success) {
-          openGameLobbyScreen($("#hostGameScreen"), data.id);
+          socket.emit('hostgame', {
+            gameID: data.id,
+            username: window.username
+          });
+          socket.on('hostgame', function (socketdata) {
+            if (socketdata.success) {
+              openGameLobbyScreen($("#hostGameScreen"), data.id);
+            }
+          });
         }
       }
     });
@@ -50,9 +57,35 @@ function hostGame() {
 function openJoinScreen() {
   $("#homeScreen").hide();
   $("#joinGameScreen").show();
-  getGameList();
+  //getGameList();
 }
 
+function joinGame() {
+  var gameCode = Number($("#codeInput").val());
+  
+  // Form validation
+  if (isNaN(gameCode) || gameCode < 1000 || gameCode > 9999) {
+    alert("Code must be 4 digits!");
+  }
+  else {
+    console.log(gameCode);
+    socket.emit('joingame', {
+      code: gameCode,
+      username: window.username
+    });
+    socket.on('joingame', function (socketdata) {
+      console.log(socketdata);
+      if (socketdata.success) {
+        openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
+      }
+      else {
+        alert(socketData.message);
+      }
+    })
+  }
+}
+
+/*
 function getGameList() {
   $.ajax({
     type: "get",
@@ -101,6 +134,7 @@ function createGameListTable() {
     });
   }
 }
+*/
 
 // GAME LOBBY
 function openGameLobbyScreen(prevScreen, gameID) {
@@ -125,10 +159,13 @@ function getGameInfo(gameID) {
 function createGameLobby() {
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
-  currentGame.players.forEach(function (player, index) {
+  var index = 1;
+  for (var id in currentGame.players) {
+    var player = currentGame.players[id];
     $("#gameLobby").append($("<h2>")
-      .html("Player " + (index + 1) + ": " + player.username));
-  });
+      .html("Player " + index + ": " + player.username));
+    index++;
+  }
   $("#phoneCode").html(currentGame.code);
 }
 
@@ -155,11 +192,16 @@ function attachButtonEvents() {
   $("#joinCancelBtn").click(function (event) {
     openHomeScreen($("#joinGameScreen"));
   });
+  $("#codeForm").submit(function (event) {
+    event.preventDefault();
+    joinGame();
+  });
 }
 
 $(document).ready(function () {
 	window.addEventListener('load', function() {
     	new FastClick(document.body);
 	}, false);
+  socket = io.connect("http://localhost:8686");
   attachButtonEvents();
 });

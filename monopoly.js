@@ -1,27 +1,22 @@
-exports.newGame = function(id, code, name, password, maxPlayers, host) {
-  var game = new Object();
-  
-  game.id = id;
-  game.code = code;
-  game.host = new Player(host);
-  game.name = name;
-  game.password = password;
-  game.maxPlayers = maxPlayers;
-  game.numPlayers = 1;      /* Number of players currently connected */
-  game.isStarted = false;
-  game.players = [game.host];
-  game.boards = [];
-  game.currentTurn = undefined;
-  game.availableHouses = 32;
-  game.availableHotels = 12;
-  game.availableProperties = [];    /* TODO: fill this in with all properties */
-  
-  return game;
+var Game = function(id, code, name, password, maxPlayers) {  
+  this.id = id;
+  this.code = code;
+  this.host = undefined;
+  this.name = name;
+  this.password = password;
+  this.maxPlayers = maxPlayers;
+  this.numPlayers = 0;
+  this.isStarted = false;
+  this.players = {};
+  this.boards = {};
+  this.currentTurn = undefined;
+  this.availableHouses = 32;
+  this.availableHotels = 12;
+  this.availableProperties = [];  /* TODO: fill this in with all properties */ 
 }
 
-var Player = function (username) {
+var Player = function(username) {
   this.username = username;
-  this.socket = undefined;
   this.money = 1500;
   this.properties = [];
 }
@@ -30,3 +25,12 @@ var Property = function() {
   this.numberOfHouses = 0;
   this.hotel = false;
 }
+
+module.exports.newGame = function(id, code, name, password, maxPlayers) {
+  return new Game(id, code, name, password, maxPlayers);
+}
+module.exports.newPlayer = function(username) {
+  return new Player(username);
+}
+module.exports.newProperty = new Property();
+

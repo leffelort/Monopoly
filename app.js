@@ -23,14 +23,13 @@ app.get("/:staticFilename", function (request, response) {
 var currentGames = {};
 
 app.post("/hostGame", function (req, resp) {
-  var hostName = req.body.hostName;
   var gameName = req.body.gameName;
   var password = req.body.password;
-  var numPlayers = 4;
+  var numPlayers = Number(req.body.numPlayers);
   var gameID = shortID.generate();
   var phoneCode = phoneCodeGen.generate();
   currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName, 
-    password, numPlayers, hostName);
+    password, numPlayers);
   
   resp.send({ 
     success: true,
@@ -71,7 +70,7 @@ app.get("/gameList", function (req, resp) {
 app.get("/game/:id", function (req, resp) {
   var gameID = req.params.id;
   var game = currentGames[gameID];
-  console.log(game);
+  console.log(currentGames);
   if (game !== undefined) {
     resp.send({
       success: true,
@@ -154,8 +153,60 @@ app.listen(11611);
 // ========================
 
 var io = require('socket.io').listen(8686);
+var connections = {};
 
 io.sockets.on('connection', function (socket) {
-  socket.on('code', function (data) {console.log(data)});
-  socket.on('disconnect', function () { });
+  connections[socket.id] = socket;
+  
+  socket.on('hostgame', function (data) {
+    var game = currentGames[data.gameID];
+    if (game !== undefined && game.host === undefined) {
+      game.host = monopoly.newPlayer(data.username);
+      game.numPlayers++;
+      game.players[socket.id] = game.host;
+      socket.emit('hostgame', { success: true });
+    }
+  });
+  
+  socket.on('joingame', function (data) {
+    for (var gameID in currentGames) {
+      var game = currentGames[gameID];
+      if (game.code === data.code) {
+        // Error checking
+        if (game.isStarted) {
+          socket.emit('joingame', {
+            success: false,
+            message: "This game is already in progress."
+          });
+        }
+        else if (game.numPlayers === game.maxPlayers) {
+          socket.emit('joingame', {
+            success: false,
+            message: "This game is full."
+          });
+        }
+        else {
+          var player = monopoly.newPlayer(data.username);
+          game.numPlayers++;
+          game.players[socket.id] = player;
+          socket.emit('joingame', {
+            success: true,
+            gameID: game.id
+          });
+          for (var socketid in game.players) {
+            console.log(game.players[socketid]);
+            if (socketid !== socket.id) {
+              connections[socketid].emit('newplayer', {
+                player: player,
+              });
+            }
+          }
+        }
+      }
+    }
+  });
+  
+  socket.on('disconnect', function () { 
+    delete connections[socket.id];
+  });
 });
