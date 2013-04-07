@@ -105,26 +105,38 @@ var port = 37067;
 
 var options = {w : 1};
 var dbName = 'monopoly';
+var dbIsOpen = false;
 
+
+mongoExpressAuth.init({
+	mongo: {
+		host: host,
+		port: port,
+		dbName: dbName,
+		collectionName: 'users'
+	}
+}, function() {
+
+});
 var client = new mongo.Db(
 		dbName,
 		new mongo.Server(host, port),
 		options
 	);
 
+client.open(function(error, result) {
+	if (error)
+		throw error;
+	client.authenticate("thedrick", "thedrick", function(err, res) {
+		if (err)
+			throw err;
+		dbIsOpen = true;
+	});
+});
+
 function getPropertiesFromDatabase(onOpen) {
 
-	client.open(onDbReady);
-
-	function onDbReady(error) {
-		if (error) 
-			throw error;
-		client.authenticate("thedrick", "thedrick", function(err, res) {
-			if (err)
-				throw err;
-			client.collection('properties', onPropertyCollectionReady);
-		});
-	}
+	client.collection('properties', onPropertyCollectionReady);
 
 	function logger(error, result) {
 		if (error)
@@ -138,7 +150,6 @@ function getPropertiesFromDatabase(onOpen) {
 		var props = propertyCollection.find({}).toArray(function(err, array) {
 			console.log(array);
 			onOpen(array);
-			closeDb();
 		});
 	}
 }
