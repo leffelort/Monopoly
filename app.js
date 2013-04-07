@@ -107,17 +107,6 @@ var options = {w : 1};
 var dbName = 'monopoly';
 var dbIsOpen = false;
 
-
-mongoExpressAuth.init({
-	mongo: {
-		host: host,
-		port: port,
-		dbName: dbName,
-		collectionName: 'users'
-	}
-}, function() {
-
-});
 var client = new mongo.Db(
 		dbName,
 		new mongo.Server(host, port),
