@@ -1,3 +1,4 @@
+/* Fonts */
 @font-face {
   font-family: 'Kabel-ExtraBold';
   src: url('../fonts/KabobExtrabold Regular.ttf') format('truetype');
@@ -13,23 +14,34 @@
   src: url('../fonts/KabobLight Regular.ttf') format('truetype');
 }
 
+/* Global styles */
 body {
   min-height: 300px;
   background-color: #eee;
 }
 
+#content {
+  margin: 0 1em;
+}
+
 h1 {
-  font: 36px 'Kabel-ExtraBold';
+  font: 2em 'Kabel-ExtraBold';
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 0.5em;
+}
+
+h2 {
+  font: 1.5em 'Kabel-Regular';
+  padding: 0.2em;
 }
 
 h3 {
   font: 24px 'Kabel-Light';
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
   text-align: center;
 }
 
+/* Title */
 #title {
   border: 2px solid #222;
   background-color: #ED1B24;
@@ -38,7 +50,7 @@ h3 {
   padding: 5px 15px;
   margin: 20px auto;
 
-  width: 600px;
+  width: 56%;
 }
 
 .titleText {
@@ -48,22 +60,14 @@ h3 {
   text-shadow: -1px 2px 2px black;
 }
 
-#content {
-  width: 600px;
-  margin: 0 auto;
-}
-
+/* Host Game Screen */
 #hostGameScreen {
-  display: none;
-}
-
-#joinGameScreen {
   display: none;
 }
 
 .buttons {
   width: inherit;
-  margin: 0 auto;
+  margin: 1em auto 0 auto;
   text-align: center;
 }
 
@@ -83,6 +87,7 @@ h3 {
   color: white;
   text-shadow: -1px 1px 1px black;
   box-shadow: 0px 1px 3px #333;
+  border-radius: 5px;
 }
 
 .btn:disabled {
@@ -95,11 +100,25 @@ h3 {
 
 .textForm {
   display: block;
-  width: 300px;
-  height: 30px;
+  width: 15em;
+  height: 1.5em;
   padding: 5px;
-  margin: 0 auto 1em auto;
-  font: 20px 'Kabel-Light';
+  margin: 0 auto 0.5em auto;
+  font: 1.25em 'Kabel-Light';
+}
+
+#hostError {
+  color: #FF514F;
+}
+
+/* Join Game Screen */
+#joinGameScreen {
+  display: none;
+}
+
+#codeInput {
+  text-align: center;
+  width: 10em;
 }
 
 #noGamesMessage {
@@ -138,4 +157,19 @@ td {
   font: 18px 'Kabel-Light';
   padding: 10px;
   vertical-align: middle;
+}
+
+/* Game Lobby */
+#gameLobbyScreen {
+  display: none;
+}
+
+#gameLobby {
+  margin: 0 auto 1em auto;
+  background-color: #ccc;
+  border-radius: 5px;
+}
+
+.playerSeat {
+  width: 100%;
 }

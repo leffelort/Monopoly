@@ -6,6 +6,7 @@ var app = express();
 var fs = require("fs");
 var shortID = require("shortid");
 var monopoly = require("./monopoly.js");
+var phoneCodeGen = require("./phoneCodeGen.js");
 
 app.use(express.bodyParser());
 
@@ -19,7 +20,7 @@ app.get("/:staticFilename", function (request, response) {
 */
 
 // Map of game id's to Game objects
-var currentGames = [];
+var currentGames = {};
 
 app.post("/hostGame", function (req, resp) {
   var hostName = req.body.hostName;
@@ -27,29 +28,31 @@ app.post("/hostGame", function (req, resp) {
   var password = req.body.password;
   var numPlayers = 4;
   var gameID = shortID.generate();
-  currentGames[gameID] = 
-    monopoly.newGame(gameID, gameName, password, numPlayers, hostName);
+  var phoneCode = phoneCodeGen.generate();
+  currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName, 
+    password, numPlayers, hostName);
   
-  resp.send({ success: true });
+  resp.send({ 
+    success: true,
+    id: gameID
+  });
 });
 
 app.get("/gameList", function (req, resp) {
   var gameList = [];
   for (var gameID in currentGames) {
     var game = currentGames[gameID];
-    var gameStatus;
     if (game.isStarted) {
-      gameStatus = "In Progress";
+      var gameStatus = "In Progress";
     }
     else {
-      gameStatus = game.numPlayers + "/" + game.maxPlayers + " players";
+      var gameStatus = game.numPlayers + "/" + game.maxPlayers + " players";
     }
-    var gamePassword;
     if (game.password === "") {
-      gamePassword = "No";
+      var gamePassword = "No";
     }
     else {
-      gamePassword = "Yes";
+      var gamePassword = "Yes";
     }
     
     gameList.push({
@@ -63,6 +66,21 @@ app.get("/gameList", function (req, resp) {
     success: true,
     gameList: gameList
   });
+});
+
+app.get("/game/:id", function (req, resp) {
+  var gameID = req.params.id;
+  var game = currentGames[gameID];
+  console.log(game);
+  if (game !== undefined) {
+    resp.send({
+      success: true,
+      game: game
+    });
+  }
+  else {
+    resp.send({ success: false });
+  }
 });
 
 app.get("/properties", function(req, resp) {
