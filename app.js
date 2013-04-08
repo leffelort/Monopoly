@@ -30,6 +30,9 @@ app.post("/hostGame", function (req, resp) {
   var phoneCode = phoneCodeGen.generate();
   currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName, 
     password, numPlayers);
+  getPropertiesFromDatabase(function (arr) {
+	currentGames[gameID].availableProperties = arr;  /* TODO: fill this in with all properties */ 
+  });
   
   resp.send({ 
     success: true,
@@ -247,7 +250,36 @@ io.sockets.on('connection', function (socket) {
     }
   });
   
+  socket.on('playerWaiting', function (data) {
+	var username = data.username;
+	var code = data.code;
+	for (var gameID in currentGames) {
+      var game = currentGames[gameID];
+      if (game.code === data.code) {
+		game.playersWaiting++;
+		//console.log("Playerswaiting: " + game.playersWaiting);
+		//console.log("numPlayres: " + game.numPlayers);
+		if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted)) {
+			//set playersWaiting = 0??
+			startGame(gameID);
+		}
+	  }
+	}
+  }); 
+  
+  
   socket.on('disconnect', function () { 
     delete connections[socket.id];
   });
 });
+
+
+// MORE FUNCTIONS
+function startGame(gameID) {
+	var game = currentGames[gameID];
+	//console.log("STARTING: " + gameID);
+	for (var socketid in game.players) {
+		connections[socketid].emit('gameReady', {});
+	}
+	game.isStarted = true;
+}

@@ -6,13 +6,14 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.password = password;
   this.maxPlayers = maxPlayers;
   this.numPlayers = 0;
+  this.playersWaiting = 0;
   this.isStarted = false;
   this.players = {};
   this.boards = {};
   this.currentTurn = undefined;
   this.availableHouses = 32;
   this.availableHotels = 12;
-  this.availableProperties = [];  /* TODO: fill this in with all properties */ 
+  this.availableProperties;
 }
 
 var Player = function(username, fbusername) {

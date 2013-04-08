@@ -9,6 +9,8 @@ var socket;
 var username = "testUser";
 var fbusername = undefined;
 
+var gameCode; //need this to be a global for now :/ ~pjm
+
 // GAME HOSTING
 function openHostScreen() {
   $("#homeScreen").hide();
@@ -63,7 +65,7 @@ function openJoinScreen() {
 }
 
 function joinGame() {
-  var gameCode = Number($("#codeInput").val());
+  gameCode = Number($("#codeInput").val());
   
   // Form validation
   if (isNaN(gameCode) || gameCode < 1000 || gameCode > 9999) {
@@ -156,6 +158,7 @@ function getGameInfo(gameID) {
     success: function(data) {
       if (data.success) {
         currentGame = data.game;
+		gameCode = currentGame.code;
         createGameLobby();
       }
     }
@@ -164,7 +167,6 @@ function getGameInfo(gameID) {
 
 function createGameLobby() {
   $("#waitingBtn").hide();
-
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
   var index = 1;
@@ -198,6 +200,19 @@ function openHomeScreen(prevScreen) {
   $("#homeScreen").show();
 }
 
+function startWaiting() {
+	$("#startGameBtn").hide();
+	$("#waitingBtn").show();
+	socket.emit('playerWaiting', {
+      code: gameCode,
+      username: window.username
+    });
+	socket.on('gameReady', function () {
+		console.log("READY.");
+		window.location = "/mobileHome.html";
+	});
+}
+
 function attachButtonEvents() {
   $("#hostBtn").click(function (event) {
     openHostScreen();
@@ -220,8 +235,7 @@ function attachButtonEvents() {
     joinGame();
   });
   $("#startGameBtn").click(function (event) {
-	$("#startGameBtn").hide();
-	$("#waitingBtn").show();
+	startWaiting();
   });
 }
 
