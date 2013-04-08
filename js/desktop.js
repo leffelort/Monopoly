@@ -141,6 +141,9 @@ function openGameLobbyScreen(prevScreen, gameID) {
   prevScreen.hide();
   $("#gameLobbyScreen").show();
   getGameInfo(gameID);
+	socket.on('newplayer', function (socketdata) {
+		getGameInfo(gameID);
+	});
 }
 
 function getGameInfo(gameID) {
@@ -160,6 +163,7 @@ function createGameLobby() {
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
   var index = 1;
+  $("#gameLobby").html("");
   for (var id in currentGame.players) {
     var player = currentGame.players[id];
     $("#gameLobby").append($("<h2>")
@@ -167,6 +171,12 @@ function createGameLobby() {
     index++;
   }
   $("#phoneCode").html(currentGame.code);
+  var numPlayers = (index - 1);
+  if (numPlayers < 2) {
+	$("#startGameBtn")[0].setAttribute("disabled");
+  }  else { 
+	$("#startGameBtn")[0].removeAttribute("disabled");
+  }
 }
 
 // HOME SCREEN
