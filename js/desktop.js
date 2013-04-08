@@ -300,7 +300,7 @@ function login(afterLogin) {
 var afterLogin = function() {
   $(".facebookLogin").hide();
   $(".buttons").show();
-  socket = io.connect("http://cmuopoly.herokuapp.com");
+  socket = io.connect(window.location.hostname);
   FB.api('/me', function(me) {
     console.log(me);
     window.username = me.name;
