@@ -184,11 +184,11 @@ td {
   width: 80%;
   position: relative;
   text-align: center;
-  margin: 0 auto;
+  margin: 10px auto;
 }
 
 .gameLobbyRow .userSquare {
-  height: 140px;
+  height: 130px;
   width: 50%;
   display: inline-block;
 }
@@ -202,9 +202,11 @@ td {
 .gameLobbyRow h2 {
   position: absolute;
   bottom: 0;
-  font: 14px 'Kabel-Light';
+  font: 16px 'Kabel-Light';
   text-align: center;
-  width: 47%;
+  width: 50%;
+  padding: 0;
+  margin: 0;
 }
 
 #gameLobby {
