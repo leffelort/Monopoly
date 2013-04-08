@@ -99,27 +99,17 @@ app.get("/properties", function(req, resp) {
 // ========================
 
 var mongo = require('mongodb');
-var host = 'ds045557.mongolab.com';
-var port = 45557;
 
-var options = {w : 1};
-var dbName = 'heroku_app14631401';
+var mongoUri = process.env.MONGOLAB_URI
 var dbIsOpen = false;
+var client = undefined;
 
-var client = new mongo.Db(
-		dbName,
-		new mongo.Server(host, port),
-		options
-	);
-
-client.open(function(error, result) {
-	if (error)
-		throw error;
-	client.authenticate("thedrick", "thedrick", function(err, res) {
-		if (err)
-			throw err;
-		dbIsOpen = true;
-	});
+mongo.Db.connect(mongoUri, function(err, db) {
+	if (err)
+		throw err;
+	console.log("successfully connected to the database.")
+	client = db;
+	dbIsOpen = true;
 });
 
 function getPropertiesFromDatabase(onOpen) {
@@ -169,6 +159,7 @@ function saveObjectToDB(collection, obj) {
 }
 
 function closeDb() {
+	dbIsOpen = false;
 	client.close();
 }
 
