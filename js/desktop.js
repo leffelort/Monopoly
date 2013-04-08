@@ -18,7 +18,7 @@ function hostGame() {
   var gameName = $("#nameInput").val().trim();
   var password = $("#passwordInput").val();
   var numPlayers = Number($("#numPlayersInput").val());
-  
+
   // Validate the form
   if (gameName === "") {
     alert("Please enter a game name.");
@@ -62,7 +62,7 @@ function openJoinScreen() {
 
 function joinGame() {
   var gameCode = Number($("#codeInput").val());
-  
+
   // Form validation
   if (isNaN(gameCode) || gameCode < 1000 || gameCode > 9999) {
     alert("Code must be 4 digits!");
@@ -85,6 +85,15 @@ function joinGame() {
   }
 }
 
+function leaveGame() {
+  var gameID = currentGame.id;
+  currentGame = undefined;
+  socket.emit('leavegame', {
+    gameID: gameID
+  });
+  openHomeScreen($("#gameLobbyScreen"));
+}
+
 /*
 function getGameList() {
   $.ajax({
@@ -102,7 +111,7 @@ function getGameList() {
 function createGameListTable() {
   var gameTable = $("#gameTable");
   gameTable.empty();
-  
+
   if (gameList.length === 0) {
     gameTable.hide();
     $("#noGamesMessage").show();
@@ -115,7 +124,7 @@ function createGameListTable() {
       .append($("<th>").html("Password"))
       .append($("<th>").html("Status"));
     gameTable.append(headerRow);
-  
+
     gameList.forEach(function (game, index, array) {
       var row = $("<tr>")
         .append($("<td>").html(game.name))
@@ -144,6 +153,14 @@ function openGameLobbyScreen(prevScreen, gameID) {
 	socket.on('newplayer', function (socketdata) {
 		getGameInfo(gameID);
 	});
+  socket.on('playerleft', function (socketdata) {
+    getGameInfo(gameID);
+  });
+  socket.on('hostleft', function (socketdata) {
+    alert("The host has left the game.");
+    currentGame = undefined;
+    openHomeScreen($("#gameLobbyScreen"));
+  });
 }
 
 function getGameInfo(gameID) {
@@ -176,7 +193,7 @@ function createGameLobby() {
   var numPlayers = (index - 1);
   if (numPlayers < 2) {
 	$("#startGameBtn")[0].setAttribute("disabled", true);
-  }  else { 
+  }  else {
 	$("#startGameBtn")[0].removeAttribute("disabled");
   }
 }
@@ -195,8 +212,8 @@ function attachButtonEvents() {
     openJoinScreen();
   });
   $("#hostGameForm").submit(function (event) {
-    hostGame();
     event.preventDefault();
+    hostGame();
   });
   $("#hostCancelBtn").click(function (event) {
     openHomeScreen($("#hostGameScreen"));
@@ -208,9 +225,12 @@ function attachButtonEvents() {
     event.preventDefault();
     joinGame();
   });
+  $("#leaveGameBtn").click(function (event) {
+    leaveGame();
+  });
   $("#startGameBtn").click(function (event) {
-	$("#startGameBtn").hide();
-	$("#waitingBtn").show();
+    $("#startGameBtn").hide();
+    $("#waitingBtn").show();
   });
 }
 

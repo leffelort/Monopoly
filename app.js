@@ -254,6 +254,28 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  socket.on('leavegame', function (data) {
+    var game = currentGames[data.gameID];
+    if (game !== undefined) {
+      if (game.players[socket.id] === game.host) {
+        // If host leaves, the entire game is deleted
+        for (var socketid in game.players) {
+          if (socketid !== socket.id) {
+            connections[socketid].emit('hostleft', {})
+          }
+        }
+        delete currentGames[data.gameID];
+      }
+      else {
+        delete game.players[socket.id];
+        game.numPlayers--;
+        for (var socketid in game.players) {
+          connections[socketid].emit('playerleft', {});
+        }
+      }
+    }
+  });
+
   socket.on('disconnect', function () {
     delete connections[socket.id];
   });
