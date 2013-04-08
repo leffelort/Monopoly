@@ -273,7 +273,7 @@ function login(afterLogin) {
 var afterLogin = function() {
   $(".facebookLogin").hide();
   $(".buttons").show();
-  socket = io.connect("http://fast-plateau-8085.herokuapp.com");
+  socket = io.connect("http://cmuopoly.herokuapp.com");
   FB.api('/me', function(me) {
     console.log(me);
     window.username = me.name;
