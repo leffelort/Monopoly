@@ -104,8 +104,7 @@ app.get("/properties", function(req, resp) {
 
 var mongo = require('mongodb');
 
-var mongoUri = process.env.MONGOLAB_URI ||
-			  "mongodb://heroku_app14631401:4ccecvoit0u9pn6ssu7gmm439g@ds045557.mongolab.com:45557/heroku_app14631401"
+var mongoUri = process.env.MONGOLAB_URI 
 var dbIsOpen = false;
 var client = undefined;
 
