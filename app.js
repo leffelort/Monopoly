@@ -32,7 +32,7 @@ app.post("/hostGame", function (req, resp) {
     password, numPlayers);
 
   getPropertiesFromDatabase(function (arr) {
-	currentGames[gameID].availableProperties = arr;  /* TODO: fill this in with all properties */
+	currentGames[gameID].availableProperties = arr; 
   });
 
   resp.send({
