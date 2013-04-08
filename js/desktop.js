@@ -160,6 +160,8 @@ function getGameInfo(gameID) {
 }
 
 function createGameLobby() {
+  $("#waitingBtn").hide();
+
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
   var index = 1;
@@ -173,7 +175,7 @@ function createGameLobby() {
   $("#phoneCode").html(currentGame.code);
   var numPlayers = (index - 1);
   if (numPlayers < 2) {
-	$("#startGameBtn")[0].setAttribute("disabled");
+	$("#startGameBtn")[0].setAttribute("disabled", true);
   }  else { 
 	$("#startGameBtn")[0].removeAttribute("disabled");
   }
@@ -206,6 +208,10 @@ function attachButtonEvents() {
     event.preventDefault();
     joinGame();
   });
+  $("#startGameBtn").click(function (event) {
+	$("#startGameBtn").hide();
+	$("#waitingBtn").show();
+  });
 }
 
 $(document).ready(function () {
@@ -230,4 +236,5 @@ $(document).ready(function () {
     });
   });
   attachButtonEvents();
+  $("#waitingBtn").show();
 });
