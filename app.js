@@ -171,7 +171,9 @@ app.listen(process.env.PORT || 11611);
 // ========================
 
 var http = require('http');
-var io = require('socket.io').listen(http.createServer(app));
+var server = http.createServer(app);
+console.log(server);
+var io = require('socket.io').listen(server);
 
 io.configure(function () { 
   io.set("transports", ["xhr-polling"]); 
