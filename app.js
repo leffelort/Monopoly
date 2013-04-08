@@ -28,10 +28,10 @@ app.post("/hostGame", function (req, resp) {
   var numPlayers = Number(req.body.numPlayers);
   var gameID = shortID.generate();
   var phoneCode = phoneCodeGen.generate();
-  currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName, 
+  currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName,
     password, numPlayers);
-  
-  resp.send({ 
+
+  resp.send({
     success: true,
     id: gameID
   });
@@ -53,14 +53,14 @@ app.get("/gameList", function (req, resp) {
     else {
       var gamePassword = "Yes";
     }
-    
+
     gameList.push({
       name: game.name,
       password: gamePassword,
       status: gameStatus
     });
   }
-  
+
   resp.send({
     success: true,
     gameList: gameList
@@ -85,7 +85,7 @@ app.get("/game/:id", function (req, resp) {
 app.get("/properties", function(req, resp) {
 	var userid = req.body.userid;
 	var gameid = req.body.gameid;
-	getPropertiesFromDatabase(function(obj){ 
+	getPropertiesFromDatabase(function(obj){
 		console.log(obj);
 		resp.send({
 			props : obj,
@@ -151,14 +151,14 @@ function saveObjectToDB(collection, obj) {
 				throw e;
 			if (r.length === 0) {
 				collec.insert(obj, function(err, res) {
-					if (err) 
+					if (err)
 						throw err;
 					console.log(res);
 				});
 			} else if (obj.socketid !== undefined) {
 				console.log("Updating socket id for user");
 				collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
-					if (err) 
+					if (err)
 						throw err;
 				});
 			} else {
@@ -197,7 +197,7 @@ io.sockets.on('connection', function (socket) {
   	saveObjectToDB('users', user);
   	socketToPlayerId[socket.id] = user.id;
   });
-  
+
   socket.on('hostgame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
@@ -207,11 +207,13 @@ io.sockets.on('connection', function (socket) {
       socket.emit('hostgame', { success: true });
     }
   });
-  
+
   socket.on('joingame', function (data) {
+    var gameFound = false;
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
       if (game.code === data.code) {
+        gameFound = true;
         // Error checking
         if (game.isStarted) {
           socket.emit('joingame', {
@@ -244,9 +246,15 @@ io.sockets.on('connection', function (socket) {
         }
       }
     }
+    if (!gameFound) {
+      socket.emit('joingame', {
+        success: false,
+        message: "Game does not exist."
+      });
+    }
   });
-  
-  socket.on('disconnect', function () { 
+
+  socket.on('disconnect', function () {
     delete connections[socket.id];
   });
 });
