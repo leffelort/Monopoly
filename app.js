@@ -201,7 +201,8 @@ io.sockets.on('connection', function (socket) {
   socket.on('hostgame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
-      game.host = monopoly.newPlayer(data.username);
+      game.host = monopoly.newPlayer(data.username, data.fbusername);
+      console.log(game.host);
       game.numPlayers++;
       game.players[socket.id] = game.host;
       socket.emit('hostgame', { success: true });
@@ -226,7 +227,7 @@ io.sockets.on('connection', function (socket) {
           });
         }
         else {
-          var player = monopoly.newPlayer(data.username);
+          var player = monopoly.newPlayer(data.username, data.fbusername);
           game.numPlayers++;
           game.players[socket.id] = player;
           socket.emit('joingame', {

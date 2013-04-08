@@ -7,6 +7,7 @@ var selectedGameIndex;
 var socket;
 
 var username = "testUser";
+var fbusername = undefined;
 
 // GAME HOSTING
 function openHostScreen() {
@@ -40,7 +41,8 @@ function hostGame() {
         if (data.success) {
           socket.emit('hostgame', {
             gameID: data.id,
-            username: window.username
+            username: window.username,
+            fbusername: window.fbusername
           });
           socket.on('hostgame', function (socketdata) {
             if (socketdata.success) {
@@ -71,7 +73,8 @@ function joinGame() {
     console.log(gameCode);
     socket.emit('joingame', {
       code: gameCode,
-      username: window.username
+      username: window.username,
+      fbusername: window.fbusername
     });
     socket.on('joingame', function (socketdata) {
       console.log(socketdata);
@@ -166,10 +169,18 @@ function createGameLobby() {
   $("#gameTitle").html(currentGame.name);
   var index = 1;
   $("#gameLobby").html("");
+  var row;
   for (var id in currentGame.players) {
     var player = currentGame.players[id];
-    $("#gameLobby").append($("<h2>")
-      .html("Player " + index + ": " + player.username));
+    if (index % 2 === 1) {
+      row = $("<div>").addClass("gameLobbyRow");
+    }
+    var userSquare = $("<div>").addClass("userSquare");
+    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbusername + "/picture?width=100&height=100"))
+              .append($("<h2>").html("Player " + index + ": " + player.username));
+    row.append(userSquare);
+    if (index % 2 === 1)
+      $("#gameLobby").append(row);
     index++;
   }
   $("#phoneCode").html(currentGame.code);
@@ -214,6 +225,28 @@ function attachButtonEvents() {
   });
 }
 
+function login(afterLogin) {
+  FB.login(function(response) {
+      if (response.authResponse) {
+          afterLogin();
+      } else {
+          // cancelled
+      }
+  })
+}
+
+var afterLogin = function() {
+  $(".facebookLogin").hide();
+  $(".buttons").show();
+  socket = io.connect("http://localhost:8686");
+  FB.api('/me', function(me) {
+    console.log(me);
+    window.username = me.name;
+    window.fbusername = me.username;
+    socket.emit('login', me);
+  });
+}
+
 $(document).ready(function () {
 	window.addEventListener('load', function() {
     	new FastClick(document.body);
@@ -223,15 +256,9 @@ $(document).ready(function () {
   $("#facebookLoginButton").click(function() {
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected') {
-        $(".facebookLogin").hide();
-        $(".buttons").show();
-        socket = io.connect("http://localhost:8686");
-        FB.api('/me', function(me) {
-          window.username = me.name;
-          socket.emit('login', me);
-        });
+        afterLogin();
       } else {
-        login();
+        login(afterLogin);
       }
     });
   });

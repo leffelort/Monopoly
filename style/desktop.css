@@ -25,20 +25,24 @@ body {
 }
 
 h1 {
-  font: 2em 'Kabel-ExtraBold';
+  font: 1.6em 'Kabel-ExtraBold';
   text-align: center;
   margin-bottom: 0.5em;
 }
 
 h2 {
-  font: 1.5em 'Kabel-Regular';
-  padding: 0.2em;
+  font: 1.4em 'Kabel-Regular';
+  padding: 0.3em;
 }
 
 h3 {
-  font: 24px 'Kabel-Light';
+  font: 1.0em 'Kabel-Light';
   margin-bottom: 0.5em;
   text-align: center;
+  display: block;
+  width: 80%;
+  margin: 0 auto;
+  line-height: 140%;
 }
 
 /* Title */
@@ -50,11 +54,11 @@ h3 {
   padding: 5px 15px;
   margin: 20px auto;
 
-  width: 56%;
+  width: 45%;
 }
 
 .titleText {
-  font: 50px 'Kabel-ExtraBold';
+  font: 2em 'Kabel-ExtraBold';
   text-align: center;
   color: white;
   text-shadow: -1px 2px 2px black;
@@ -74,12 +78,12 @@ h3 {
 .btn {
   -webkit-appearance: none;
   appearance: none;
-  width: 200px;
-  height: 50px;
+  width: 32%;
+  height: 34px;
   display: inline;
-  margin: 0 5px 20px;
 
-  font: 24px 'Kabel-ExtraBold';
+  margin: 0 6px;
+  font: 18px 'Kabel-ExtraBold';
   text-transform: uppercase;
   text-decoration: none;
 
@@ -87,11 +91,13 @@ h3 {
   color: white;
   text-shadow: -1px 1px 1px black;
   box-shadow: 0px 1px 3px #333;
-  border-radius: 5px;
+  border-radius: 3px;
+
+  padding: 0;
 }
 
 .btn.fb {
-  width: 400px;
+  width: 60%;
 }
 
 .facebookLogin {
@@ -110,11 +116,11 @@ h3 {
 
 .textForm {
   display: block;
-  width: 15em;
-  height: 1.5em;
+  width: 14em;
+  height: 1.2em;
   padding: 5px;
   margin: 0 auto 0.5em auto;
-  font: 1.25em 'Kabel-Light';
+  font: 0.9em 'Kabel-Light';
 }
 
 #hostError {
@@ -174,10 +180,37 @@ td {
   display: none;
 }
 
+.gameLobbyRow {
+  width: 80%;
+  position: relative;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.gameLobbyRow .userSquare {
+  height: 140px;
+  width: 50%;
+  display: inline-block;
+}
+
+.gameLobbyRow img {
+  display: block;
+  margin: 2px auto;
+  border: 1px solid #333;
+}
+
+.gameLobbyRow h2 {
+  position: absolute;
+  bottom: 0;
+  font: 14px 'Kabel-Light';
+  text-align: center;
+  width: 47%;
+}
+
 #gameLobby {
   margin: 0 auto 1em auto;
-  background-color: #ccc;
-  border-radius: 5px;
+  background-color: #eee;
+  text-align: center;
 }
 
 .playerSeat {

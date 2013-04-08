@@ -15,7 +15,8 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.availableProperties = [];  /* TODO: fill this in with all properties */ 
 }
 
-var Player = function(username) {
+var Player = function(username, fbusername) {
+  this.fbusername = fbusername
   this.username = username;
   this.money = 1500;
   this.properties = [];
@@ -29,8 +30,8 @@ var Property = function() {
 module.exports.newGame = function(id, code, name, password, maxPlayers) {
   return new Game(id, code, name, password, maxPlayers);
 }
-module.exports.newPlayer = function(username) {
-  return new Player(username);
+module.exports.newPlayer = function(username, fbusername) {
+  return new Player(username, fbusername);
 }
 module.exports.newProperty = new Property();
 
