@@ -99,11 +99,11 @@ app.get("/properties", function(req, resp) {
 // ========================
 
 var mongo = require('mongodb');
-var host = 'ds037067.mongolab.com';
-var port = 37067;
+var host = 'ds045557.mongolab.com';
+var port = 45557;
 
 var options = {w : 1};
-var dbName = 'monopoly';
+var dbName = 'heroku_app14631401';
 var dbIsOpen = false;
 
 var client = new mongo.Db(
