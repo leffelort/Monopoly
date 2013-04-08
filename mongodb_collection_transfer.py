@@ -5,9 +5,9 @@ db = client.monopoly
 db.authenticate("thedrick", "thedrick")
 collection = db.properties
 
-mongolab = pymongo.MongoClient('ds045557.mongolab.com', 45557)
-mongolab_monopoly = mongolab["heroku_app14631401"]
-mongolab_monopoly.authenticate("heroku_app14631401", "4ccecvoit0u9pn6ssu7gmm439g")
+mongolab = pymongo.MongoClient('ds041157.mongolab.com', 41157)
+mongolab_monopoly = mongolab["cmuopoly"]
+mongolab_monopoly.authenticate("amittere", "amittere")
 mongolab_props = mongolab_monopoly.properties
 
 props_to_insert = []
