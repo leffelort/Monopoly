@@ -156,7 +156,7 @@ app.get("/properties", function(req, resp) {
 
 var mongo = require('mongodb');
 
-var mongoUri = process.env.MONGOLAB_URI 
+var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI 
 var dbIsOpen = false;
 var client = undefined;
 
