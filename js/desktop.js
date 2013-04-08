@@ -7,6 +7,9 @@ var selectedGameIndex;
 var socket;
 
 var username = "testUser";
+var fbusername = undefined;
+
+var gameCode; //need this to be a global for now :/ ~pjm
 
 // GAME HOSTING
 function openHostScreen() {
@@ -40,7 +43,8 @@ function hostGame() {
         if (data.success) {
           socket.emit('hostgame', {
             gameID: data.id,
-            username: window.username
+            username: window.username,
+            fbusername: window.fbusername
           });
           socket.on('hostgame', function (socketdata) {
             if (socketdata.success) {
@@ -61,8 +65,7 @@ function openJoinScreen() {
 }
 
 function joinGame() {
-  var gameCode = Number($("#codeInput").val());
-
+  gameCode = Number($("#codeInput").val());
   // Form validation
   if (isNaN(gameCode) || gameCode < 1000 || gameCode > 9999) {
     alert("Code must be 4 digits!");
@@ -71,7 +74,8 @@ function joinGame() {
     console.log(gameCode);
     socket.emit('joingame', {
       code: gameCode,
-      username: window.username
+      username: window.username,
+      fbusername: window.fbusername
     });
     socket.on('joingame', function (socketdata) {
       console.log(socketdata);
@@ -170,6 +174,7 @@ function getGameInfo(gameID) {
     success: function(data) {
       if (data.success) {
         currentGame = data.game;
+		gameCode = currentGame.code;
         createGameLobby();
       }
     }
@@ -178,15 +183,22 @@ function getGameInfo(gameID) {
 
 function createGameLobby() {
   $("#waitingBtn").hide();
-
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
   var index = 1;
   $("#gameLobby").html("");
+  var row;
   for (var id in currentGame.players) {
     var player = currentGame.players[id];
-    $("#gameLobby").append($("<h2>")
-      .html("Player " + index + ": " + player.username));
+    if (index % 2 === 1) {
+      row = $("<div>").addClass("gameLobbyRow");
+    }
+    var userSquare = $("<div>").addClass("userSquare");
+    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbusername + "/picture?width=100&height=100"))
+              .append($("<h2>").html("Player " + index + ": " + player.username));
+    row.append(userSquare);
+    if (index % 2 === 1)
+      $("#gameLobby").append(row);
     index++;
   }
   $("#phoneCode").html(currentGame.code);
@@ -202,6 +214,19 @@ function createGameLobby() {
 function openHomeScreen(prevScreen) {
   prevScreen.hide();
   $("#homeScreen").show();
+}
+
+function startWaiting() {
+	$("#startGameBtn").hide();
+	$("#waitingBtn").show();
+	socket.emit('playerWaiting', {
+      code: gameCode,
+      username: window.username
+    });
+	socket.on('gameReady', function () {
+		console.log("READY.");
+		window.location = "/mobileHome.html";
+	});
 }
 
 function attachButtonEvents() {
@@ -231,6 +256,29 @@ function attachButtonEvents() {
   $("#startGameBtn").click(function (event) {
     $("#startGameBtn").hide();
     $("#waitingBtn").show();
+    startWaiting();
+  });
+}
+
+function login(afterLogin) {
+  FB.login(function(response) {
+      if (response.authResponse) {
+          afterLogin();
+      } else {
+          // cancelled
+      }
+  });
+}
+
+var afterLogin = function() {
+  $(".facebookLogin").hide();
+  $(".buttons").show();
+  socket = io.connect("http://localhost:8686");
+  FB.api('/me', function(me) {
+    console.log(me);
+    window.username = me.name;
+    window.fbusername = me.username;
+    socket.emit('login', me);
   });
 }
 
@@ -243,15 +291,9 @@ $(document).ready(function () {
   $("#facebookLoginButton").click(function() {
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected') {
-        $(".facebookLogin").hide();
-        $(".buttons").show();
-        socket = io.connect("http://localhost:8686");
-        FB.api('/me', function(me) {
-          window.username = me.name;
-          socket.emit('login', me);
-        });
+        afterLogin();
       } else {
-        login();
+        login(afterLogin);
       }
     });
   });
