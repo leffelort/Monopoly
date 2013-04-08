@@ -172,6 +172,12 @@ app.listen(process.env.PORT || 11611);
 
 var http = require('http');
 var io = require('socket.io').listen(http.createServer(app));
+
+io.configure(function () { 
+  io.set("transports", ["xhr-polling"]); 
+  io.set("polling duration", 10); 
+});
+
 var connections = {};
 var socketToPlayerId = {};
 
