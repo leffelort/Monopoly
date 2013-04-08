@@ -165,6 +165,18 @@ function openGameLobbyScreen(prevScreen, gameID) {
     currentGame = undefined;
     openHomeScreen($("#gameLobbyScreen"));
   });
+  socket.on('newmessage', function (socketdata) {
+    var message = $("<li>");
+    if (socketdata.type === "event") {
+      message.addClass("chatEvent");
+      message.html(socketdata.message);
+    }
+    else if (socketdata.type === "message") {
+      message.addClass("chatMessage");
+      message.html(socketdata.sender + ": " + socketdata.message);
+    }
+    $("#chatWindow").append(message);
+  });
 }
 
 function getGameInfo(gameID) {
@@ -207,6 +219,17 @@ function createGameLobby() {
 	$("#startGameBtn")[0].setAttribute("disabled", true);
   }  else {
 	$("#startGameBtn")[0].removeAttribute("disabled");
+  }
+}
+
+function sendMessage() {
+  var message = $("#chatBox").val().trim();
+  if (message !== "") {
+    socket.emit('chatmessage', {
+      type: 'message',
+      sender: window.fbusername,
+      message: message
+    });
   }
 }
 
@@ -257,6 +280,10 @@ function attachButtonEvents() {
     $("#startGameBtn").hide();
     $("#waitingBtn").show();
     startWaiting();
+  });
+  $("#chatForm").submit(function (event) {
+    event.preventDefault();
+    sendMessage();
   });
 }
 

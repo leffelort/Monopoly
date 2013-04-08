@@ -218,3 +218,16 @@ td {
 .playerSeat {
   width: 100%;
 }
+
+.chatWindow {
+  background-color: #FFF;
+}
+
+.chatWindow li {
+  height: 1em;
+  display: block;
+}
+
+.chatEvent {
+  color: #FFB200;
+}
