@@ -273,7 +273,7 @@ function login(afterLogin) {
 var afterLogin = function() {
   $(".facebookLogin").hide();
   $(".buttons").show();
-  socket = io.connect("http://localhost:8686");
+  socket = io.connect(window.location.hostname);
   FB.api('/me', function(me) {
     console.log(me);
     window.username = me.name;
