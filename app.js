@@ -168,7 +168,6 @@ function closeDb() {
 	client.close();
 }
 
-app.listen(process.env.PORT || 11611);
 
 // ========================
 // === Socket.io server ===
@@ -178,6 +177,8 @@ var http = require('http');
 var server = http.createServer(app);
 console.log(server);
 var io = require('socket.io').listen(server);
+
+app.listen(process.env.PORT || 11611);
 
 io.configure(function () { 
   io.set("transports", ["xhr-polling"]); 
