@@ -219,15 +219,30 @@ td {
   width: 100%;
 }
 
-.chatWindow {
+#chatWindow {
   background-color: #FFF;
+  height: 6em;
+  display: block;
+  overflow: scroll;
+  padding: 10px;
 }
 
-.chatWindow li {
+#chatWindow li {
   height: 1em;
   display: block;
+  margin-bottom: 0.2em;
+  font: 1.0em 'Kabel-Light';
 }
 
 .chatEvent {
   color: #FFB200;
+}
+
+#chatForm {
+  display: block;
+}
+
+#chatBox,
+#chatSubmitBtn {
+  display: inline;
 }

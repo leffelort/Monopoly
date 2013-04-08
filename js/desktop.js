@@ -165,7 +165,7 @@ function openGameLobbyScreen(prevScreen, gameID) {
     currentGame = undefined;
     openHomeScreen($("#gameLobbyScreen"));
   });
-  socket.on('newmessage', function (socketdata) {
+  socket.on('chatmessage', function (socketdata) {
     var message = $("<li>");
     if (socketdata.type === "event") {
       message.addClass("chatEvent");
@@ -176,6 +176,7 @@ function openGameLobbyScreen(prevScreen, gameID) {
       message.html(socketdata.sender + ": " + socketdata.message);
     }
     $("#chatWindow").append(message);
+    console.log(socketdata);
   });
 }
 
@@ -226,10 +227,12 @@ function sendMessage() {
   var message = $("#chatBox").val().trim();
   if (message !== "") {
     socket.emit('chatmessage', {
+      gameID: currentGame.id,
       type: 'message',
       sender: window.fbusername,
       message: message
     });
+    $("#chatBox").val("");
   }
 }
 

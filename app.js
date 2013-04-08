@@ -351,6 +351,19 @@ io.sockets.on('connection', function (socket) {
 	}
   });
   
+  socket.on('chatmessage', function (data) {
+    var game = currentGames[data.gameID];
+    if (game !== undefined) {
+      for (var socketid in game.players) {
+        connections[socketid].emit('chatmessage', {
+          type: data.type,
+          sender: data.sender,
+          message: data.message
+        });
+      }
+    }
+  });
+  
   socket.on('disconnect', function () {
     delete connections[socket.id];
   });
