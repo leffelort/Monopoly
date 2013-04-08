@@ -100,7 +100,8 @@ app.get("/properties", function(req, resp) {
 
 var mongo = require('mongodb');
 
-var mongoUri = process.env.MONGOLAB_URI
+var mongoUri = process.env.MONGOLAB_URI ||
+			  "mongodb://heroku_app14631401:4ccecvoit0u9pn6ssu7gmm439g@ds045557.mongolab.com:45557/heroku_app14631401"
 var dbIsOpen = false;
 var client = undefined;
 
@@ -163,13 +164,14 @@ function closeDb() {
 	client.close();
 }
 
-app.listen(11611);
+app.listen(process.env.PORT || 11611);
 
 // ========================
 // === Socket.io server ===
 // ========================
 
-var io = require('socket.io').listen(8686);
+var http = require('http');
+var io = require('socket.io').listen(http.createServer(app));
 var connections = {};
 var socketToPlayerId = {};
 
