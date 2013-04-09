@@ -6,7 +6,7 @@ var selectedGameIndex;
 
 var socket;
 
-var username = "testUser";
+var username = undefined;
 var fbusername = undefined;
 
 var gameCode; //need this to be a global for now :/ ~pjm
@@ -191,7 +191,7 @@ function sendMessage() {
     socket.emit('chatmessage', {
       gameID: currentGame.id,
       type: 'message',
-      sender: window.fbusername,
+      sender: window.username,
       message: message
     });
     $("#chatBox").val("");
