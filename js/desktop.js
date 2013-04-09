@@ -287,9 +287,12 @@ function attachSocketHandlers() {
     }
     else if (socketdata.type === "message") {
       message.addClass("chatMessage");
-      message.html(socketdata.sender + ": " + socketdata.message);
+      var sender = $("<span>").addClass("chatSender").html(socketdata.sender);
+      var messageText = $("<span>").html(": " + socketdata.message);
+      message.append(sender).append(messageText);
     }
     $("#chatWindow").append(message);
+    $('#chatWindow').scrollTop($('#chatWindow')[0].scrollHeight);
     console.log(socketdata);
   });
   
