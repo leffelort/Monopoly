@@ -261,7 +261,7 @@ function attachSocketHandlers() {
       openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
     }
     else {
-      alert(socketData.message);
+      alert(socketdata.message);
     }
   });
   
