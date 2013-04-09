@@ -6,7 +6,7 @@ var selectedGameIndex;
 
 var socket;
 
-var username = "testUser";
+var username = undefined;
 var fbusername = undefined;
 
 var gameCode; //need this to be a global for now :/ ~pjm
@@ -83,9 +83,9 @@ function joinGame() {
         openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
       }
       else {
-        alert(socketData.message);
+        alert(socketdata.message);
       }
-    })
+    });
   }
 }
 
@@ -173,7 +173,9 @@ function openGameLobbyScreen(prevScreen, gameID) {
     }
     else if (socketdata.type === "message") {
       message.addClass("chatMessage");
-      message.html(socketdata.sender + ": " + socketdata.message);
+      var sender = $("<span>").addClass("chatSender").html(socketdata.sender);
+      var messageText = $("<span>").html(": " + socketdata.message);
+      message.append(sender).append(messageText);
     }
     $("#chatWindow").append(message);
     console.log(socketdata);
@@ -229,7 +231,7 @@ function sendMessage() {
     socket.emit('chatmessage', {
       gameID: currentGame.id,
       type: 'message',
-      sender: window.fbusername,
+      sender: window.username,
       message: message
     });
     $("#chatBox").val("");

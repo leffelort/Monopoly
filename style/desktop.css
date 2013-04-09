@@ -31,12 +31,12 @@ h1 {
 }
 
 h2 {
-  font: 1.4em 'Kabel-Regular';
+  font: 1.4em 'Lato', Helvetica, Arial, sans-serif;
   padding: 0.3em;
 }
 
 h3 {
-  font: 1.0em 'Kabel-Light';
+  font: 1.0em 'Lato', Helvetica, Arial, sans-serif;
   margin-bottom: 0.5em;
   text-align: center;
   display: block;
@@ -78,12 +78,10 @@ h3 {
 .btn {
   -webkit-appearance: none;
   appearance: none;
-  width: 32%;
-  height: 34px;
   display: inline;
 
   margin: 0 6px;
-  font: 18px 'Kabel-ExtraBold';
+  font: 1em 'Kabel-ExtraBold';
   text-transform: uppercase;
   text-decoration: none;
 
@@ -93,7 +91,7 @@ h3 {
   box-shadow: 0px 1px 3px #333;
   border-radius: 3px;
 
-  padding: 0;
+  padding: 5px 20px;
 }
 
 .btn.fb {
@@ -111,7 +109,7 @@ h3 {
 }
 
 .formLabel {
-	font: 20px 'Kabel-Light';
+	font: 20px 'Lato', Helvetica, Arial, sans-serif;
 }
 
 .textForm {
@@ -120,7 +118,7 @@ h3 {
   height: 1.2em;
   padding: 5px;
   margin: 0 auto 0.5em auto;
-  font: 0.9em 'Kabel-Light';
+  font: 0.9em 'Lato', Helvetica, Arial, sans-serif;
 }
 
 #hostError {
@@ -202,7 +200,7 @@ td {
 .gameLobbyRow h2 {
   position: absolute;
   bottom: 0;
-  font: 16px 'Kabel-Light';
+  font: 16px 'Lato', Helvetica, Arial, sans-serif;
   text-align: center;
   width: 50%;
   padding: 0;
@@ -223,15 +221,18 @@ td {
   background-color: #FFF;
   height: 6em;
   display: block;
-  overflow: scroll;
+  overflow-y: scroll;
   padding: 10px;
 }
 
 #chatWindow li {
-  height: 1em;
-  display: block;
-  margin-bottom: 0.2em;
-  font: 1.0em 'Kabel-Light';
+  margin-bottom: 0.25em;
+  font: 1em 'Lato', Helvetica, Arial, sans-serif;
+  overflow-wrap: break-word;
+}
+
+.chatSender {
+  font-weight: 700;
 }
 
 .chatEvent {
@@ -242,7 +243,13 @@ td {
   display: block;
 }
 
-#chatBox,
+#chatBox {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 15px 10px;
+  margin-bottom: 0.25em;
+}
+
 #chatSubmitBtn {
-  display: inline;
+  float: right;
 }
