@@ -232,11 +232,6 @@ var io = require('socket.io').listen(server);
 
 server.listen(process.env.PORT || 11611);
 
-io.configure(function () {
-  io.set("transports", ["xhr-polling"]);
-  io.set("polling duration", 10);
-});
-
 var connections = {};
 var socketToPlayerId = {};
 
@@ -372,6 +367,38 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
+    // If the player was in a game, remove them from it
+    for (var gameID in currentGames) {
+      var game = currentGames[gameID];
+      if (socket.id in game.players) {
+        if (!game.isStarted) {
+          console.log("HERRO");
+          if (game.players[socket.id] === game.host) {
+            // If the host disconnected, delete the entire game
+            for (var socketid in game.players) {
+              if (socketid !== socket.id) {
+                connections[socketid].emit('hostleft', {})
+              }
+            }
+            delete game;
+          }
+          else {
+            // Otherwise, the user leaves
+            delete game.players[socket.id];
+            game.numPlayers--;
+            for (var socketid in game.players) {
+              connections[socketid].emit('playerleft', {
+                gameID: game.id
+              });
+            }
+          }
+        }
+        else {
+          // TODO: handle disconnections while in game elegantly.
+        }
+        break;
+      }
+    }
     delete connections[socket.id];
   });
 });
