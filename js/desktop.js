@@ -178,6 +178,7 @@ function openGameLobbyScreen(prevScreen, gameID) {
       message.append(sender).append(messageText);
     }
     $("#chatWindow").append(message);
+    $('#chatWindow').scrollTop($('#chatWindow')[0].scrollHeight);
     console.log(socketdata);
   });
 }
