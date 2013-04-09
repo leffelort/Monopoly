@@ -262,7 +262,10 @@ io.sockets.on('connection', function (socket) {
       console.log(game.host);
       game.numPlayers++;
       game.players[socket.id] = game.host;
-      socket.emit('hostgame', { success: true });
+      socket.emit('hostgame', { 
+        success: true,
+        gameID: game.id
+      });
     }
   });
 
@@ -298,6 +301,7 @@ io.sockets.on('connection', function (socket) {
             if (socketid !== socket.id) {
               connections[socketid].emit('newplayer', {
                 player: player,
+                gameID: game.id
               });
             }
           }
@@ -328,7 +332,9 @@ io.sockets.on('connection', function (socket) {
         delete game.players[socket.id];
         game.numPlayers--;
         for (var socketid in game.players) {
-          connections[socketid].emit('playerleft', {});
+          connections[socketid].emit('playerleft', {
+            gameID: game.id
+          });
         }
       }
     }

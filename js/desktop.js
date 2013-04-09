@@ -46,11 +46,6 @@ function hostGame() {
             username: window.username,
             fbusername: window.fbusername
           });
-          socket.on('hostgame', function (socketdata) {
-            if (socketdata.success) {
-              openGameLobbyScreen($("#hostGameScreen"), data.id);
-            }
-          });
         }
       }
     });
@@ -77,15 +72,6 @@ function joinGame() {
       username: window.username,
       fbusername: window.fbusername
     });
-    socket.on('joingame', function (socketdata) {
-      console.log(socketdata);
-      if (socketdata.success) {
-        openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
-      }
-      else {
-        alert(socketData.message);
-      }
-    })
   }
 }
 
@@ -154,30 +140,6 @@ function openGameLobbyScreen(prevScreen, gameID) {
   prevScreen.hide();
   $("#gameLobbyScreen").show();
   getGameInfo(gameID);
-	socket.on('newplayer', function (socketdata) {
-		getGameInfo(gameID);
-	});
-  socket.on('playerleft', function (socketdata) {
-    getGameInfo(gameID);
-  });
-  socket.on('hostleft', function (socketdata) {
-    alert("The host has left the game.");
-    currentGame = undefined;
-    openHomeScreen($("#gameLobbyScreen"));
-  });
-  socket.on('chatmessage', function (socketdata) {
-    var message = $("<li>");
-    if (socketdata.type === "event") {
-      message.addClass("chatEvent");
-      message.html(socketdata.message);
-    }
-    else if (socketdata.type === "message") {
-      message.addClass("chatMessage");
-      message.html(socketdata.sender + ": " + socketdata.message);
-    }
-    $("#chatWindow").append(message);
-    console.log(socketdata);
-  });
 }
 
 function getGameInfo(gameID) {
@@ -246,13 +208,9 @@ function startWaiting() {
 	$("#startGameBtn").hide();
 	$("#waitingBtn").show();
 	socket.emit('playerWaiting', {
-      code: gameCode,
-      username: window.username
-    });
-	socket.on('gameReady', function () {
-		console.log("READY.");
-		window.location = "/mobileHome.html";
-	});
+    code: gameCode,
+    username: window.username
+  });
 }
 
 function attachButtonEvents() {
@@ -290,6 +248,57 @@ function attachButtonEvents() {
   });
 }
 
+function attachSocketHandlers() {
+  socket.on('hostgame', function (socketdata) {
+    if (socketdata.success) {
+      openGameLobbyScreen($("#hostGameScreen"), socketdata.gameID);
+    }
+  });
+  
+  socket.on('joingame', function (socketdata) {
+    console.log(socketdata);
+    if (socketdata.success) {
+      openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
+    }
+    else {
+      alert(socketData.message);
+    }
+  });
+  
+	socket.on('newplayer', function (socketdata) {
+		getGameInfo(socketdata.gameID);
+	});
+  
+  socket.on('playerleft', function (socketdata) {
+    getGameInfo(socketdata.gameID);
+  });
+  
+  socket.on('hostleft', function (socketdata) {
+    alert("The host has left the game.");
+    currentGame = undefined;
+    openHomeScreen($("#gameLobbyScreen"));
+  });
+  
+  socket.on('chatmessage', function (socketdata) {
+    var message = $("<li>");
+    if (socketdata.type === "event") {
+      message.addClass("chatEvent");
+      message.html(socketdata.message);
+    }
+    else if (socketdata.type === "message") {
+      message.addClass("chatMessage");
+      message.html(socketdata.sender + ": " + socketdata.message);
+    }
+    $("#chatWindow").append(message);
+    console.log(socketdata);
+  });
+  
+	socket.on('gameReady', function () {
+		console.log("READY.");
+		window.location = "/mobileHome.html";
+	});
+}
+
 function login(afterLogin) {
   FB.login(function(response) {
       if (response.authResponse) {
@@ -310,6 +319,7 @@ var afterLogin = function() {
     window.fbusername = me.username;
     socket.emit('login', me);
   });
+  attachSocketHandlers();
 }
 
 $(document).ready(function () {
