@@ -10,7 +10,7 @@ var phoneCodeGen = require("./phoneCodeGen.js");
 
 app.use(express.bodyParser());
 
-/* borrowed from Evan Shapiro's Case Study, from Class notes. */ 
+/* borrowed from Evan Shapiro's Case Study, from Class notes. */
 /*
 app.all('/', function mobileDesktopRouter(req, res, next){
     if (!strStartsWith(req.url, '/desktop') && !strStartsWith(req.url, '/mobile')){
@@ -84,7 +84,7 @@ app.post("/hostGame", function (req, resp) {
     password, numPlayers);
 
   getPropertiesFromDatabase(function (arr) {
-	currentGames[gameID].availableProperties = arr; 
+	currentGames[gameID].availableProperties = arr;
   });
 
   resp.send({
@@ -156,7 +156,8 @@ app.get("/properties", function(req, resp) {
 
 var mongo = require('mongodb');
 
-var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI 
+var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI ||
+  "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly"
 var dbIsOpen = false;
 var client = undefined;
 
@@ -231,9 +232,9 @@ var io = require('socket.io').listen(server);
 
 server.listen(process.env.PORT || 11611);
 
-io.configure(function () { 
-  io.set("transports", ["xhr-polling"]); 
-  io.set("polling duration", 10); 
+io.configure(function () {
+  io.set("transports", ["xhr-polling"]);
+  io.set("polling duration", 10);
 });
 
 var connections = {};
@@ -350,7 +351,7 @@ io.sockets.on('connection', function (socket) {
 	  }
 	}
   });
-  
+
   socket.on('chatmessage', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
@@ -363,7 +364,7 @@ io.sockets.on('connection', function (socket) {
       }
     }
   });
-  
+
   socket.on('disconnect', function () {
     delete connections[socket.id];
   });
