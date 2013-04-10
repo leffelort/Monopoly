@@ -30,6 +30,32 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', end
 
 }
 
+
+@media only screen and (max-width : 320px) {
+#portraitcover {
+		width: 100%;
+		height: 100%;
+		z-index: 200;
+		position: absolute;
+		top: 0;
+		left: 0;
+		background-color: #ddd;
+	}
+	
+	#portraitcover p {
+		width: 80%;
+		margin: 20% auto;
+		display: block;
+		text-align: center;
+	}
+}
+
+@media only screen and (min-width: 321px) {
+	#portraitcover {
+		display: none;
+	}
+}
+
 #content {
 	position: relative;
 }
