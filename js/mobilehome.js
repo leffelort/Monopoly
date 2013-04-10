@@ -45,7 +45,14 @@ window.fbAsyncInit = function() {
    }(document));
 
 $(document).ready(function() {
+  window.addEventListener('load', function() {
+    new FastClick(document.body);
+  }, false);
   var initialHeight = $("#gameButtons").height();
   $("#content").height($(window).height() + 60);
+
+  $("#inspectbtn").click(function() {
+    window.location = "/inspect.html";
+  });
 });
 

@@ -13,8 +13,21 @@
 	src: url('../fonts/KabobLight Regular.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Kabel-Regular';
+  src: url('../fonts/KabaleMedium-Normal.ttf') format('truetype');
+}
+
 body {
-	background-color: #eee;
+background: rgb(71,178,14); /* Old browsers */
+background: -moz-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%, rgba(40,137,11,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(71,178,14,1)), color-stop(100%,rgba(40,137,11,1))); /* Chrome,Safari4+ */
+background: -webkit-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* Opera 12+ */
+background: -ms-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* IE10+ */
+background: radial-gradient(ellipse at center,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', endColorstr='#28890b',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
 }
 
 #content {
@@ -31,15 +44,17 @@ body {
 	text-align: left;
 	margin: 0 auto;
 	width: 70%;
+	color: white;
 }
 
 #playerinfo .infoList {
 	display: inline-block;
 	vertical-align: top;
 	margin-left: 20px;
-	font: 20px 'Kabel-Light';
+	font: 20px 'Kabel-Regular';
 	list-style: none;
 	text-align: left;
+	letter-spacing: 1.5px;
 }
 
 #playerinfo .infoList li {
