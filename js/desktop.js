@@ -169,8 +169,8 @@ function createGameLobby() {
       row = $("<div>").addClass("gameLobbyRow");
     }
     var userSquare = $("<div>").addClass("userSquare");
-    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbusername + "/picture?width=100&height=100"))
-              .append($("<h2>").html("Player " + index + ": " + player.username));
+    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbusername + "/picture?width=75&height=75"))
+              .append($("<h2>").html("Player " + index + ": " + player.username.split(" ")[0]));
     row.append(userSquare);
     if (index % 2 === 1)
       $("#gameLobby").append(row);
