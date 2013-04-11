@@ -414,6 +414,11 @@ io.sockets.on('connection', function (socket) {
         });
       }
     });
+	
+  socket.on('getme', function () {
+	var me = socketToPlayerId[socket.id];
+	socket.emit('getme', me);
+  });
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
