@@ -5,10 +5,36 @@ function loadFBData() {
   var name = fbobj.name;
   var picurl = "https://graph.facebook.com/" + fbobj.username + "/picture?width=70&height=70"
   var info = $("<div>").addClass("infoList");
-  info.append($("<li>").addClass("infoitem").html("Player 1: " + name));
-  info.append($("<li>").addClass("infoitem").html("$1500"));
-  infodiv.append($("<img>").attr("src", picurl))
+  info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player 1:</span> " + name));
+  var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$1500");
+  info.append(moneydisp);
+
+  var getoutcards = $("<div>").attr("id", "getoutcards");
+  var getoutchance = $("<div>").attr({
+    "class" : "getout",
+    "id" : "getoutchance"
+  });
+  var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
+  getoutchance.html(getouttext);
+  var getoutcommunity = $("<div>").attr({
+    "class" : "getout",
+    "id" : "getoutcommunity"
+  });
+  getoutcommunity.html(getouttext);
+  getoutcards.append(getoutchance);
+
+  moneydisp.append(getoutchance);
+  
+  // add the profile picture and offset it to line it up with the roll button.
+  // The + 2 is for the image border.
+  var profilepic = $("<img>").attr("src", picurl).css("left", $("#rollbtn").offset().left + 2);
+  infodiv.append(profilepic)
          .append(info);
+  infodiv.append(getoutcards);
+  getoutcards.css("right", $(window).width() - $("#tradebtn").offset().left - $("#tradebtn").width() - 2);
+
+  info.css("left", profilepic.offset().left + profilepic.width() + 20);
+  window.scrollTo(0, 1);
 }  
 
 window.fbAsyncInit = function() {

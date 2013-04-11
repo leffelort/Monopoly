@@ -19,14 +19,14 @@
 }
 
 body {
-background: rgb(71,178,14); /* Old browsers */
-background: -moz-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%, rgba(40,137,11,1) 100%); /* FF3.6+ */
-background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(71,178,14,1)), color-stop(100%,rgba(40,137,11,1))); /* Chrome,Safari4+ */
-background: -webkit-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* Chrome10+,Safari5.1+ */
-background: -o-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* Opera 12+ */
-background: -ms-radial-gradient(center, ellipse cover,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* IE10+ */
-background: radial-gradient(ellipse at center,  rgba(71,178,14,1) 0%,rgba(40,137,11,1) 100%); /* W3C */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', endColorstr='#28890b',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+background: rgb(0,124,49); /* Old browsers */
+background: -moz-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%, rgba(0,96,33,1) 100%); /* FF3.6+ */
+background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,124,49,1)), color-stop(100%,rgba(0,96,33,1))); /* Chrome,Safari4+ */
+background: -webkit-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Chrome10+,Safari5.1+ */
+background: -o-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Opera 12+ */
+background: -ms-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* IE10+ */
+background: radial-gradient(ellipse at center,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* W3C */
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#007c31', endColorstr='#006021',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 
 }
 
@@ -62,38 +62,48 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', end
 
 #playerwrapper {
 	position: absolute;
-	top: 5%;
+	top: 10%;
 	left: 0;
 	width: 100%;
 }
+
 #playerinfo {
 	text-align: left;
 	margin: 0 auto;
-	width: 70%;
 	color: white;
 }
 
 #playerinfo .infoList {
 	display: inline-block;
-	vertical-align: top;
-	margin-left: 20px;
-	font: 20px 'Kabel-Regular';
+	font: 24px 'Lato';
 	list-style: none;
 	text-align: left;
-	letter-spacing: 1.5px;
+	position: absolute;
+	top: -4px;
+	font-weight: 400;
 }
 
 #playerinfo .infoList li {
-	margin-bottom: 2%;
+	margin-bottom: 1%;
+}
+
+.moneydisp {
+	font: 20px 'Lato';
+}
+
+.playerdisp {
+	font-weight: 700;
 }
 
 
 #playerinfo img {
 	display: inline-block;
-	border: 1px solid #333;
+	border: 2px solid white;
 	-moz-box-shadow: 0 1px 3px 0 #333;
 	-webkit-box-shadow: 0 1px 3px 0 #333;
 	box-shadow: 0 1px 3px 0 #333;
+	border-radius: 1px;
+	position: absolute;
 }
 
 #gameButtons {
@@ -120,7 +130,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', end
 	display: block;
 	width: 100%;
 	position: absolute;
-	bottom: 5%;
+	bottom: 12%;
 }
 
 .gamebtn {
@@ -141,37 +151,39 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#47b20e', end
 }
 
 #getoutcards {
-	width: 100%;
 	position: absolute;
-	top: 40%;
-	text-align: center;
+	top: 1px;
+	display: none;
 }
 
 .getout {
-	width: 68px;
-	height: 35px;
-	display: inline-block;
-	margin: 5px 20px;
+	width: 40px;
+	height: 20px;
+	display: block;
 	border: 1px solid #333;
 	opacity: 0.45;
 	position: relative;
 	-moz-box-shadow: 0 1px 3px 0 #333;
 	-webkit-box-shadow: 0 1px 3px 0 #333;
 	box-shadow: 0 1px 3px 0 #333;
+	margin-bottom: 12px;
+	margin-top: 5px;
 }
 
 .getout p {
-	font: 10px 'Kabel-Light';
+	font: 6px 'Kabel-Regular';
 	position: absolute;
+	letter-spacing: 1px;
+	text-align: center;
 }
 
 .getout p:first-child {
-	top: 20%;
+	top: 15%;
 	width: 100%;
 	display: block;
 }
 .getout p:last-child {
-	bottom: 20%;
+	bottom: 15%;
 	width: 100%;
 	display: block;
 }
