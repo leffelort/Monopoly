@@ -5,6 +5,7 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.name = name;
   this.password = password;
   this.maxPlayers = maxPlayers;
+  this.numBoards = 0;
   this.numPlayers = 0;
   this.playersWaiting = 0;
   this.isStarted = false;
@@ -16,6 +17,8 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.availableProperties;
 }
 
+
+
 var Player = function(username, fbusername) {
   this.fbusername = fbusername
   this.username = username;
@@ -26,6 +29,14 @@ var Player = function(username, fbusername) {
 var Property = function() {
   this.numberOfHouses = 0;
   this.hotel = false;
+}
+
+var Board = function() {
+	this.boardNumber;
+}
+
+module.exports.newBoard = function() {
+	return new Board();
 }
 
 module.exports.newGame = function(id, code, name, password, maxPlayers) {

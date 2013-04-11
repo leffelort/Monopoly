@@ -292,15 +292,14 @@ io.sockets.on('connection', function (socket) {
             success: true,
             gameID: game.id
           });
-          for (var socketid in game.players) {
-            console.log(game.players[socketid]);
-            if (socketid !== socket.id) {
-              connections[socketid].emit('newplayer', {
+		  sendToOthers(gameID, 'newplayer', {
                 player: player,
                 gameID: game.id
-              });
-            }
-          }
+              }, socket.id);
+		  sendToBoards(gameID, 'newplayer', {
+				player: player,
+				gameID: game.id
+			  });
         }
       }
     }
@@ -312,28 +311,85 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  
+  socket.on('boardjoin', function (data) {
+	connections[socket.id] = socket;
+    var gameFound = false;
+    for (var gameID in currentGames) {
+      var game = currentGames[gameID];
+      if (game.code === data.code) {
+        gameFound = true;
+        // Error checking
+      /*  if (game.isStarted) {
+          socket.emit('joingame', {
+            success: false,
+            message: "This game is already in progress."
+          });
+        } 
+        else if (game.numPlayers === game.maxPlayers) {
+          socket.emit('joingame', {
+            success: false,
+            message: "This game is full."
+          });
+        } */
+        //else {
+          var board = monopoly.newBoard();
+          game.numBoards++;
+          game.boards[socket.id] = board;
+          socket.emit('boardjoin', {
+            success: true,
+            gameID: game.id
+          });
+		  sendToPlayers(game.id, 'boardjoin', {
+			gameID: game.id,
+			number: game.numBoards});
+       /*   
+		for (var socketid in game.players) {
+            console.log(game.players[socketid]);
+            if (socketid !== socket.id) {
+              connections[socketid].emit('boardjoin', {
+                board: game.numBoards,
+                gameID: game.id
+              });
+            }
+          }
+		  */
+		  if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)){
+			startGame(game.id);
+		  }
+        //}
+      }
+    }
+    if (!gameFound) {
+      socket.emit('boardjoin', {
+        success: false,
+        message: "Game does not exist."
+      });
+    }
+  });
+  
+  
+  
   socket.on('leavegame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
       if (game.players[socket.id] === game.host) {
         // If host leaves, the entire game is deleted
-        for (var socketid in game.players) {
-          if (socketid !== socket.id) {
-            connections[socketid].emit('hostleft', {})
-          }
-        }
+		sendToOthers(data.gameID, 'hostleft', {}, socket.id);
+		sendToBoards(data.gameID, 'hostleft', {});
         delete currentGames[data.gameID];
       }
       else {
         delete game.players[socket.id];
         game.numPlayers--;
-        for (var socketid in game.players) {
-          connections[socketid].emit('playerleft', {
+        sendToPlayers(data.gameID, 'playerleft',  {
             gameID: game.id
           });
+		sendToBoards(data.gameID, 'playerleft', {
+			gameID: game.id
+		  });
         }
       }
-    }
   });
 
   socket.on('playerWaiting', function (data) {
@@ -345,7 +401,7 @@ io.sockets.on('connection', function (socket) {
 		game.playersWaiting++;
 		//console.log("Playerswaiting: " + game.playersWaiting);
 		//console.log("numPlayres: " + game.numPlayers);
-		if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted)) {
+		if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
 			//set playersWaiting = 0??
 			startGame(gameID);
 		}
@@ -356,15 +412,13 @@ io.sockets.on('connection', function (socket) {
   socket.on('chatmessage', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
-      for (var socketid in game.players) {
-        connections[socketid].emit('chatmessage', {
+	  sendToPlayers(data.gameID, 'chatmessage', {
           type: data.type,
           sender: data.sender,
           message: data.message
         });
       }
-    }
-  });
+    });
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
@@ -375,22 +429,16 @@ io.sockets.on('connection', function (socket) {
           console.log("HERRO");
           if (game.players[socket.id] === game.host) {
             // If the host disconnected, delete the entire game
-            for (var socketid in game.players) {
-              if (socketid !== socket.id) {
-                connections[socketid].emit('hostleft', {})
-              }
-            }
-            delete game;
+            sendToOthers(gameID, 'hostleft', {}, socket.id);
+            sendToBoards(gameID, 'hostleft', {});
+			delete game;
           }
           else {
             // Otherwise, the user leaves
             delete game.players[socket.id];
             game.numPlayers--;
-            for (var socketid in game.players) {
-              connections[socketid].emit('playerleft', {
-                gameID: game.id
-              });
-            }
+              sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+			  sendToBoards(gameID, 'playerleft', {gameID: game.id});
           }
         }
         else {
@@ -406,10 +454,40 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 function startGame(gameID) {
+	sendToPlayers(gameID, 'gameReady', {});
+	sendToBoards(gameID, 'gameReady', {});
 	var game = currentGames[gameID];
-	//console.log("STARTING: " + gameID);
-	for (var socketid in game.players) {
-		connections[socketid].emit('gameReady', {});
+	if (game !== undefined) {
+		game.isStarted = true;
 	}
-	game.isStarted = true;
+}
+
+
+function sendToPlayers(gameID, emitString, emitArgs) {
+      var game = currentGames[gameID];
+      if (game != undefined) {
+		for (var socketid in game.players) {
+			connections[socketid].emit(emitString, emitArgs);
+		}
+	  }
+}	
+
+function sendToBoards(gameID, emitString, emitArgs) {
+	 var game = currentGames[gameID];
+      if (game != undefined) {
+		for (var socketid in game.boards) {
+			connections[socketid].emit(emitString, emitArgs);
+		}
+	  }
+}
+
+function sendToOthers(gameID, emitString, emitArgs, senderID) {
+	var game = currentGames[gameID];
+    if (game != undefined) {
+		for (var socketid in game.players) {
+			if (socketid !== senderID) {
+				connections[socketid].emit(emitString, emitArgs);
+			}
+		}
+	}
 }
