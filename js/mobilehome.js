@@ -74,6 +74,8 @@ $(document).ready(function() {
   window.addEventListener('load', function() {
     new FastClick(document.body);
   }, false);
+
+  // hacky way to resize the view properly.
   var initialHeight = $("#gameButtons").height();
   $("#content").height($(window).height() + 60);
 

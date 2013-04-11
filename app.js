@@ -240,10 +240,10 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('reopen', function (data) {
     userMaintain(data);
-  }
+  });
 
   socket.on('login', function (data) {
-	userMaintain(data);
+	 userMaintain(data);
   });
 
   socket.on('hostgame', function (data) {
