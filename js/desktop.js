@@ -341,5 +341,4 @@ $(document).ready(function () {
     });
   });
   attachButtonEvents();
-  $("#waitingBtn").show();
 });
