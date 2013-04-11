@@ -240,10 +240,10 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('reopen', function (data) {
     userMaintain(data);
-  }
+  });
 
   socket.on('login', function (data) {
-	userMaintain(data);
+	 userMaintain(data);
   });
 
   socket.on('hostgame', function (data) {
@@ -414,6 +414,16 @@ io.sockets.on('connection', function (socket) {
         });
       }
     });
+	
+  socket.on('getme', function () {
+	//@TODO:: FIX THIS -pmarino
+	var me = socketToPlayerId[socket.id];
+	socket.emit('getme', me);
+  });
+  
+  //socket.on('diceroll' function(data) {
+//	handleRoll(data.result, socketToPlayerId[socket.id]);
+ // }
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it

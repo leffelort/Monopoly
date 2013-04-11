@@ -1,0 +1,9 @@
+#dice {
+	width: 260px;
+}
+
+.die {
+	width: 80px;
+	height: 80px;
+	font: 40px 'Arial';
+}
