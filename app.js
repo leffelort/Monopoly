@@ -237,18 +237,13 @@ var socketToPlayerId = {};
 
 io.sockets.on('connection', function (socket) {
   connections[socket.id] = socket;
+  
+  socket.on('reopen', function (data) {
+    userMaintain(data);
+  }
 
   socket.on('login', function (data) {
-  	var user = {};
-  	user.first_name = data.first_name;
-  	user.last_name = data.last_name;
-  	user.id = data.id;
-  	user.gender = data.gender;
-  	user.socketid = socket.id;
-  	user.invites = [];
-  	user.gameInProgress = undefined;
-  	saveObjectToDB('users', user);
-  	socketToPlayerId[socket.id] = user.id;
+	userMaintain(data);
   });
 
   socket.on('hostgame', function (data) {
@@ -453,13 +448,27 @@ io.sockets.on('connection', function (socket) {
 
 
 // MORE FUNCTIONS
+
+function userMaintain(data) {
+  	var user = {};
+  	user.first_name = data.first_name;
+  	user.last_name = data.last_name;
+  	user.id = data.id;
+  	user.gender = data.gender;
+  	user.socketid = socket.id;
+  	user.invites = [];
+  	user.gameInProgress = undefined;
+  	saveObjectToDB('users', user);
+  	socketToPlayerId[socket.id] = user.id;
+}
+
 function startGame(gameID) {
-	sendToPlayers(gameID, 'gameReady', {});
-	sendToBoards(gameID, 'gameReady', {});
-	var game = currentGames[gameID];
 	if (game !== undefined) {
 		game.isStarted = true;
 	}
+	sendToPlayers(gameID, 'gameReady', {});
+	sendToBoards(gameID, 'gameReady', {});
+	var game = currentGames[gameID];
 }
 
 
