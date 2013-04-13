@@ -234,6 +234,17 @@ function saveGame(game) {
   });
 }
 
+function deleteGame(game) {
+  client.collection("games", function(error, games) {
+    if (error) throw error;
+    games.remove({id: game.id}, function(error) {
+      if (error) throw error;
+      delete game;
+      console.log("successfully removed game from the database");
+    });
+  });
+}
+
 function closeDb() {
   dbIsOpen = false;
   client.close();
@@ -393,7 +404,7 @@ io.sockets.on('connection', function (socket) {
         // If host leaves, the entire game is deleted
         sendToOthers(data.gameID, 'hostleft', {}, socket.id);
         sendToBoards(data.gameID, 'hostleft', {});
-        delete currentGames[data.gameID];
+        deleteGame(currentGames[data.gameID])
       }
       else {
         delete game.players[socket.id];
@@ -404,8 +415,8 @@ io.sockets.on('connection', function (socket) {
         sendToBoards(data.gameID, 'playerleft', {
           gameID: game.id
         });
+        saveGame(game);
       }
-      saveGame(game);
     }
   });
 
@@ -454,14 +465,16 @@ io.sockets.on('connection', function (socket) {
     // If the player was in a game, remove them from it
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
+      console.log("Players", game.players);
       if (socket.id in game.players) {
         if (!game.isStarted) {
           console.log("HERRO");
           if (game.players[socket.id] === game.host) {
+            console.log("going to delete because host left");
             // If the host disconnected, delete the entire game
             sendToOthers(gameID, 'hostleft', {}, socket.id);
             sendToBoards(gameID, 'hostleft', {});
-            delete game;
+            deleteGame(game);
           }
           else {
             // Otherwise, the user leaves
