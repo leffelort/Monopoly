@@ -51,12 +51,12 @@ function strEndsWith(str, suffix) {
 /* end of borrowed code */
 
 app.get('/desktop/', function(req, res, next){
-    mongoExpressAuth.checkLogin(req, res, function(err){
-        if (err)
-            res.sendfile('static/login.html');
-        else
-            next();
-    });
+  mongoExpressAuth.checkLogin(req, res, function(err){
+    if (err)
+      res.sendfile('static/login.html');
+    else
+      next();
+  });
 });
 
 
@@ -83,9 +83,9 @@ app.post("/hostGame", function (req, resp) {
   currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName,
     password, numPlayers);
 
-  getPropertiesFromDatabase(function (arr) {
-	currentGames[gameID].availableProperties = arr;
-  });
+    getPropertiesFromDatabase(function (arr) {
+      currentGames[gameID].availableProperties = arr;
+    });
 
   resp.send({
     success: true,
@@ -139,14 +139,14 @@ app.get("/game/:id", function (req, resp) {
 });
 
 app.get("/properties", function(req, resp) {
-	var userid = req.body.userid;
-	var gameid = req.body.gameid;
-	getPropertiesFromDatabase(function(obj){
-		resp.send({
-			props : obj,
-			success:true
-		});
-	});
+  var userid = req.body.userid;
+  var gameid = req.body.gameid;
+  getPropertiesFromDatabase(function(obj){
+    resp.send({
+      props : obj,
+      success:true
+    });
+  });
 });
 
 // ========================
@@ -161,62 +161,82 @@ var dbIsOpen = false;
 var client = undefined;
 
 mongo.Db.connect(mongoUri, function(err, db) {
-	if (err)
-		throw err;
-	console.log("successfully connected to the database.")
-	client = db;
-	dbIsOpen = true;
+  if (err)
+    throw err;
+  console.log("successfully connected to the database.")
+  client = db;
+  dbIsOpen = true;
 });
 
 function getPropertiesFromDatabase(onOpen) {
 
-	client.collection('properties', onPropertyCollectionReady);
+  client.collection('properties', onPropertyCollectionReady);
 
-	function logger(error, result) {
-		if (error)
-			throw error;
-		console.log(result);
-	}
+  function logger(error, result) {
+    if (error)
+      throw error;
+    console.log(result);
+  }
 
-	function onPropertyCollectionReady(error, propertyCollection) {
-		if (error)
-			throw error;
-		var props = propertyCollection.find({}).toArray(function(err, array) {
-			onOpen(array);
-		});
-	}
+  function onPropertyCollectionReady(error, propertyCollection) {
+    if (error)
+      throw error;
+    var props = propertyCollection.find({}).toArray(function(err, array) {
+      onOpen(array);
+    });
+  }
 }
 
 function saveObjectToDB(collection, obj) {
-	console.log("saving object ", obj);
-	client.collection(collection, function(error, collec) {
-		if (error)
-			throw error;
-		collec.find({id : obj.id}).toArray(function(e, r) {
-			if (e)
-				throw e;
-			if (r.length === 0) {
-				collec.insert(obj, function(err, res) {
-					if (err)
-						throw err;
-					console.log(res);
-				});
-			} else if (obj.socketid !== undefined) {
-				console.log("Updating socket id for user");
-				collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
-					if (err)
-						throw err;
-				});
-			} else {
-				console.log("object already exists in database");
-			}
-		});
-	});
+  console.log("saving object ", obj);
+  client.collection(collection, function(error, collec) {
+    if (error)
+      throw error;
+    collec.find({id : obj.id}).toArray(function(e, r) {
+      if (e)
+        throw e;
+      if (r.length === 0) {
+        collec.insert(obj, function(err, res) {
+          if (err)
+            throw err;
+          console.log(res);
+        });
+      } else if (obj.socketid !== undefined) {
+        console.log("Updating socket id for user");
+        collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
+          if (err)
+            throw err;
+        });
+      } else {
+        console.log("object already exists in database");
+      }
+    });
+  });
+}
+
+function saveGame(game) {
+  console.log("saving game");
+  client.collection("games", function(error, games) {
+    if (error) throw error;
+    games.find({id: game.id}).toArray(function(error, arr) {
+      if (error) throw error;
+      if (arr.length === 0) {
+        games.insert(game, function(error, result) {
+          if (error) throw error;
+          console.log(result);
+        });
+      } else {
+        games.update({id: game.id}, game, function(error) {
+          if (error) throw error;
+        });
+      }
+    });
+  });
 }
 
 function closeDb() {
-	dbIsOpen = false;
-	client.close();
+  dbIsOpen = false;
+  client.close();
 }
 
 
@@ -241,7 +261,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('login', function (data) {
-	 userMaintain(socket, data);
+   userMaintain(socket, data);
   });
 
   socket.on('hostgame', function (data) {
@@ -255,6 +275,7 @@ io.sockets.on('connection', function (socket) {
         success: true,
         gameID: game.id
       });
+      saveGame(game);
     }
   });
 
@@ -285,15 +306,16 @@ io.sockets.on('connection', function (socket) {
             success: true,
             gameID: game.id
           });
-		  sendToOthers(gameID, 'newplayer', {
+          sendToOthers(gameID, 'newplayer', {
                 player: player,
                 gameID: game.id
               }, socket.id);
-		  sendToBoards(gameID, 'newplayer', {
-				player: player,
-				gameID: game.id
-			  });
+          sendToBoards(gameID, 'newplayer', {
+                player: player,
+                gameID: game.id
+              });
         }
+        saveGame(game);
       }
     }
     if (!gameFound) {
@@ -306,7 +328,7 @@ io.sockets.on('connection', function (socket) {
 
   
   socket.on('boardjoin', function (data) {
-	connections[socket.id] = socket;
+  connections[socket.id] = socket;
     var gameFound = false;
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
@@ -333,11 +355,12 @@ io.sockets.on('connection', function (socket) {
             success: true,
             gameID: game.id
           });
-		  sendToPlayers(game.id, 'boardjoin', {
-			gameID: game.id,
-			number: game.numBoards});
+          sendToPlayers(game.id, 'boardjoin', {
+            gameID: game.id,
+            number: game.numBoards
+          });
        /*   
-		for (var socketid in game.players) {
+    for (var socketid in game.players) {
             console.log(game.players[socketid]);
             if (socketid !== socket.id) {
               connections[socketid].emit('boardjoin', {
@@ -346,11 +369,11 @@ io.sockets.on('connection', function (socket) {
               });
             }
           }
-		  */
-		  if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)){
-			startGame(game.id);
-		  }
-        //}
+      */
+        if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)){
+          startGame(game.id);
+        }
+        saveGame(game);
       }
     }
     if (!gameFound) {
@@ -358,7 +381,7 @@ io.sockets.on('connection', function (socket) {
         success: false,
         message: "Game does not exist."
       });
-    }
+    } 
   });
   
   
@@ -368,55 +391,57 @@ io.sockets.on('connection', function (socket) {
     if (game !== undefined) {
       if (game.players[socket.id] === game.host) {
         // If host leaves, the entire game is deleted
-		sendToOthers(data.gameID, 'hostleft', {}, socket.id);
-		sendToBoards(data.gameID, 'hostleft', {});
+        sendToOthers(data.gameID, 'hostleft', {}, socket.id);
+        sendToBoards(data.gameID, 'hostleft', {});
         delete currentGames[data.gameID];
       }
       else {
         delete game.players[socket.id];
         game.numPlayers--;
         sendToPlayers(data.gameID, 'playerleft',  {
-            gameID: game.id
-          });
-		sendToBoards(data.gameID, 'playerleft', {
-			gameID: game.id
-		  });
-        }
+          gameID: game.id
+        });
+        sendToBoards(data.gameID, 'playerleft', {
+          gameID: game.id
+        });
       }
+      saveGame(game);
+    }
   });
 
   socket.on('playerWaiting', function (data) {
-	var username = data.username;
-	var code = data.code;
-	for (var gameID in currentGames) {
+    var username = data.username;
+    var code = data.code;
+    for (var gameID in currentGames) {
       var game = currentGames[gameID];
       if (game.code === data.code) {
-		game.playersWaiting++;
-		//console.log("Playerswaiting: " + game.playersWaiting);
-		//console.log("numPlayres: " + game.numPlayers);
-		if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
-			//set playersWaiting = 0??
-			startGame(gameID);
-		}
-	  }
-	}
+        game.playersWaiting++;
+        //console.log("Playerswaiting: " + game.playersWaiting);
+        //console.log("numPlayres: " + game.numPlayers);
+        if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
+          //set playersWaiting = 0??
+          startGame(gameID);
+        }
+        saveGame(game);
+      }
+    }
   });
 
   socket.on('chatmessage', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
-	  sendToPlayers(data.gameID, 'chatmessage', {
-          type: data.type,
-          sender: data.sender,
-          message: data.message
-        });
-      }
-    });
-	
+      sendToPlayers(data.gameID, 'chatmessage', {
+        type: data.type,
+        sender: data.sender,
+        message: data.message
+      });
+    }
+  });
+  
   socket.on('getme', function () {
-	//@TODO:: FIX THIS -pmarino
-	  var me = socketToPlayerId[socket.id];
-	  socket.emit('getme', me);
+  //@TODO:: FIX THIS -pmarino
+    var me = socketToPlayerId[socket.id];
+    socket.emit('getme', me);
   });
   
   socket.on('diceroll', function(data) {
@@ -436,14 +461,15 @@ io.sockets.on('connection', function (socket) {
             // If the host disconnected, delete the entire game
             sendToOthers(gameID, 'hostleft', {}, socket.id);
             sendToBoards(gameID, 'hostleft', {});
-			delete game;
+            delete game;
           }
           else {
             // Otherwise, the user leaves
             delete game.players[socket.id];
             game.numPlayers--;
-              sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-			  sendToBoards(gameID, 'playerleft', {gameID: game.id});
+            sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+            sendToBoards(gameID, 'playerleft', {gameID: game.id});
+            saveGame(game);
           }
         }
         else {
@@ -460,53 +486,53 @@ io.sockets.on('connection', function (socket) {
 // MORE FUNCTIONS
 
 function userMaintain(socket, data) {
-  	var user = {};
-  	user.first_name = data.first_name;
-  	user.last_name = data.last_name;
-  	user.id = data.id;
-  	user.gender = data.gender;
-  	user.socketid = socket.id;
-  	user.invites = [];
-  	user.gameInProgress = undefined;
-  	saveObjectToDB('users', user);
-  	socketToPlayerId[socket.id] = user.id;
+    var user = {};
+    user.first_name = data.first_name;
+    user.last_name = data.last_name;
+    user.id = data.id;
+    user.gender = data.gender;
+    user.socketid = socket.id;
+    user.invites = [];
+    user.gameInProgress = undefined;
+    saveObjectToDB('users', user);
+    socketToPlayerId[socket.id] = user.id;
 }
 
 function startGame(gameID) {
-	if (game !== undefined) {
-		game.isStarted = true;
-	}
-	sendToPlayers(gameID, 'gameReady', {});
-	sendToBoards(gameID, 'gameReady', {});
-	var game = currentGames[gameID];
+  if (game !== undefined) {
+    game.isStarted = true;
+  }
+  sendToPlayers(gameID, 'gameReady', {});
+  sendToBoards(gameID, 'gameReady', {});
+  var game = currentGames[gameID];
 }
 
 
 function sendToPlayers(gameID, emitString, emitArgs) {
-      var game = currentGames[gameID];
-      if (game != undefined) {
-		for (var socketid in game.players) {
-			connections[socketid].emit(emitString, emitArgs);
-		}
-	  }
-}	
+  var game = currentGames[gameID];
+  if (game != undefined) {
+    for (var socketid in game.players) {
+      connections[socketid].emit(emitString, emitArgs);
+    }
+  }
+} 
 
 function sendToBoards(gameID, emitString, emitArgs) {
-	 var game = currentGames[gameID];
-      if (game != undefined) {
-		for (var socketid in game.boards) {
-			connections[socketid].emit(emitString, emitArgs);
-		}
-	  }
+   var game = currentGames[gameID];
+    if (game != undefined) {
+      for (var socketid in game.boards) {
+        connections[socketid].emit(emitString, emitArgs);
+    }
+  }
 }
 
 function sendToOthers(gameID, emitString, emitArgs, senderID) {
-	var game = currentGames[gameID];
+  var game = currentGames[gameID];
     if (game != undefined) {
-		for (var socketid in game.players) {
-			if (socketid !== senderID) {
-				connections[socketid].emit(emitString, emitArgs);
-			}
-		}
-	}
+    for (var socketid in game.players) {
+      if (socketid !== senderID) {
+        connections[socketid].emit(emitString, emitArgs);
+      }
+    }
+  }
 }
