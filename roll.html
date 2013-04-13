@@ -3,17 +3,22 @@
 <head>
 	<title>Roll</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="style/reset.css">
 	<link rel="stylesheet" type="text/css" href="style/roll.css">
 </head>
 <body>
 <div id="dice">
-  <div class="die" id="die1"></div>
-  <div class="die" id="die2"></div>
+  <div class="die" id="die1"><div class="dieval"></div></div>
+  <div class="die" id="die2"><div class="dieval"></div></div>
+</div>
+<div id="rollresult">
+  <div id="rollvalue"></div>
 </div>
 <div class="buttons">
   <input type="button" class="btn" id="rollstartbtn" value="Roll!" />
 </div>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 <script src="js/jquery-1.9.1.min.js"></script>
 <script src="js/roll.js"></script>
 </body>

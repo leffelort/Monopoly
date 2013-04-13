@@ -1,39 +1,47 @@
 var fbobj = undefined;
+var ppd = 70; // ppd = profile pic dimensions
 
+
+// @TODO: Need to update this with actual information about the current state
+// of the player in the game once the database supports it.
 function loadFBData() {
   var infodiv = $("#playerinfo");
   var name = fbobj.name;
-  var picurl = "https://graph.facebook.com/" + fbobj.username + "/picture?width=70&height=70"
+  var picurl = "https://graph.facebook.com/" + fbobj.username + "/picture?width=" + ppd + "&height=" + ppd
   var info = $("<div>").addClass("infoList");
   info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player 1:</span> " + name));
   var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$1500");
   info.append(moneydisp);
 
-  var getoutcards = $("<div>").attr("id", "getoutcards");
-  var getoutchance = $("<div>").attr({
-    "class" : "getout",
-    "id" : "getoutchance"
-  });
-  var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
-  getoutchance.html(getouttext);
-  var getoutcommunity = $("<div>").attr({
-    "class" : "getout",
-    "id" : "getoutcommunity"
-  });
-  getoutcommunity.html(getouttext);
-  getoutcards.append(getoutchance);
 
-  moneydisp.append(getoutchance);
+  // @TODO This is really messy, but it's how I was adding
+  //        new get out of jail free cards.
+  // 
+  // var getoutcards = $("<div>").attr("id", "getoutcards");
+  // var getoutchance = $("<div>").attr({
+  //   "class" : "getout",
+  //   "id" : "getoutchance"
+  // });
+  // var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
+  // getoutchance.html(getouttext);
+  // var getoutcommunity = $("<div>").attr({
+  //   "class" : "getout",
+  //   "id" : "getoutcommunity"
+  // });
+  // getoutcommunity.html(getouttext);
+  // getoutcards.append(getoutchance);
+
+  // moneydisp.append(getoutchance);
   
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
   var profilepic = $("<img>").attr("src", picurl).css("left", $("#rollbtn").offset().left + 2);
   infodiv.append(profilepic)
          .append(info);
-  infodiv.append(getoutcards);
-  getoutcards.css("right", $(window).width() - $("#tradebtn").offset().left - $("#tradebtn").width() - 2);
+  //infodiv.append(getoutcards);
+  //getoutcards.css("right", $(window).width() - $("#tradebtn").offset().left - $("#tradebtn").width() - 2);
 
-  info.css("left", profilepic.offset().left + profilepic.width() + 20);
+  info.css("left", $("#rollbtn").offset().left + 2 + ppd + 20);
   window.scrollTo(0, 1);
 }  
 
@@ -52,6 +60,8 @@ window.fbAsyncInit = function() {
       FB.api('/me', function(response){
         window.fbobj = response;
         loadFBData();
+        socket = io.connect(window.location.hostname);
+        socket.emit('reopen', response); // tell the server who we are.
       });
     } else {
       // not_authorized
@@ -82,5 +92,9 @@ $(document).ready(function() {
   $("#inspectbtn").click(function() {
     window.location = "/inspect.html";
   });
+
+  $("#rollbtn").click(function() {
+    window.location.replace("/roll.html");
+  })
 });
 

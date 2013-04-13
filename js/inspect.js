@@ -1,4 +1,39 @@
 var propertyDatabase = undefined;
+var setupPage;
+
+window.fbAsyncInit = function() {
+  FB.init({
+    appId      : '448108371933308', // App ID
+    channelUrl : '//localhost:11611/channel.html', // Channel File
+    status     : true, // check login status
+    cookie     : true, // enable cookies to allow the server to access the session
+    xfbml      : true  // parse XFBML
+  });
+
+  FB.getLoginStatus(function(response) {
+    if (response.status === 'connected') {
+      // connected
+      FB.api('/me', function(response){
+        socket = io.connect(window.location.hostname);
+        socket.emit('reopen', response); // tell the server who we are.
+        setupPage();
+      });
+    } else {
+      // not_authorized
+      alert("You are not logged in");
+      window.location.replace("desktop.html");
+    }
+  });
+};
+
+// Load the FB SDK Asynchronously
+(function(d){
+   var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+   if (d.getElementById(id)) {return;}
+   js = d.createElement('script'); js.id = id; js.async = true;
+   js.src = "//connect.facebook.net/en_US/all.js";
+   ref.parentNode.insertBefore(js, ref);
+ }(document));
 
 function getProperties() {
 	$.ajax({
@@ -62,6 +97,8 @@ function loadDetailedView(property) {
 	detailedView.show();
 }
 
+
+// @TODO: Make sure the properties display current data
 function displayProperties(properties) {
 	var propDiv = $("#propList");
 	propertyDatabase = properties;
@@ -97,7 +134,7 @@ function displayProperties(properties) {
 	$("#propList").css("height", document.documentElement.clientHeight + 60);
 }
 
-$(document).ready(function() {
+var setupPage = function() {
 	window.addEventListener('load', function() {
     	new FastClick(document.body);
 	}, false);
@@ -105,7 +142,8 @@ $(document).ready(function() {
 		"height" : document.documentElement.clientHeight + 60,
 		"width" : document.documentElement.clientWidth - $("#propList").width()
 	});
+	window.scrollTo(0, 1);
 	// get property data from the database.
 	getProperties();
 
-});
+}

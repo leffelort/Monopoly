@@ -21,12 +21,19 @@ body {
 .die {
 	width: 80px;
 	height: 80px;
-	font: 40px 'Arial';
+	font: 40px 'Lato' 'Helvetica Neue' Helvetica Arial sans-serif;
 	background-color: white;
 	border-radius: 10px;
 	border: 1px solid black;
 	display: inline-block;
 	margin: 10%;
+	position: relative;
+}
+
+.dieval {
+	position: absolute;
+	top: 20%;
+	width: 100%;
 }
 
 .btn {
@@ -38,7 +45,7 @@ body {
 
 	font: 24px 'Lato' 'Helvetica Neue' Helvetica Arial sans-serif;
 
-	background-color: #eee;
+	background-color: #f0f0f0;
 	color: #333;
 	text-shadow: -1px 1px 1px black;
 	box-shadow: 0px 1px 3px #333;
@@ -50,5 +57,17 @@ body {
 	bottom: 15%;
 	width: 100%;
 	text-align: center;
+}
+
+#rollresult {
+	position: absolute;
+	bottom: 36%;
+	width: 100%;
+	text-align: center;
+}
+
+#rollvalue {
+	font: 24px 'Lato' 'Helvetica Neue' Helvetica Arial sans-serif;
+	color: #f0f0f0;
 }
 

@@ -142,7 +142,6 @@ app.get("/properties", function(req, resp) {
 	var userid = req.body.userid;
 	var gameid = req.body.gameid;
 	getPropertiesFromDatabase(function(obj){
-		console.log(obj);
 		resp.send({
 			props : obj,
 			success:true
@@ -227,7 +226,6 @@ function closeDb() {
 
 var http = require('http');
 var server = http.createServer(app);
-console.log(server);
 var io = require('socket.io').listen(server);
 
 server.listen(process.env.PORT || 11611);
@@ -239,11 +237,11 @@ io.sockets.on('connection', function (socket) {
   connections[socket.id] = socket;
   
   socket.on('reopen', function (data) {
-    userMaintain(data);
+    userMaintain(socket, data);
   });
 
   socket.on('login', function (data) {
-	 userMaintain(data);
+	 userMaintain(socket, data);
   });
 
   socket.on('hostgame', function (data) {
@@ -417,13 +415,15 @@ io.sockets.on('connection', function (socket) {
 	
   socket.on('getme', function () {
 	//@TODO:: FIX THIS -pmarino
-	var me = socketToPlayerId[socket.id];
-	socket.emit('getme', me);
+	  var me = socketToPlayerId[socket.id];
+	  socket.emit('getme', me);
   });
   
-  //socket.on('diceroll' function(data) {
-//	handleRoll(data.result, socketToPlayerId[socket.id]);
- // }
+  socket.on('diceroll', function(data) {
+    //handleRoll(data.result, socketToPlayerId[socket.id]);
+    console.log("We got a roll of " + data.result + " from socket " + socket.id);
+    socket.emit('diceroll', {success: (data.result !== undefined)});
+  });
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
@@ -459,7 +459,7 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
-function userMaintain(data) {
+function userMaintain(socket, data) {
   	var user = {};
   	user.first_name = data.first_name;
   	user.last_name = data.last_name;
