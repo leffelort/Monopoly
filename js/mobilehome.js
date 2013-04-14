@@ -7,7 +7,7 @@ var me = undefined; // variable to store player information
 // of the player in the game once the database supports it.
 function loadFBData() {
   var infodiv = $("#playerinfo");
-  var name = me.full_name;
+  var name = me.username;
   var picurl = "https://graph.facebook.com/" + me.fbusername + "/picture?width=" + ppd + "&height=" + ppd
   var info = $("<div>").addClass("infoList");
   info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player " + me.playerNumber + ":</span> " + name));

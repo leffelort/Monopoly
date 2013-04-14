@@ -173,11 +173,11 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
-    u.drop();
+    //u.drop();
    });
    client.collection("games", function (e,g) {
     if (e) throw e;
-    g.drop();
+    //g.drop();
    });
 });
 
@@ -186,11 +186,6 @@ function queryUser(sockid, callback) {
   console.log("query for username with socketid ", sockid);
   client.collection("users", function(error, users) {
     if (error) throw error; 
-   // users.find({}).toArray(function(err,arr) {
-   //  if (err) throw err;
-    //  console.log(arr);
-    //}); //oddly, commenting out this step causes the code to crash. woo.
-    //console.log('intermed.');
     users.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
       console.log("queryUsername", arr);
@@ -207,13 +202,7 @@ function queryUser(sockid, callback) {
 function queryGame(sockid, callback) {
   queryUser(sockid, function(user) {
     client.collection("games", function(error, games) {
-      //console.log("UN: " + user.fbusername);
       games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
-      //games.find( { "players" : {"$elemMatch" : { "username" : {"$eq" : un } } } } ).toArray(function(err, arr){
-      //games.find({ players : sockid}).toArray(function(err, arr){
-      //games.find( { players : { $elemMatch : { sockid.username : un } } } ).toArray(function(err, arr){
-      //findobj["players." + sockid] = {"username" : un};
-      //games.find( findobj ).toArray(function(err, arr) {
         if (err) throw err;
         console.log("queryGame", arr);
         if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
@@ -222,16 +211,30 @@ function queryGame(sockid, callback) {
     });
   });
 }
-//DON'T USE THIS. READ ONLY, ONLY USED IN THE SOCKET.ON("GETME") HANDLER.
+//DON'T USE THIS. READ ONLY, ONLY USED IN THE SOCKET.ON("GETME") HANDLER. - pmarino
+// this is a copy and paste of queryGame because... I didn't know how else
+// to do it for some reason? Calling queryGame wasn't working for whatever
+// reason but that might just be me being dumb. - thedrick
 function queryPlayer(sockid, callback) {
-  queryGame(sockid, function(game) {
-      callback(game.players[sockid]);
-      //var finalPlayer = undefined;
-      //for (playerid in game.players) {
-       // if (username === game.players[playerid].fbusername) {
-        //  finalPlayer = game.players[playerid];
-        //}
-      //return finalPlayer;
+  var p;
+  queryUser(sockid, function(user) {
+    client.collection("games", function(error, games) {
+      games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
+        if (err) throw err;
+        console.log("queryGame", arr);
+        if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
+        for (var i = 0; i < arr.length; i++) { // no idea why i did a for loop cause it shouldn't actually have more than 1.
+          var game = arr[i];
+          for (var pid in game.players) {
+            var player = game.players[pid];
+            console.log("looking for player with pid " + user.fbusername + " currently looking at ", player);
+            if (player.fbusername === user.fbusername)
+              p = player;
+          }
+        }
+        callback(p);
+      });
+    });
   });
 }
  
@@ -284,6 +287,17 @@ function saveObjectToDB(collection, obj, cback) {
         console.log("object already exists in database");
       }
       cback();
+    });
+  });
+}
+
+function updateCurrentGame(playerid, gameid) {
+  console.log("updating player + " + playerid + " with game id " + gameid);
+  client.collection("users", function(error, users) {
+    if (error) throw error;
+    users.update({fbusername: playerid}, {$set : {gameInProgress: gameid} } , function(error) {
+      if (error) throw error;
+      console.log("successfully updated gameinprogress");
     });
   });
 }
@@ -366,6 +380,7 @@ io.sockets.on('connection', function (socket) {
       game.host.playerNumber = game.numPlayers;
       game.host.gameInProgress = game.id;
       game.players[socket.id] = game.host;
+      updateCurrentGame(data.fbusername, game.id);
       socket.emit('hostgame', { 
         success: true,
         gameID: game.id
@@ -399,6 +414,7 @@ io.sockets.on('connection', function (socket) {
           player.playerNumber = game.numPlayers;
           player.gameInProgress = game.id;
           game.players[socket.id] = player;
+          updateCurrentGame(data.fbusername, game.id);
           socket.emit('joingame', {
             success: true,
             gameID: game.id
@@ -537,8 +553,7 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('getme', function () {
   console.log("FUCK YOU.");
-    queryPlayer(socket.id, function(err,res){
-      if (err) throw err;
+    queryPlayer(socket.id, function(res){
       socket.emit('getme', res);
     });
   });
