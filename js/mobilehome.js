@@ -69,6 +69,11 @@ window.fbAsyncInit = function() {
         window.fbobj = response;
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
+        socket.on('reopen', function(resp) {
+          if (resp.success) {
+            socket.emit('getme' {});
+          }
+        })
         socket.on('getme', function(resp) {
           if (resp === undefined) {
             alert("You are not a part of this game.");
@@ -78,9 +83,6 @@ window.fbAsyncInit = function() {
           window.me = resp;
           loadFBData();
         });
-        setTimeout(function() {
-          socket.emit('getme', {});
-        }, 500);
       });
     } else {
       // not_authorized
