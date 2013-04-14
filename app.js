@@ -74,6 +74,8 @@ app.get("/:staticFilename", function (request, response) {
 // Map of game id's to Game objects
 var currentGames = {};
 
+// called from the client when someone clicks the "host game" button
+// on the main screen.
 app.post("/hostGame", function (req, resp) {
   var gameName = req.body.gameName;
   var password = req.body.password;
@@ -93,6 +95,8 @@ app.post("/hostGame", function (req, resp) {
   });
 });
 
+// return the list of games to populate the list
+// are we still using this?
 app.get("/gameList", function (req, resp) {
   var gameList = [];
   for (var gameID in currentGames) {
@@ -138,6 +142,7 @@ app.get("/game/:id", function (req, resp) {
   }
 });
 
+// reuturn a list of all properties
 app.get("/properties", function(req, resp) {
   var userid = req.body.userid;
   var gameid = req.body.gameid;
@@ -168,25 +173,50 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
 });
 
-function queryUsername(sockid) {
+// get a username for a given socket id
+function queryUsername(sockid, callback) {
+  console.log("query for username with socketid ", sockid);
   var u;
   client.collection("users", function(error, users) {
     if (error) throw error; 
-    u = users.find( { socketid : sockid } ).toArray();
-    if (u === undefined || u.length !== 1) throw ("queryUsername exception");
-    return u[0].username; 
+    users.find( { socketid : sockid } ).toArray(function(err, arr) {
+      if (err) throw err;
+      u = arr;
+      console.log("queryUsername", u);
+      if (u === undefined || u.length !== 1) throw ("queryUsername exception");
+      callback(u[0].fbusername); 
+    });
   });
 }
 
-function queryGame(sockid) {
-  var g;
-  var un = queryUsername(sockid);
+// get back the game the player at socket id is a part of
+function queryGame(sockid, callback) {
+  queryUsername(sockid, function(un) {
     client.collection("games", function(error, games) {
-      var gA = games.find( { players : { $elemMatch : { username : u.username } } } ).toArray();
-      if (gA === undefined || gA.length !== 1) throw ("queryGame exception");
-      g = gA[0];
+      var findobj = {}
+      findobj["players." + sockid] = {"fbusername" : un};
+      games.find( findobj ).toArray(function(err, arr) {
+        if (err) throw err;
+        console.log("queryGame", arr);
+        if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
+        callback(arr[0]);
+      });
     });
-  return g;
+  });
+}
+
+function queryPlayer(sockid) {
+  queryGame(sockid, function(game) {
+    queryUsername(sockid, function(username) {
+      var finalPlayer = undefined;
+      for (playerid in game.players) {
+        if (username === game.players[playerid].fbusername) {
+          finalPlayer = game.players[playerid];
+        }
+      }
+      return finalPlayer;
+    });
+  });
 }
  
 function getPropertiesFromDatabase(onOpen) {
@@ -208,6 +238,10 @@ function getPropertiesFromDatabase(onOpen) {
   }
 }
 
+// this is actually the save user function, but I figured
+// we might use it for more than just users. It updates a socket id
+// if one is provided, adds to the database if objs is not already
+// there, and does nothing otherwise
 function saveObjectToDB(collection, obj) {
   console.log("saving object ", obj);
   client.collection(collection, function(error, collec) {
@@ -235,6 +269,8 @@ function saveObjectToDB(collection, obj) {
   });
 }
 
+// save's a game's current state to the databse. Overwrites
+// a games previous state if it existed.
 function saveGame(game) {
   console.log("saving game");
   client.collection("games", function(error, games) {
@@ -255,6 +291,7 @@ function saveGame(game) {
   });
 }
 
+// deletes game from the databse.
 function deleteGame(game) {
   client.collection("games", function(error, games) {
     if (error) throw error;
@@ -288,12 +325,17 @@ var socketToPlayerId = {};
 io.sockets.on('connection', function (socket) {
   connections[socket.id] = socket;
   
+  // reopen and login do the exact same thing in that they
+  // update the server on player's logged in and which socket
+  // that player corresponds to.
   socket.on('reopen', function (data) {
     userMaintain(socket, data);
+    socket.emit('repoen', {success: true});
   });
 
   socket.on('login', function (data) {
-   userMaintain(socket, data);
+    userMaintain(socket, data);
+    socket.emit('login', {success: true});
   });
 
   socket.on('hostgame', function (data) {
@@ -302,6 +344,7 @@ io.sockets.on('connection', function (socket) {
       game.host = monopoly.newPlayer(data.username, data.fbusername);
       console.log(game.host);
       game.numPlayers++;
+      game.host.playerNumber = game.numPlayers;
       game.players[socket.id] = game.host;
       socket.emit('hostgame', { 
         success: true,
@@ -333,6 +376,7 @@ io.sockets.on('connection', function (socket) {
         else {
           var player = monopoly.newPlayer(data.username, data.fbusername);
           game.numPlayers++;
+          player.playerNumber = game.numPlayers;
           game.players[socket.id] = player;
           socket.emit('joingame', {
             success: true,
@@ -520,23 +564,27 @@ io.sockets.on('connection', function (socket) {
 
 function handleRoll(z, socketid) {
   var found = false; 
-  var game = queryGame(socketid);
-  var username = queryUsername(socketid);
-  for (p in game.players) {
-    if (p.username === username) {
-      found = true;
-      if (p.space + z > 39) passGo(game, username, socketid);
-      //if (p.space === 20) //todo handle in-jail rolls. 
-      p.space = ((p.space + z) % 40);
-      sendToBoards(game.id, 'movePlayer', {username: p.username, 
-                                           space : p.space });
-      saveGame(game);
-      handleSpace(game, username, socketid, p.space);
-    } 
-  }
-  if (found === false) throw "handleRoll exception";
+  queryGame(socketid, function(game){
+    queryUsername(socketid, function(username) {
+      for (p in game.players) {
+        if (p.username === username) {
+          found = true;
+          if (p.space + z > 39) passGo(game, username, socketid);
+          //if (p.space === 20) //todo handle in-jail rolls. 
+          p.space = ((p.space + z) % 40);
+          sendToBoards(game.id, 'movePlayer', {username: p.username, 
+                                               space : p.space });
+          saveGame(game);
+          handleSpace(game, username, socketid, p.space);
+        } 
+      }
+      if (found === false) throw "handleRoll exception";
+    });
+  });
 }
 
+// thedrick - this is kind of ugly, but apparently map is relatively new?
+// I was going to port this to a map reduce, but this is fine.
 function isOwnable(space) {
   var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
   var railroads = [5,15,25,35]

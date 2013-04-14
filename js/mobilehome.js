@@ -1,37 +1,45 @@
 var fbobj = undefined;
 var ppd = 70; // ppd = profile pic dimensions
+var me = undefined; // variable to store player information
 
 
 // @TODO: Need to update this with actual information about the current state
 // of the player in the game once the database supports it.
 function loadFBData() {
   var infodiv = $("#playerinfo");
-  var name = fbobj.name;
-  var picurl = "https://graph.facebook.com/" + fbobj.username + "/picture?width=" + ppd + "&height=" + ppd
+  var name = me.full_name;
+  var picurl = "https://graph.facebook.com/" + me.fbusername + "/picture?width=" + ppd + "&height=" + ppd
   var info = $("<div>").addClass("infoList");
-  info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player 1:</span> " + name));
-  var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$1500");
+  info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player " + me.playerNumber + ":</span> " + name));
+  var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$" + me.money);
   info.append(moneydisp);
 
 
   // @TODO This is really messy, but it's how I was adding
   //        new get out of jail free cards.
   // 
-  // var getoutcards = $("<div>").attr("id", "getoutcards");
-  // var getoutchance = $("<div>").attr({
-  //   "class" : "getout",
-  //   "id" : "getoutchance"
-  // });
-  // var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
-  // getoutchance.html(getouttext);
-  // var getoutcommunity = $("<div>").attr({
-  //   "class" : "getout",
-  //   "id" : "getoutcommunity"
-  // });
-  // getoutcommunity.html(getouttext);
-  // getoutcards.append(getoutchance);
-
-  // moneydisp.append(getoutchance);
+  if (me.jailCards !== undefined && me.jailCards.length !== 0) {
+    var getoutcards = $("<div>").attr("id", "getoutcards");
+    var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
+    if ($.inArray("chance", me.jailCards)) {
+      var getoutchance = $("<div>").attr({
+        "class" : "getout",
+        "id" : "getoutchance"
+      });
+      getoutchance.html(getouttext);
+      getoutcards.append(getoutchance);
+    }
+    
+    if ($.inArray("community", me.jailCards)) {
+      var getoutcommunity = $("<div>").attr({
+        "class" : "getout",
+        "id" : "getoutcommunity"
+      });
+      getoutcommunity.html(getouttext);
+      getoutcards.append(getoutcommunity);
+    }
+    info.append(getoutcards);
+  }
   
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
@@ -59,9 +67,20 @@ window.fbAsyncInit = function() {
       // connected
       FB.api('/me', function(response){
         window.fbobj = response;
-        loadFBData();
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
+        socket.on('getme', function(resp) {
+          if (resp === undefined) {
+            alert("You are not a part of this game.");
+            window.location.replace("desktop.html");
+          }
+          console.log("I AM ", resp);
+          window.me = resp;
+          loadFBData();
+        });
+        setTimeout(function() {
+          socket.emit('getme', {});
+        }, 500);
       });
     } else {
       // not_authorized

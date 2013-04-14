@@ -24,7 +24,9 @@ var Player = function(username, fbusername) {
   this.username = username;
   this.money = 1500;
   this.properties = [];
+  this.jailCards = [];
   this.space = 0;
+  this.playerNumber = 0;
 }
 
 var Property = function() {
