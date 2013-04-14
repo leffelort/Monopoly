@@ -171,14 +171,18 @@ mongo.Db.connect(mongoUri, function(err, db) {
   console.log("successfully connected to the database.")
   client = db;
   dbIsOpen = true;
-  //client.collection("users", function (e, u) { 
-   // if (e) throw e;
-   // u.drop();
-   //});
+  client.collection("users", function (e, u) { 
+    if (e) throw e;
+    u.drop();
+   });
+   client.collection("games", function (e,g) {
+    if (e) throw e;
+    g.drop();
+   });
 });
 
 // get a username for a given socket id
-function queryUsername(sockid, callback) {
+function queryUser(sockid, callback) {
   console.log("query for username with socketid ", sockid);
   client.collection("users", function(error, users) {
     if (error) throw error; 
@@ -192,32 +196,33 @@ function queryUsername(sockid, callback) {
       console.log("queryUsername", arr);
       if (arr === undefined || arr.length !== 1) throw ("queryUsername exception");
       
-      callback(arr[0].full_name); 
+      callback(arr[0]); 
     });
   });
 }
 
+
+
 // get back the game the player at socket id is a part of
 function queryGame(sockid, callback) {
-  queryUsername(sockid, function(un) {
+  queryUser(sockid, function(user) {
     client.collection("games", function(error, games) {
-      console.log("UN: " + un);
-      games.find({"players.username" : un}).toArray(function(err, arr){
+      //console.log("UN: " + user.fbusername);
+      games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
       //games.find( { "players" : {"$elemMatch" : { "username" : {"$eq" : un } } } } ).toArray(function(err, arr){
       //games.find({ players : sockid}).toArray(function(err, arr){
       //games.find( { players : { $elemMatch : { sockid.username : un } } } ).toArray(function(err, arr){
       //findobj["players." + sockid] = {"username" : un};
       //games.find( findobj ).toArray(function(err, arr) {
         if (err) throw err;
-        //console.log("queryGame", arr);
+        console.log("queryGame", arr);
         if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
         callback(arr[0]);
-      
       });
     });
   });
 }
-
+//DON'T USE THIS. READ ONLY, ONLY USED IN THE SOCKET.ON("GETME") HANDLER.
 function queryPlayer(sockid, callback) {
   queryGame(sockid, function(game) {
       callback(game.players[sockid]);
@@ -359,6 +364,7 @@ io.sockets.on('connection', function (socket) {
       console.log(game.host);
       game.numPlayers++;
       game.host.playerNumber = game.numPlayers;
+      game.host.gameInProgress = game.id;
       game.players[socket.id] = game.host;
       socket.emit('hostgame', { 
         success: true,
@@ -391,6 +397,7 @@ io.sockets.on('connection', function (socket) {
           var player = monopoly.newPlayer(data.username, data.fbusername);
           game.numPlayers++;
           player.playerNumber = game.numPlayers;
+          player.gameInProgress = game.id;
           game.players[socket.id] = player;
           socket.emit('joingame', {
             success: true,
@@ -581,7 +588,7 @@ io.sockets.on('connection', function (socket) {
 // MORE FUNCTIONS
 
 function handleRoll(z, socketid) {
-  var found = false; 
+ /* var found = false; 
   queryGame(socketid, function(game){
     queryUsername(socketid, function(username) {
       if (game.players[socketid].space + z > 39) passGo(game, username, socketid);
@@ -593,6 +600,8 @@ function handleRoll(z, socketid) {
       handleSpace(game, username, socketid, game.players[socketid].space);
       });
   });
+  */
+  //TODO.
 }
 
 // thedrick - this is kind of ugly, but apparently map is relatively new?
