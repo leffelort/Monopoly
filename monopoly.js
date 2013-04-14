@@ -24,6 +24,7 @@ var Player = function(username, fbusername) {
   this.username = username;
   this.money = 1500;
   this.properties = [];
+  this.space = 0;
 }
 
 var Property = function() {

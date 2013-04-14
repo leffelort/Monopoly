@@ -168,6 +168,27 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
 });
 
+function queryUsername(sockid) {
+  var u;
+  client.collection("users", function(error, users) {
+    if (error) throw error; 
+    u = users.find( { socketid : sockid } ).toArray();
+    if (u === undefined || u.length !== 1) throw ("queryUsername exception");
+    return u[0].username; 
+  });
+}
+
+function queryGame(sockid) {
+  var g;
+  var un = queryUsername(sockid);
+    client.collection("games", function(error, games) {
+      var gA = games.find( { players : { $elemMatch : { username : u.username } } } ).toArray();
+      if (gA === undefined || gA.length !== 1) throw ("queryGame exception");
+      g = gA[0];
+    });
+  return g;
+}
+ 
 function getPropertiesFromDatabase(onOpen) {
 
   client.collection('properties', onPropertyCollectionReady);
@@ -430,7 +451,7 @@ io.sockets.on('connection', function (socket) {
         //console.log("Playerswaiting: " + game.playersWaiting);
         //console.log("numPlayres: " + game.numPlayers);
         if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
-          //set playersWaiting = 0??
+          //set playersWaiting = 0 not necessary because of start
           startGame(gameID);
         }
         saveGame(game);
@@ -450,13 +471,12 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('getme', function () {
-  //@TODO:: FIX THIS -pmarino
-    var me = socketToPlayerId[socket.id];
+    var me = queryPlayer(socket.id);
     socket.emit('getme', me);
   });
   
   socket.on('diceroll', function(data) {
-    //handleRoll(data.result, socketToPlayerId[socket.id]);
+    handleRoll(data.result, socket.id);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
@@ -498,10 +518,139 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
+function handleRoll(z, socketid) {
+  var found = false; 
+  var game = queryGame(socketid);
+  var username = queryUsername(socketid);
+  for (p in game.players) {
+    if (p.username === username) {
+      found = true;
+      if (p.space + z > 39) passGo(game, username, socketid);
+      //if (p.space === 20) //todo handle in-jail rolls. 
+      p.space = ((p.space + z) % 40);
+      sendToBoards(game.id, 'movePlayer', {username: p.username, 
+                                           space : p.space });
+      saveGame(game);
+      handleSpace(game, username, socketid, p.space);
+    } 
+  }
+  if (found === false) throw "handleRoll exception";
+}
+
+function isOwnable(space) {
+  var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
+  var railroads = [5,15,25,35]
+  var utilities = [12,28]
+  for (var i in properties) {
+    if (space === i) 
+      return true;
+  }
+  for (var i in railroads) {
+    if (space === i) 
+      return true;
+  }
+  for (var i in utilities) {
+    if (space === i)
+      return true;
+  }
+  return false;
+}
+
+function isChance(space) {
+  return (space === 22 || space === 36);
+}
+function isCommChest(space) {
+  return (space === 2 || space === 17);
+}
+function isTax(space) {
+  return (space === 4 || space === 38);
+}
+function isCorner(space) { 
+  return (space%10 === 4);
+}
+
+function isOwned(game, space) {
+ /* var avails = game.availableProperties;
+  for (var prop in avails) {
+    if (prop.id === space) { 
+      return false;
+    }
+  return true; */
+  return false; //TODO, get spaceIDs into the db
+}
+
+function collectRent(game, space, socketid, username) {
+  //todo: rentcollection.
+}
+
+function shortSell(space, socketid) {
+  var sock = connections[socketid];
+  sock.emit('shortSell', {'property' : space}); //naming convention?
+}
+
+function sendToJail(game, socketid, username) {
+  //todo: sendToJail.
+}
+
+function handleTax(game, space, socketid, username){
+  if (space === 38) {
+    debit(username, 100);
+  }
+  if (space === 4) {
+    //todo: incometax()
+  }
+}
+
+function handleSpace(game, username, socketid, space) {
+  if (isOwnable(space)) {
+    if (isOwned(game, space)) {
+      collectRent(game, space, socketid, username);
+    } else {
+      shortSell(space, socketid);
+    }
+  }
+  if (isCorner(space)) {
+    if (space === 0) {
+      //todo: do we want double money for landing on go???
+    }
+    if (space === 20) {
+      //todo: do we want free parking to be a straight $500??
+    }
+    if (space === 30) {
+      sendToJail(game, socketid, username);
+    }
+  }
+  if (isCommChest(space) || isChance(space)) {
+    //todo: comm chest & chance
+  }
+  if (isTax(space)) {
+    handleTax(game, space, socketid, username);
+  }
+}
+
+function debit(game, username, amt) {
+  var found = false;
+  for (var p in game.players) {
+    if (p.username === username) {
+      found = true;
+      if (p.money - amt < 0) {
+        //handle mortgage conditions, loss conditions, etc;
+      } else {
+        p.money = p.money - amt;
+      }
+    }
+  }
+  saveGame(game);
+  if (found === false) throw "debit exception";
+}
+
+
 function userMaintain(socket, data) {
     var user = {};
     user.first_name = data.first_name;
     user.last_name = data.last_name;
+    user.full_name = data.name;
+    user.fbusername = data.username; 
     user.id = data.id;
     user.gender = data.gender;
     user.socketid = socket.id;
