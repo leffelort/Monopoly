@@ -228,8 +228,10 @@ function queryPlayer(sockid, callback) {
           for (var pid in game.players) {
             var player = game.players[pid];
             console.log("looking for player with pid " + user.fbusername + " currently looking at ", player);
-            if (player.fbusername === user.fbusername)
+            if (player.fbusername === user.fbusername) {
               p = player;
+              p.fbid = user.id;
+            }
           }
         }
         callback(p);
