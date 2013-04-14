@@ -71,7 +71,7 @@ window.fbAsyncInit = function() {
         socket.emit('reopen', response); // tell the server who we are.
         socket.on('reopen', function(resp) {
           if (resp.success) {
-            socket.emit('getme' {});
+            socket.emit('getme', {});
           }
         })
         socket.on('getme', function(resp) {
