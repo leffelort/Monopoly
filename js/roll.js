@@ -1,5 +1,6 @@
 var socket; 
 var rollresult;
+var fbobj;
 
 window.fbAsyncInit = function() {
   FB.init({
@@ -15,6 +16,7 @@ window.fbAsyncInit = function() {
       // connected
       window.scrollTo(0, 1); // scroll past broswer bar
       FB.api('/me', function(response){
+        fbobj = response;
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
 
@@ -73,7 +75,8 @@ function allowRolls() {
     rollresult = total;
     socket.emit('diceroll', {
       result: total,
-      doubles: (roll1 === roll2)
+      doubles: (roll1 === roll2),
+      fbid: fbobj.id
     });
   }
 
