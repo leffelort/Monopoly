@@ -32,12 +32,13 @@ var Player = function(username, fbid) {
   this.playerNumber = 0;
 }
 
-var Property = function() {
+var Property = function(card) {
   //this doesn't jive with our property obj in the database :|
   this.numHouses = 0;
   this.hotel = false;
   this.monopoly = false;
   this.mortgaged = false;
+  this.card = card;
 }
 
 var Board = function(id) {
@@ -55,5 +56,7 @@ module.exports.newGame = function(id, code, name, password, maxPlayers) {
 module.exports.newPlayer = function(username, fbid) {
   return new Player(username, fbid);
 }
-module.exports.newProperty = new Property();
+module.exports.newProperty = function(card) {
+  return new Property(card);
+}
 
