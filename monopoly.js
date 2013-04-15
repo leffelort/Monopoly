@@ -15,6 +15,7 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.availableHouses = 32;
   this.availableHotels = 12;
   this.availableProperties;
+  this.propertyOwners = {};
 }
 
 
@@ -30,8 +31,11 @@ var Player = function(username, fbusername) {
 }
 
 var Property = function() {
-  this.numberOfHouses = 0;
+  //this doesn't jive with our property obj in the database :|
+  this.numHouses = 0;
   this.hotel = false;
+  this.monopoly = false;
+  this.mortgaged = false;
 }
 
 var Board = function() {

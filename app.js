@@ -554,7 +554,6 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('getme', function () {
-  console.log("FUCK YOU.");
     queryPlayer(socket.id, function(res){
       socket.emit('getme', res);
     });
@@ -562,9 +561,18 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('diceroll', function(data) {
     console.log('diceroll??');
-    handleRoll(data.result, socket.id);
+    handleRoll(data.result, data.doubles, socket.id);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
+  });
+  
+  socket.on('shortSell', function(data) {
+    if (data.result) {
+      handleSale(data.property, socket.id);
+    }
+    else {
+      //endTurn();
+    }
   });
 
   socket.on('disconnect', function () {
@@ -604,21 +612,33 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
-function handleRoll(z, socketid) {
- /* var found = false; 
-  queryGame(socketid, function(game){
-    queryUsername(socketid, function(username) {
-      if (game.players[socketid].space + z > 39) passGo(game, username, socketid);
-      //if (p.space === 20) //todo handle in-jail rolls. 
-      game.players[socketid].space = ((p.space + z) % 40);
-      sendToBoards(game.id, 'movePlayer', {username: game.players[socketid].username, 
-                                           space : game.players[socketid].space });
-      saveGame(game);
-      handleSpace(game, username, socketid, game.players[socketid].space);
-      });
+function handleSale(space, socketid) {
+  queryGame(socketid, function(game) {
+    var prop;
+    for (var index in game.availableProperties) {
+      if (game.availableProperties[index].id === space) {
+        prop = game.availableProperties[index];
+        delete game.availableProperties[index];
+      }
+    }
+    var user = game.players[socketid].fbusername;
+    game.players[socketid].properties[space] = prop;
+    game.propertyOwners[space] = user;
+    debit(game, socketid, property.price);
+    sendToBoards('propertySold', {property : space, username: user});
   });
-  */
-  //TODO.
+}
+
+function handleRoll(z, dbls, socketid) {
+  queryGame(socketid, function(game){
+     //if (game.players[socketid].jailed) //todo handle in-jail rolls. 
+    game.players[socketid].space = ((game.players[socketid].space + z) % 40);
+    sendToBoards(game.id, 'movePlayer', {fbusername: game.players[socketid].fbusername, 
+                                           space : game.players[socketid].space });
+     // saveGame(game);
+    if (game.players[socketid].space < z) passGo(game, socketid);
+    handleSpace(game, socketid, game.players[socketid].space);
+  });
 }
 
 // thedrick - this is kind of ugly, but apparently map is relatively new?
@@ -652,21 +672,55 @@ function isTax(space) {
   return (space === 4 || space === 38);
 }
 function isCorner(space) { 
-  return (space%10 === 4);
+  return (space%10 === 0);
 }
 
 function isOwned(game, space) {
- /* var avails = game.availableProperties;
+  var avails = game.availableProperties;
   for (var prop in avails) {
-    if (prop.id === space) { 
+    if (avails[prop].id === space) { 
       return false;
     }
-  return true; */
-  return false; //TODO, get spaceIDs into the db
+  return true;
+  }
+  //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid, username) {
-  //todo: rentcollection.
+function collectRent(game, space, socketid) {
+  //todo: how do i find out who owns something? real issue. need a map from space -> uname?
+  var property = game[socketid].propertyOwners[space];
+  var amt, atom;
+  var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
+  
+  if (property.mortgaged) {
+    amt = 0; //todo: mention this to the clients?
+  }
+  if (!property.monopoly) {
+    amt = property.rent;
+  }
+  if ((property.monopoly) && (property.numHouses === 0) && (!property.hotel)) {
+    amt = (property.rent * 2)
+  }
+  if (property.numHouses === 1) {
+    amt = property.onehouse;
+  }
+  if (property.numHouses === 2) {
+    amt = property.twohouse;
+  }
+  if (property.numHouses === 3) {
+    amt = property.threehouse;
+  }
+  if (property.numHouses === 4) {
+    amt = property.fourhouse;
+  }
+  if (property.hotel) {
+    amt = property.hotel;
+  }
+  atom = debit(game, socketid, amt);
+  if (atom) credit(game, socketid, amt);
+  else throw exn;
+  connections[socketid].emit('payingRent', {space: space, amount: amt});
+  //endTurn();
 }
 
 function shortSell(space, socketid) {
@@ -674,11 +728,15 @@ function shortSell(space, socketid) {
   sock.emit('shortSell', {'property' : space}); //naming convention?
 }
 
-function sendToJail(game, socketid, username) {
-  //todo: sendToJail.
+function sendToJail(game, socketid) {
+  var jail = 30;
+  game.players[socketid].space = jail;
+  sendToBoards(game.id, 'goToJail', {fbusername: game.players[socketid].fbusername, 
+                                       space : jail });
+  game.players[socketid].jailed = true;
 }
 
-function handleTax(game, space, socketid, username){
+function handleTax(game, space, socketid){
   if (space === 38) {
     debit(game, socketid, 100);
   }
@@ -687,48 +745,48 @@ function handleTax(game, space, socketid, username){
   }
 }
 
-function handleSpace(game, username, socketid, space) {
+function handleSpace(game, socketid, space) {
   if (isOwnable(space)) {
     if (isOwned(game, space)) {
-      collectRent(game, space, socketid, username);
+      collectRent(game, space, socketid);
     } else {
       shortSell(space, socketid);
     }
   }
   if (isCorner(space)) {
     if (space === 0) {
-      //todo: do we want double money for landing on go???
+      credit(game,socketid,200);
+      // do we want double money for landing on go???
     }
     if (space === 20) {
-      //todo: do we want free parking to be a straight $500??
+      credit(game,socketid,500);
+      // do we want free parking to be a straight $500??
     }
     if (space === 30) {
-      sendToJail(game, socketid, username);
+      sendToJail(game, socketid);
     }
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
   }
   if (isTax(space)) {
-    handleTax(game, space, socketid, username);
+    handleTax(game, space, socketid);
   }
 }
 
-function debit(game, username, amt) {
-  var found = false;
-  
- /* for (var p in game.players) {
-    if (game.players[p].username === username) {
-      found = true;
-      if (game.players[p].money - amt < 0) {
+function credit(game,socketid, amt) {
+  game.players[socketid].money = game.players[socketid].money + amt;
+  //need to ensure atomicity later on probably...
+}
+
+function debit(game, socketid, amt) {
+      if (game.players[socketid].money - amt < 0) {
         //handle mortgage conditions, loss conditions, etc;
       } else {
-        game.players[p].money = game.players[p].money - amt;
+        game.players[socketid].money = game.players[socketid].money - amt;
+        return true;
       }
-    }
-  }*/ 
-  saveGame(game);
-  if (found === false) throw "debit exception";
+  //saveGame(game);
 }
 
 
@@ -748,12 +806,12 @@ function userMaintain(socket, data, cback) {
 }
 
 function startGame(gameID) {
+  var game = currentGames[gameID];
   if (game !== undefined) {
     game.isStarted = true;
   }
   sendToPlayers(gameID, 'gameReady', {});
   sendToBoards(gameID, 'gameReady', {});
-  var game = currentGames[gameID];
 }
 
 
