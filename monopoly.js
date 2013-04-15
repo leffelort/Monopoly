@@ -21,7 +21,7 @@ var Game = function(id, code, name, password, maxPlayers) {
 
 
 var Player = function(username, fbid) {
-  this.fbid = fbid
+  this.fbid = fbid;
   this.username = username;
   this.money = 1500;
   this.properties = [];
@@ -38,12 +38,13 @@ var Property = function() {
   this.mortgaged = false;
 }
 
-var Board = function() {
-	this.boardNumber;
+var Board = function(id, boardnumber) {
+  this.id = id;
+	this.boardNumber = boardnumber;
 }
 
-module.exports.newBoard = function() {
-	return new Board();
+module.exports.newBoard = function(id, boardnumber) {
+	return new Board(id, boardnumber);
 }
 
 module.exports.newGame = function(id, code, name, password, maxPlayers) {

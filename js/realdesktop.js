@@ -5,7 +5,7 @@ var currentGame;
 var selectedGameIndex;
 
 var socket;
-
+var boardID;
 
 var gameCode; //need this to be a global for now :/ ~pjm
 
@@ -258,6 +258,7 @@ function attachSocketHandlers() {
   socket.on('boardjoin', function (socketdata) {
     console.log(socketdata);
     if (socketdata.success) {
+      boardID = socketdata.boardID;
       openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
     }
     else {

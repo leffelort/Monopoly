@@ -456,49 +456,28 @@ io.sockets.on('connection', function (socket) {
 
   
   socket.on('boardjoin', function (data) {
-  connections[socket.id] = socket;
+    connections[socket.id] = socket;
     var gameFound = false;
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
       if (game.code === data.code) {
         gameFound = true;
-        // Error checking
-      /*  if (game.isStarted) {
-          socket.emit('joingame', {
-            success: false,
-            message: "This game is already in progress."
-          });
-        } 
-        else if (game.numPlayers === game.maxPlayers) {
-          socket.emit('joingame', {
-            success: false,
-            message: "This game is full."
-          });
-        } */
-        //else {
-          var board = monopoly.newBoard();
-          game.numBoards++;
-          game.boards[socket.id] = board;
-          socket.emit('boardjoin', {
-            success: true,
-            gameID: game.id
-          });
-          sendToPlayers(game.id, 'boardjoin', {
-            gameID: game.id,
-            number: game.numBoards
-          });
-       /*   
-    for (var socketid in game.players) {
-            console.log(game.players[socketid]);
-            if (socketid !== socket.id) {
-              connections[socketid].emit('boardjoin', {
-                board: game.numBoards,
-                gameID: game.id
-              });
-            }
-          }
-      */
-        if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)){
+        game.numBoards++;
+        var boardID = shortid.generate();
+        var board = monopoly.newBoard(boardID, game.numBoards);
+        game.boards[socket.id] = board;
+        socket.emit('boardjoin', {
+          success: true,
+          gameID: game.id,
+          boardID: board.id
+        });
+        sendToPlayers(game.id, 'boardjoin', {
+          gameID: game.id,
+          number: game.numBoards
+        });
+        if ((game.playersWaiting === game.numPlayers) && 
+            (game.numPlayers > 1) && (!game.isStarted) && 
+            (game.numBoards > 0)) {
           startGame(game.id);
         }
         saveGame(game);
@@ -589,8 +568,9 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('disconnect', function () {
-  // If the player was in a game, remove them from it
-    queryUser(socket, function(user) {
+    // If the player was in a game, remove them from it
+    console.log("socket disconnect: " + socket.id);
+    queryUser(socket.id, function(user) {
       var game = currentGames[user.gameInProgress];
       if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
         console.log("HERRO");
@@ -787,29 +767,30 @@ function credit(game,socketid, amt, fbid) {
 }
 
 function debit(game, socketid, amt, fbid) {
-      if (game.players[fbid].money - amt < 0) {
-        //handle mortgage conditions, loss conditions, etc;
-      } else {
-        game.players[fbid].money = game.players[fbid].money - amt;
-        return true;
-      }
+  if (game.players[fbid].money - amt < 0) {
+    //handle mortgage conditions, loss conditions, etc;
+  } else {
+    game.players[fbid].money = game.players[fbid].money - amt;
+    return true;
+  }
   //saveGame(game);
 }
 
 
 function userMaintain(socket, data, cback) {
-    var user = {};
-    user.first_name = data.first_name;
-    user.last_name = data.last_name;
-    user.full_name = data.name;
-    user.fbid = data.id; 
-    user.id = data.id;
-    user.gender = data.gender;
-    user.socketid = socket.id;
-    user.invites = [];
-    user.gameInProgress = undefined;
-    saveObjectToDB('users', user, cback);
-    socketToPlayerId[socket.id] = user.id;
+  console.log("userMaintain " + socket.id);
+  var user = {};
+  user.first_name = data.first_name;
+  user.last_name = data.last_name;
+  user.full_name = data.name;
+  user.fbid = data.id; 
+  user.id = data.id;
+  user.gender = data.gender;
+  user.socketid = socket.id;
+  user.invites = [];
+  user.gameInProgress = undefined;
+  saveObjectToDB('users', user, cback);
+  socketToPlayerId[socket.id] = user.id;
 }
 
 function startGame(gameID) {
