@@ -12,6 +12,7 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.players = {};
   this.boards = {};
   this.currentTurn = undefined;
+  this.doubles = false;
   this.availableHouses = 32;
   this.availableHotels = 12;
   this.availableProperties;
