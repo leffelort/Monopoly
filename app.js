@@ -478,7 +478,7 @@ io.sockets.on('connection', function (socket) {
       if (game.code === data.code) {
         gameFound = true;
         game.numBoards++;
-        var boardID = shortid.generate();
+        var boardID = shortID.generate();
         var board = monopoly.newBoard(boardID, game.numBoards);
         board.socketid = socket.id;
         game.boards[boardID] = board;
