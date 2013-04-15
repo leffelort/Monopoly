@@ -381,7 +381,7 @@ io.sockets.on('connection', function (socket) {
       game.numPlayers++;
       game.host.playerNumber = game.numPlayers;
       game.host.gameInProgress = game.id;
-      game.players[socket.id] = game.host;
+      game.players[data.fbusername] = game.host;
       updateCurrentGame(data.fbusername, game.id);
       socket.emit('hostgame', { 
         success: true,
@@ -415,7 +415,7 @@ io.sockets.on('connection', function (socket) {
           game.numPlayers++;
           player.playerNumber = game.numPlayers;
           player.gameInProgress = game.id;
-          game.players[socket.id] = player;
+          game.players[data.fbusername] = player;
           updateCurrentGame(data.fbusername, game.id);
           socket.emit('joingame', {
             success: true,
@@ -504,14 +504,14 @@ io.sockets.on('connection', function (socket) {
   socket.on('leavegame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
-      if (game.players[socket.id] === game.host) {
+      if (game.players[data.fbusername] === game.host) {
         // If host leaves, the entire game is deleted
         sendToOthers(data.gameID, 'hostleft', {}, socket.id);
         sendToBoards(data.gameID, 'hostleft', {});
         deleteGame(currentGames[data.gameID])
       }
       else {
-        delete game.players[socket.id];
+        delete game.players[data.fbusername];
         game.numPlayers--;
         sendToPlayers(data.gameID, 'playerleft',  {
           gameID: game.id
@@ -561,14 +561,14 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('diceroll', function(data) {
     console.log('diceroll??');
-    handleRoll(data.result, data.doubles, socket.id);
+    handleRoll(data.result, data.doubles, socket.id, data.fbusername);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
   
   socket.on('shortSell', function(data) {
     if (data.result) {
-      handleSale(data.property, socket.id);
+      handleSale(data.property, socket.id, data.fbusername);
     }
     else {
       //endTurn();
@@ -612,7 +612,7 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
-function handleSale(space, socketid) {
+function handleSale(space, socketid, fbusername) {
   queryGame(socketid, function(game) {
     var prop;
     for (var index in game.availableProperties) {
@@ -621,23 +621,23 @@ function handleSale(space, socketid) {
         delete game.availableProperties[index];
       }
     }
-    var user = game.players[socketid].fbusername;
-    game.players[socketid].properties[space] = prop;
-    game.propertyOwners[space] = user;
-    debit(game, socketid, property.price);
-    sendToBoards('propertySold', {property : space, username: user});
+   // var user = game.players[socketid].fbusername;
+    game.players[fbusername].properties[space] = prop;
+    game.propertyOwners[space] = fbusername;
+    debit(game, socketid, property.price, fbusername);
+    sendToBoards('propertySold', {property : space, fbusername: fbusername});
   });
 }
 
-function handleRoll(z, dbls, socketid) {
+function handleRoll(z, dbls, socketid, fbusername) {
   queryGame(socketid, function(game){
-     //if (game.players[socketid].jailed) //todo handle in-jail rolls. 
-    game.players[socketid].space = ((game.players[socketid].space + z) % 40);
-    sendToBoards(game.id, 'movePlayer', {fbusername: game.players[socketid].fbusername, 
-                                           space : game.players[socketid].space });
+     //if (game.players[fbusername].jailed) //todo handle in-jail rolls. 
+    game.players[fbusername].space = ((game.players[fbusername].space + z) % 40);
+    sendToBoards(game.id, 'movePlayer', {fbusername: fbusername, 
+                                           space : game.players[fbusername].space });
      // saveGame(game);
-    if (game.players[socketid].space < z) passGo(game, socketid);
-    handleSpace(game, socketid, game.players[socketid].space);
+    if (game.players[fbusername].space < z) passGo(game, socketid,fbusername);
+    handleSpace(game, socketid, game.players[fbusername].space);
   });
 }
 
@@ -686,9 +686,9 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid) {
+function collectRent(game, space, socketid,fbusername) {
   //todo: how do i find out who owns something? real issue. need a map from space -> uname?
-  var property = game[socketid].propertyOwners[space];
+  var property = game[fbusername].propertyOwners[space];
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   
@@ -723,67 +723,67 @@ function collectRent(game, space, socketid) {
   //endTurn();
 }
 
-function shortSell(space, socketid) {
+function shortSell(space, socketid, fbusername) {
   var sock = connections[socketid];
-  sock.emit('shortSell', {'property' : space}); //naming convention?
+  sock.emit('shortSell', {'property' : space, fbusername: fbusername}); //naming convention?
 }
 
-function sendToJail(game, socketid) {
+function sendToJail(game, socketid, fbusername) {
   var jail = 30;
-  game.players[socketid].space = jail;
+  game.players[fbusername].space = jail;
   sendToBoards(game.id, 'goToJail', {fbusername: game.players[socketid].fbusername, 
                                        space : jail });
-  game.players[socketid].jailed = true;
+  game.players[fbusername].jailed = true;
 }
 
-function handleTax(game, space, socketid){
+function handleTax(game, space, socketid, fbusername){
   if (space === 38) {
-    debit(game, socketid, 100);
+    debit(game, socketid, 100, fbusername);
   }
   if (space === 4) {
     //todo: incometax()
   }
 }
 
-function handleSpace(game, socketid, space) {
+function handleSpace(game, socketid, space, fbusername) {
   if (isOwnable(space)) {
     if (isOwned(game, space)) {
-      collectRent(game, space, socketid);
+      collectRent(game, space, socketid, fbusername);
     } else {
-      shortSell(space, socketid);
+      shortSell(space, socketid, fbusername);
     }
   }
   if (isCorner(space)) {
     if (space === 0) {
-      credit(game,socketid,200);
+      credit(game,socketid,200, fbusername);
       // do we want double money for landing on go???
     }
     if (space === 20) {
-      credit(game,socketid,500);
+      credit(game,socketid,500, fbusername);
       // do we want free parking to be a straight $500??
     }
     if (space === 30) {
-      sendToJail(game, socketid);
+      sendToJail(game, socketid, fbusername);
     }
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
   }
   if (isTax(space)) {
-    handleTax(game, space, socketid);
+    handleTax(game, space, socketid, fbusername);
   }
 }
 
-function credit(game,socketid, amt) {
-  game.players[socketid].money = game.players[socketid].money + amt;
+function credit(game,socketid, amt, fbusername) {
+  game.players[fbusername].money = game.players[fbusername].money + amt;
   //need to ensure atomicity later on probably...
 }
 
-function debit(game, socketid, amt) {
-      if (game.players[socketid].money - amt < 0) {
+function debit(game, socketid, amt, fbusername) {
+      if (game.players[fbusername].money - amt < 0) {
         //handle mortgage conditions, loss conditions, etc;
       } else {
-        game.players[socketid].money = game.players[socketid].money - amt;
+        game.players[fbusername].money = game.players[fbusername].money - amt;
         return true;
       }
   //saveGame(game);
