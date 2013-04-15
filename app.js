@@ -392,7 +392,7 @@ io.sockets.on('connection', function (socket) {
       game.host = monopoly.newPlayer(data.username, data.fbid);
       console.log(game.host);
       game.numPlayers++;
-      game.host.playerNumber = game.numPlayers;
+      game.host.playerNumber = (game.numPlayers - 1); //ie 0 indexed.
       game.host.gameInProgress = game.id;
       game.players[data.fbid] = game.host;
       updateCurrentGame(data.fbid, game.id);
@@ -426,7 +426,7 @@ io.sockets.on('connection', function (socket) {
         else {
           var player = monopoly.newPlayer(data.username, data.fbid);
           game.numPlayers++;
-          player.playerNumber = game.numPlayers;
+          player.playerNumber = (game.numPlayers - 1);
           player.gameInProgress = game.id;
           game.players[data.fbid] = player;
           updateCurrentGame(data.fbid, game.id);
@@ -436,11 +436,13 @@ io.sockets.on('connection', function (socket) {
           });
           sendToOthers(gameID, 'newplayer', {
                 player: player,
-                gameID: game.id
+                gameID: game.id,
+                number: player.playerNumber
               }, socket.id);
           sendToBoards(gameID, 'newplayer', {
                 player: player,
-                gameID: game.id
+                gameID: game.id,
+                number: player.playerNumber
               });
         }
         saveGame(game);
@@ -599,6 +601,16 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
+function endTurn(game) {
+  if (!game.doubles) {
+    game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
+  }
+  saveGame(game);
+  sendToBoards('nextTurn', {player: game.currentTurn});
+  sendToPlayers('nextTurn', {player: game.currentTurn});
+}
+
+
 function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     var prop;
@@ -613,12 +625,15 @@ function handleSale(space, socketid, fbid) {
     game.propertyOwners[space] = fbid;
     debit(game, socketid, property.price, fbid);
     sendToBoards('propertySold', {property : space, fbid: fbid});
-  });
+    endTurn(game);
+    });
 }
 
 function handleRoll(z, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
-     //if (game.players[fbid].jailed) //todo handle in-jail rolls. 
+    if ((game.players[fbid].jailed) && (!dbls)) {
+      endTurn(game);//todo handle in-jail rolls. 
+    }
     game.players[fbid].space = ((game.players[fbid].space + z) % 40);
     sendToBoards(game.id, 'movePlayer', {fbid: fbid, 
                                            space : game.players[fbid].space });
@@ -626,6 +641,11 @@ function handleRoll(z, dbls, socketid, fbid) {
     if (game.players[fbid].space < z) passGo(game, socketid,fbid);
     handleSpace(game, socketid, game.players[fbid].space);
   });
+}
+
+//tyler's not going to like this function... 
+function createsMonopoly(owned, space) {
+  return false;
 }
 
 // thedrick - this is kind of ugly, but apparently map is relatively new?
@@ -674,8 +694,8 @@ function isOwned(game, space) {
 }
 
 function collectRent(game, space, socketid,fbid) {
-  //todo: how do i find out who owns something? real issue. need a map from space -> uname?
   var property = game[fbid].propertyOwners[space];
+  //todo Railroads && utilities!!!!!!!!!!!!
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   switch(property.numHouses) {
@@ -707,7 +727,7 @@ function collectRent(game, space, socketid,fbid) {
   if (atom) credit(game, socketid, amt);
   else throw exn;
   connections[socketid].emit('payingRent', {space: space, amount: amt});
-  //endTurn();
+  endTurn(game);
 }
 
 function shortSell(space, socketid, fbid) {
@@ -730,6 +750,7 @@ function handleTax(game, space, socketid, fbid){
   if (space === 4) {
     //todo: incometax()
   }
+  endTurn(game);
 }
 
 function handleSpace(game, socketid, space, fbid) {
@@ -752,6 +773,7 @@ function handleSpace(game, socketid, space, fbid) {
     if (space === 30) {
       sendToJail(game, socketid, fbid);
     }
+    endTurn();
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
@@ -793,8 +815,10 @@ function userMaintain(socket, data, cback) {
   socketToPlayerId[socket.id] = user.id;
 }
 
+
 function startGame(gameID) {
   var game = currentGames[gameID];
+  game.currentTurn = 0;
   if (game !== undefined) {
     game.isStarted = true;
   }
