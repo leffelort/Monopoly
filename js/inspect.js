@@ -1,5 +1,6 @@
-var propertyDatabase = undefined;
+var propertyDatabase = {};
 var setupPage;
+var socket;
 
 window.fbAsyncInit = function() {
   FB.init({
@@ -16,7 +17,15 @@ window.fbAsyncInit = function() {
       FB.api('/me', function(response){
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
-        setupPage();
+        socket.on('getProperties', function(props){
+          props.sort(function(a, b) {
+            return a.card.space - b.card.space;
+          });
+          displayProperties(props);
+        });
+        socket.on('reopen', function(){
+          setupPage();
+        });
       });
     } else {
       // not_authorized
@@ -36,28 +45,21 @@ window.fbAsyncInit = function() {
  }(document));
 
 function getProperties() {
-  $.ajax({
-    type: "get",
-    data: {"userid" : "whatever", "gameid" : "whatever"},
-    url: "/properties",
-    success: function(data) {
-      if (data.success === true) {
-        displayProperties(data.props);
-      } else {
-        console.log("error");
-      }
-    }
-  });
+  socket.emit("getProperties", {});
 }
 
 function loadDetailedView(property) {
   $("#propDetails").html(" ");
   var detailedView = $("<div>").addClass("propertyCard");
   var titleDeed = $("<div>").addClass("titleDeed");
+  var titleTextColor = "black";
+  if (property.color === "blue" || property.color === "purple") {
+    titleTextColor = "white";
+  }
   titleDeed.append($("<div>").addClass("propertyName")
                  .addClass(property.color)
                  .append($("<h1>").html(property.title))
-                 );
+                 .css("color", titleTextColor));
   var details = $("<div>").addClass("details");
   details.append($("<div>").addClass("rentDisplay")
                .html(property.rent + "."));
@@ -101,22 +103,29 @@ function loadDetailedView(property) {
 // @TODO: Make sure the properties display current data
 function displayProperties(properties) {
   var propDiv = $("#propList");
-  propertyDatabase = properties;
+  console.log(properties);
   for (var i = 0; i < properties.length; i++) {
     var prop = properties[i];
-    propertyDatabase[prop.title] = prop;
+    var card = prop.card;
+    propertyDatabase[card.title] = prop;
     var cell = $("<div>").addClass("propertyCell");
     cell.append($("<div>").addClass("stripe")
-                .addClass(prop.color));
+                .addClass(card.color));
     cell.append($("<div>").addClass("proptext")
                 .addClass("propname")
-                .html(prop.title));
+                .html(card.title));
     var bottom = $("<div>").addClass("cellBottom");
-    bottom.append($("<span>").addClass("proptext")
-                .addClass("price")
-                .html("$" + prop.price));
+    if (prop.owner === "Unowned") {
+      bottom.append($("<span>").addClass("proptext")
+                  .addClass("price")
+                  .html("$" + card.price));
+    } else {
+      bottom.append($("<span>").addClass("proptext")
+                    .addClass("rent")
+                    .html("$" + card.rent));
+    }
     bottom.append($("<span>").addClass("owner")
-                 .html("Unowned"));
+                 .html(prop.owner));
     cell.append(bottom);
 
     (function() {
@@ -125,7 +134,8 @@ function displayProperties(properties) {
       cur_cell.click(function() {
         $(".propertyCell.selected").removeClass("selected");
         cur_cell.addClass("selected");
-        loadDetailedView(propertyDatabase[cur_prop.title]);
+        console.log(cur_prop);
+        loadDetailedView(propertyDatabase[cur_prop.card.title].card);
       });
     })();
     
