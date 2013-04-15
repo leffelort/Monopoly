@@ -1,53 +1,61 @@
 #propList {
-	width: 40%;
-	-webkit-overflow-scrolling: touch;
-	-moz-overflow-scrolling: touch;
-	-o-overflow-scrolling: touch;
-	-ms-overflow-scrolling: touch;
-	overflow-scrolling: touch;
-	border-right: 1px solid black;
-	border-top: 1px solid black;
-	overflow: auto;
+  width: 40%;
+  -webkit-overflow-scrolling: touch;
+  -moz-overflow-scrolling: touch;
+  -o-overflow-scrolling: touch;
+  -ms-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  border-right: 1px solid black;
+  border-top: 1px solid black;
+  overflow: auto;
 }
 
 #content {
-	position: relative;
+  position: relative;
 }
 
 #propDetails {
-	top: 0;
-  	right: 0;
-  	position: absolute;
+  top: 0;
+    right: 0;
+    position: absolute;
 }
 
 #propDetails .propertyCard {
-	width: 522px;
-	height: 600px;
-	-webkit-transform-origin: 0 0;
-	-moz-transform-origin: 0 0;
-	-o-transform-origin: 0 0;
-	-ms-transform-origin: 0 0;
-	transform-origin: 0 0;
+  width: 522px;
+  height: 600px;
+  -webkit-transform-origin: 0 0;
+  -moz-transform-origin: 0 0;
+  -o-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
 
-/*	-webkit-transform: scale(0.54);
-  	-moz-transform: scale(0.49);
-  	-o-transform: scale(0.49);
-  	-ms-transform: scale(0.49);
-  	transform: scale(0.49);*/
+/*  -webkit-transform: scale(0.54);
+    -moz-transform: scale(0.49);
+    -o-transform: scale(0.49);
+    -ms-transform: scale(0.49);
+    transform: scale(0.49);*/
 }
 
 #propOptions {
-	width: 20%;
-	height: 100%;
-	position: absolute;
-	top: 0;
-	right: 0;
+  width: 10%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: rgb(0,124,49); /* Old browsers */
+  background: -moz-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%, rgba(0,96,33,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,124,49,1)), color-stop(100%,rgba(0,96,33,1))); /* Chrome,Safari4+ */
+  background: -webkit-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Opera 12+ */
+  background: -ms-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* IE10+ */
+  background: radial-gradient(ellipse at center,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#007c31', endColorstr='#006021',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 }
 
 .backbtn {
-	height: 20%;
-	width: 100%;
-	position: absolute;
-	top: 0;
-	left: 0;
+  height: 20%;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }

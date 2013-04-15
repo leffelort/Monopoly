@@ -11,7 +11,7 @@ function loadFBData() {
   var name = me.username;
   picurl = "https://graph.facebook.com/" + me.fbid + "/picture?width=" + ppd + "&height=" + ppd
   var info = $("<div>").addClass("infoList");
-  info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player " + me.playerNumber + ":</span> " + name));
+  info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player " + (me.playerNumber + 1) + ":</span> " + name));
   var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$" + me.money);
   info.append(moneydisp);
 

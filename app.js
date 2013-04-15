@@ -8,6 +8,7 @@ var shortID = require("shortid");
 var monopoly = require("./monopoly.js");
 var phoneCodeGen = require("./phoneCodeGen.js");
 var _ = require("underscore");
+var retry = 5;
 
 app.use(express.bodyParser());
 
@@ -191,16 +192,20 @@ mongo.Db.connect(mongoUri, function(err, db) {
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
-  console.log("queryUser ", sockid);
+  if (retry <= 0) return;
+  console.log("Retry count: " + retry);
+  //console.log("queryUser ", sockid);
   client.collection("users", function(error, users) {
     if (error) throw error; 
     users.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
       console.log("queryUsername ", sockid, " ", arr);
       if (arr === undefined || arr.length !== 1) {
-        callback(undefined);
+        queryUser(sockid, callback, retry--);
       } else {
         callback(arr[0]); 
+        retry = 5;
+        return;
       }
     });
   });
@@ -223,6 +228,7 @@ function queryBoard(sockid, callback) {
 
 // get back the game the player at socket id is a part of
 function queryGame(sockid, callback) {
+  retry = 5;
   queryUser(sockid, function(user) {
     client.collection("games", function(error, games) {
       games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
@@ -704,6 +710,7 @@ function handleSale(space, socketid, fbid) {
 
 function handleRoll(z, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
+    game.doubles = dbls;
     if ((game.players[fbid].jailed) && (!dbls)) {
       endTurn(game);//todo handle in-jail rolls. 
     }
