@@ -39,14 +39,13 @@ var Property = function() {
   this.mortgaged = false;
 }
 
-var Board = function(id, boardnumber) {
+var Board = function(id) {
   this.id = id;
-	this.boardNumber = boardnumber;
   this.socketid;
 }
 
-module.exports.newBoard = function(id, boardnumber) {
-	return new Board(id, boardnumber);
+module.exports.newBoard = function(id) {
+	return new Board(id);
 }
 
 module.exports.newGame = function(id, code, name, password, maxPlayers) {

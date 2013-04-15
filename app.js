@@ -189,9 +189,11 @@ function queryUser(sockid, callback) {
     users.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
       console.log("queryUsername", arr);
-      if (arr === undefined || arr.length !== 1) throw ("queryUsername exception");
-      
-      callback(arr[0]); 
+      if (arr === undefined || arr.length !== 1) {
+        callback(undefined);
+      } else {
+        callback(arr[0]); 
+      }
     });
   });
 }
@@ -199,7 +201,7 @@ function queryUser(sockid, callback) {
 
 function queryBoard(sockid, callback) {
   console.log("query for user with socketid ", sockid);
-  client.collection("boards", function(error, users) {
+  client.collection("boards", function(error, boards) {
     if (error) throw error; 
     boards.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
@@ -479,7 +481,7 @@ io.sockets.on('connection', function (socket) {
         gameFound = true;
         game.numBoards++;
         var boardID = shortID.generate();
-        var board = monopoly.newBoard(boardID, game.numBoards);
+        var board = monopoly.newBoard(boardID);
         board.socketid = socket.id;
         game.boards[boardID] = board;
         saveObjectToDB("boards", board, function() {
@@ -570,9 +572,9 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('boardReconnect', function (data) {
-    var boar = new Board(data.id, data.id);
+    var boar = monopoly.newBoard(data.id);
     boar.socketid = socket.id;
-    saveObjectToDB('boards', boar, function(socket) {
+    saveObjectToDB('boards', boar, function() {
       socket.emit('boardReconnect', {success: true});   
     });
   });
@@ -595,8 +597,12 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
-    try {
-      queryUser(socket.id, function(user) {
+    console.log("trying to disconnect user");
+    queryUser(socket.id, function(user) {
+      try {
+        if (user === undefined) {
+          throw "user not found";
+        }
         var game = currentGames[user.gameInProgress];
         if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
           console.log("HERRO");
@@ -618,15 +624,16 @@ io.sockets.on('connection', function (socket) {
           // TODO: handle disconnections while in game elegantly.
           console.log("player disconnected: " + socket.id)
         }
-      });
-    } catch (err) {
-      // If no user found, query for boards
-      queryBoard(socket.id, function (board) {
-        console.log("board disconnected: " + socket.id)
-      });
-    } finally {
-      delete connections[socket.id];
-    }
+      } catch (err) {
+        // If no user found, query for boards
+        console.log("catching error");
+        queryBoard(socket.id, function (board) {
+          console.log("board disconnected: " + socket.id)
+        });
+      } finally {
+        delete connections[socket.id];
+      }
+    });
   });
 });
 
