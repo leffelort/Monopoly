@@ -130,7 +130,6 @@ app.get("/gameList", function (req, resp) {
 app.get("/game/:id", function (req, resp) {
   var gameID = req.params.id;
   var game = currentGames[gameID];
-  console.log(currentGames);
   if (game !== undefined) {
     resp.send({
       success: true,
@@ -173,22 +172,26 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
-    //u.drop();
+    u.drop();
    });
    client.collection("games", function (e,g) {
     if (e) throw e;
-    //g.drop();
+    g.drop();
+   });
+   client.collection("boards", function (e,b) {
+    if (e) throw e;
+    b.drop();
    });
 });
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
-  console.log("query for user with socketid ", sockid);
+  console.log("queryUser ", sockid);
   client.collection("users", function(error, users) {
     if (error) throw error; 
     users.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
-      console.log("queryUsername", arr);
+      console.log("queryUsername ", sockid, " ", arr);
       if (arr === undefined || arr.length !== 1) {
         callback(undefined);
       } else {
@@ -200,12 +203,12 @@ function queryUser(sockid, callback) {
 
 
 function queryBoard(sockid, callback) {
-  console.log("query for user with socketid ", sockid);
+  console.log("queryBoard ", sockid);
   client.collection("boards", function(error, boards) {
     if (error) throw error; 
     boards.find( { socketid : sockid } ).toArray(function(err, arr) {
       if (err) throw err;
-      console.log("queryBoards", arr);
+      console.log("queryBoards ", sockid, " ", arr);
       if (arr === undefined || arr.length !== 1) throw ("queryBoards exception");
       callback(arr[0]); 
     });
@@ -256,14 +259,17 @@ function queryPlayer(sockid, callback) {
 }
 
 function socketsInGame(gameid, cxn, callback) {
-  console.log("Looking for sockets for game id " + gameid);
+  console.log("socketsInGame " + gameid + " " + cxn);
   client.collection(cxn, function(error, collect) {
     if (error) throw error;
     collect.find({gameInProgress: gameid}).toArray(function(err, arr) {
       if (err) throw err;
       console.log("dese are the sockets i found", arr);
-      if (arr === undefined || arr.length === 0) throw ("socketInGame exception");
-      callback(arr);
+      if (arr === undefined || arr.length === 0) {
+        callback([]);
+      } else {
+        callback(arr);
+      }
     });
   });
 }
@@ -450,15 +456,15 @@ io.sockets.on('connection', function (socket) {
             gameID: game.id
           });
           sendToOthers(gameID, 'newplayer', {
-                player: player,
-                gameID: game.id,
-                number: player.playerNumber
-              }, socket.id);
+            player: player,
+            gameID: game.id,
+            number: player.playerNumber
+          }, socket.id);
           sendToBoards(gameID, 'newplayer', {
-                player: player,
-                gameID: game.id,
-                number: player.playerNumber
-              });
+            player: player,
+            gameID: game.id,
+            number: player.playerNumber
+          });
         }
         saveGame(game);
       }
@@ -604,30 +610,31 @@ io.sockets.on('connection', function (socket) {
         if (user === undefined) {
           throw "user not found";
         }
-        var game = currentGames[user.gameInProgress];
-        if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
-          console.log("HERRO");
-          if (game.players[user.fbid] === game.host) {
-            console.log("going to delete because host left");
-            // If the host disconnected, delete the entire game
-            sendToOthers(gameID, 'hostleft', {}, socket.id);
-            sendToBoards(gameID, 'hostleft', {});
-            deleteGame(game);
+        queryGame(socket.id, function(game) {
+          if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
+            console.log("HERRO");
+            if (game.players[user.fbid] === game.host) {
+              console.log("going to delete because host left");
+              // If the host disconnected, delete the entire game
+              sendToOthers(gameID, 'hostleft', {}, socket.id);
+              sendToBoards(gameID, 'hostleft', {});
+              deleteGame(game);
+            } else {
+              // Otherwise, the user leaves
+              delete game.players[user.fbid];
+              game.numPlayers--;
+              sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+              sendToBoards(gameID, 'playerleft', {gameID: game.id});
+              saveGame(game);
+            }
           } else {
-            // Otherwise, the user leaves
-            delete game.players[user.fbid];
-            game.numPlayers--;
-            sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-            sendToBoards(gameID, 'playerleft', {gameID: game.id});
-            saveGame(game);
+            // TODO: handle disconnections while in game elegantly.
+            console.log("player disconnected: " + socket.id)
           }
-        } else {
-          // TODO: handle disconnections while in game elegantly.
-          console.log("player disconnected: " + socket.id)
-        }
+        });
       } catch (err) {
         // If no user found, query for boards
-        console.log("catching error");
+        console.log("catching error", err);
         queryBoard(socket.id, function (board) {
           console.log("board disconnected: " + socket.id)
         });
@@ -881,7 +888,7 @@ function sendToPlayers(gameID, emitString, emitArgs) {
 // TODO This needs to actually send stuff to the baord and like we should
 // have the right sockets for boards and stuff. - thedrick
 function sendToBoards(gameID, emitString, emitArgs) {
-   socketsInGame(gameID, 'boards', function(sockets) {
+  socketsInGame(gameID, 'boards', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
       connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
