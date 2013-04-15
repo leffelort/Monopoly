@@ -72,7 +72,8 @@ function allowRolls() {
     var total = roll1 + roll2
     rollresult = total;
     socket.emit('diceroll', {
-      result: total
+      result: total,
+      doubles: (roll1 === roll2)
     });
   }
 

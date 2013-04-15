@@ -79,7 +79,8 @@ function leaveGame() {
   var gameID = currentGame.id;
   currentGame = undefined;
   socket.emit('leavegame', {
-    gameID: gameID
+    gameID: gameID,
+    fbusername: fbusername
   });
   openHomeScreen($("#gameLobbyScreen"));
 }

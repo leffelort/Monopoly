@@ -239,6 +239,18 @@ function queryPlayer(sockid, callback) {
     });
   });
 }
+
+function socketsInGame(gameid, callback) {
+  client.collection('users', function(error, users) {
+    if (error) throw error;
+    users.find({gameInProgress: gameid}).toArray(function(err, arr) {
+      if (err) throw err;
+
+      if (arr === undefined || arr.length === 0) throw ("socketInGame exception");
+      callback(arr);
+    });
+  });
+}
  
 function getPropertiesFromDatabase(onOpen) {
 
@@ -577,35 +589,29 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
   // If the player was in a game, remove them from it
-    for (var gameID in currentGames) {
-      var game = currentGames[gameID];
-      console.log("Players", game.players);
-      if (socket.id in game.players) {
-        if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
-          console.log("HERRO");
-          if (game.players[socket.id] === game.host) {
-            console.log("going to delete because host left");
-            // If the host disconnected, delete the entire game
-            sendToOthers(gameID, 'hostleft', {}, socket.id);
-            sendToBoards(gameID, 'hostleft', {});
-            deleteGame(game);
-          }
-          else {
-            // Otherwise, the user leaves
-            delete game.players[socket.id];
-            game.numPlayers--;
-            sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-            sendToBoards(gameID, 'playerleft', {gameID: game.id});
-            saveGame(game);
-          }
+    queryUser(socket, function(user) {
+      var game = currentGames[user.gameInProgress];
+      if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
+        console.log("HERRO");
+        if (game.players[user.fbusername] === game.host) {
+          console.log("going to delete because host left");
+          // If the host disconnected, delete the entire game
+          sendToOthers(gameID, 'hostleft', {}, socket.id);
+          sendToBoards(gameID, 'hostleft', {});
+          deleteGame(game);
+        } else {
+          // Otherwise, the user leaves
+          delete game.players[user.fbusername];
+          game.numPlayers--;
+          sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+          sendToBoards(gameID, 'playerleft', {gameID: game.id});
+          saveGame(game);
         }
-        else {
-          // TODO: handle disconnections while in game elegantly.
-        }
-        break;
+      } else {
+        // TODO: handle disconnections while in game elegantly.
       }
-    }
-    delete connections[socket.id];
+      delete connections[socket.id];
+    });
   });
 });
 
@@ -816,14 +822,15 @@ function startGame(gameID) {
 
 
 function sendToPlayers(gameID, emitString, emitArgs) {
-  var game = currentGames[gameID];
-  if (game != undefined) {
-    for (var socketid in game.players) {
-      connections[socketid].emit(emitString, emitArgs);
+  socketsInGame(gameID, function(sockets) {
+    for (var i = 0; i < sockets.length; i++) {
+      connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
-  }
+  });
 } 
 
+// TODO This needs to actually send stuff to the baord and like we should
+// have the right sockets for boards and stuff. - thedrick
 function sendToBoards(gameID, emitString, emitArgs) {
    var game = currentGames[gameID];
     if (game != undefined) {
@@ -834,12 +841,11 @@ function sendToBoards(gameID, emitString, emitArgs) {
 }
 
 function sendToOthers(gameID, emitString, emitArgs, senderID) {
-  var game = currentGames[gameID];
-    if (game != undefined) {
-    for (var socketid in game.players) {
-      if (socketid !== senderID) {
-        connections[socketid].emit(emitString, emitArgs);
+  socketsInGame(gameID, function(sockets) {
+    for (var i = 0; i < sockets.length; i++) {
+      if (sockets[i].socketid !== senderID) {
+        connections[sockets[i].socketid].emit(emitString, emitArgs);
       }
     }
-  }
+  });
 }
