@@ -197,6 +197,19 @@ function queryUser(sockid, callback) {
 }
 
 
+function queryBoard(sockid, callback) {
+  console.log("query for user with socketid ", sockid);
+  client.collection("boards", function(error, users) {
+    if (error) throw error; 
+    boards.find( { socketid : sockid } ).toArray(function(err, arr) {
+      if (err) throw err;
+      console.log("queryBoards", arr);
+      if (arr === undefined || arr.length !== 1) throw ("queryBoards exception");
+      callback(arr[0]); 
+    });
+  });
+}
+
 
 // get back the game the player at socket id is a part of
 function queryGame(sockid, callback) {
@@ -291,7 +304,7 @@ function saveObjectToDB(collection, obj, cback) {
           //console.log(res);
         });
       } else if (obj.socketid !== undefined) {
-        console.log("Updating socket id for user: " + obj.socketid);
+        console.log("Updating socket id for obj: " + obj.socketid);
         collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
           if (err)
             throw err;
@@ -553,6 +566,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
+  socket.on('getBoardMe', function () {
+  });
+  
   socket.on('diceroll', function(data) {
     console.log('diceroll??');
     handleRoll(data.result, data.doubles, socket.id, data.fbid);
@@ -797,6 +813,7 @@ function debit(game, socketid, amt, fbid) {
   }
   //saveGame(game);
 }
+
 
 
 function userMaintain(socket, data, cback) {
