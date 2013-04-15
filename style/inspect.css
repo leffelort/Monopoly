@@ -35,3 +35,19 @@
   	-ms-transform: scale(0.49);
   	transform: scale(0.49);*/
 }
+
+#propOptions {
+	width: 20%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.backbtn {
+	height: 20%;
+	width: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+}
