@@ -183,7 +183,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
-  console.log("query for username with socketid ", sockid);
+  console.log("query for user with socketid ", sockid);
   client.collection("users", function(error, users) {
     if (error) throw error; 
     users.find( { socketid : sockid } ).toArray(function(err, arr) {
@@ -227,8 +227,8 @@ function queryPlayer(sockid, callback) {
           var game = arr[i];
           for (var pid in game.players) {
             var player = game.players[pid];
-            console.log("looking for player with pid " + user.fbusername + " currently looking at ", player);
-            if (player.fbusername === user.fbusername) {
+            console.log("looking for player with pid " + user.fbid + " currently looking at ", player);
+            if (player.fbid === user.fbid) {
               p = player;
               p.fbid = user.id;
             }
@@ -241,11 +241,12 @@ function queryPlayer(sockid, callback) {
 }
 
 function socketsInGame(gameid, callback) {
+  console.log("Looking for sockets for game id " + gameid);
   client.collection('users', function(error, users) {
     if (error) throw error;
     users.find({gameInProgress: gameid}).toArray(function(err, arr) {
       if (err) throw err;
-
+      console.log("dese are the sockets i found", arr);
       if (arr === undefined || arr.length === 0) throw ("socketInGame exception");
       callback(arr);
     });
@@ -309,7 +310,7 @@ function updateCurrentGame(playerid, gameid) {
   console.log("updating player + " + playerid + " with game id " + gameid);
   client.collection("users", function(error, users) {
     if (error) throw error;
-    users.update({fbusername: playerid}, {$set : {gameInProgress: gameid} } , function(error) {
+    users.update({fbid: playerid}, {$set : {gameInProgress: gameid} } , function(error) {
       if (error) throw error;
       console.log("successfully updated gameinprogress");
     });
@@ -388,13 +389,13 @@ io.sockets.on('connection', function (socket) {
   socket.on('hostgame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
-      game.host = monopoly.newPlayer(data.username, data.fbusername);
+      game.host = monopoly.newPlayer(data.username, data.fbid);
       console.log(game.host);
       game.numPlayers++;
       game.host.playerNumber = game.numPlayers;
       game.host.gameInProgress = game.id;
-      game.players[data.fbusername] = game.host;
-      updateCurrentGame(data.fbusername, game.id);
+      game.players[data.fbid] = game.host;
+      updateCurrentGame(data.fbid, game.id);
       socket.emit('hostgame', { 
         success: true,
         gameID: game.id
@@ -423,12 +424,12 @@ io.sockets.on('connection', function (socket) {
           });
         }
         else {
-          var player = monopoly.newPlayer(data.username, data.fbusername);
+          var player = monopoly.newPlayer(data.username, data.fbid);
           game.numPlayers++;
           player.playerNumber = game.numPlayers;
           player.gameInProgress = game.id;
-          game.players[data.fbusername] = player;
-          updateCurrentGame(data.fbusername, game.id);
+          game.players[data.fbid] = player;
+          updateCurrentGame(data.fbid, game.id);
           socket.emit('joingame', {
             success: true,
             gameID: game.id
@@ -516,14 +517,14 @@ io.sockets.on('connection', function (socket) {
   socket.on('leavegame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
-      if (game.players[data.fbusername] === game.host) {
+      if (game.players[data.fbid] === game.host) {
         // If host leaves, the entire game is deleted
         sendToOthers(data.gameID, 'hostleft', {}, socket.id);
         sendToBoards(data.gameID, 'hostleft', {});
         deleteGame(currentGames[data.gameID])
       }
       else {
-        delete game.players[data.fbusername];
+        delete game.players[data.fbid];
         game.numPlayers--;
         sendToPlayers(data.gameID, 'playerleft',  {
           gameID: game.id
@@ -573,14 +574,14 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('diceroll', function(data) {
     console.log('diceroll??');
-    handleRoll(data.result, data.doubles, socket.id, data.fbusername);
+    handleRoll(data.result, data.doubles, socket.id, data.fbid);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
   
   socket.on('shortSell', function(data) {
     if (data.result) {
-      handleSale(data.property, socket.id, data.fbusername);
+      handleSale(data.property, socket.id, data.fbid);
     }
     else {
       //endTurn();
@@ -593,7 +594,7 @@ io.sockets.on('connection', function (socket) {
       var game = currentGames[user.gameInProgress];
       if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
         console.log("HERRO");
-        if (game.players[user.fbusername] === game.host) {
+        if (game.players[user.fbid] === game.host) {
           console.log("going to delete because host left");
           // If the host disconnected, delete the entire game
           sendToOthers(gameID, 'hostleft', {}, socket.id);
@@ -601,7 +602,7 @@ io.sockets.on('connection', function (socket) {
           deleteGame(game);
         } else {
           // Otherwise, the user leaves
-          delete game.players[user.fbusername];
+          delete game.players[user.fbid];
           game.numPlayers--;
           sendToPlayers(gameID, 'playerleft', {gameID: game.id});
           sendToBoards(gameID, 'playerleft', {gameID: game.id});
@@ -618,7 +619,7 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
-function handleSale(space, socketid, fbusername) {
+function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     var prop;
     for (var index in game.availableProperties) {
@@ -627,23 +628,23 @@ function handleSale(space, socketid, fbusername) {
         delete game.availableProperties[index];
       }
     }
-   // var user = game.players[socketid].fbusername;
-    game.players[fbusername].properties[space] = prop;
-    game.propertyOwners[space] = fbusername;
-    debit(game, socketid, property.price, fbusername);
-    sendToBoards('propertySold', {property : space, fbusername: fbusername});
+   // var user = game.players[socketid].fbid;
+    game.players[fbid].properties[space] = prop;
+    game.propertyOwners[space] = fbid;
+    debit(game, socketid, property.price, fbid);
+    sendToBoards('propertySold', {property : space, fbid: fbid});
   });
 }
 
-function handleRoll(z, dbls, socketid, fbusername) {
+function handleRoll(z, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
-     //if (game.players[fbusername].jailed) //todo handle in-jail rolls. 
-    game.players[fbusername].space = ((game.players[fbusername].space + z) % 40);
-    sendToBoards(game.id, 'movePlayer', {fbusername: fbusername, 
-                                           space : game.players[fbusername].space });
+     //if (game.players[fbid].jailed) //todo handle in-jail rolls. 
+    game.players[fbid].space = ((game.players[fbid].space + z) % 40);
+    sendToBoards(game.id, 'movePlayer', {fbid: fbid, 
+                                           space : game.players[fbid].space });
      // saveGame(game);
-    if (game.players[fbusername].space < z) passGo(game, socketid,fbusername);
-    handleSpace(game, socketid, game.players[fbusername].space);
+    if (game.players[fbid].space < z) passGo(game, socketid,fbid);
+    handleSpace(game, socketid, game.players[fbid].space);
   });
 }
 
@@ -692,9 +693,9 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid,fbusername) {
+function collectRent(game, space, socketid,fbid) {
   //todo: how do i find out who owns something? real issue. need a map from space -> uname?
-  var property = game[fbusername].propertyOwners[space];
+  var property = game[fbid].propertyOwners[space];
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   switch(property.numHouses) {
@@ -729,67 +730,67 @@ function collectRent(game, space, socketid,fbusername) {
   //endTurn();
 }
 
-function shortSell(space, socketid, fbusername) {
+function shortSell(space, socketid, fbid) {
   var sock = connections[socketid];
-  sock.emit('shortSell', {'property' : space, fbusername: fbusername}); //naming convention?
+  sock.emit('shortSell', {'property' : space, fbid: fbid}); //naming convention?
 }
 
-function sendToJail(game, socketid, fbusername) {
+function sendToJail(game, socketid, fbid) {
   var jail = 30;
-  game.players[fbusername].space = jail;
-  sendToBoards(game.id, 'goToJail', {fbusername: game.players[socketid].fbusername, 
+  game.players[fbid].space = jail;
+  sendToBoards(game.id, 'goToJail', {fbid: game.players[fbid].fbid, 
                                        space : jail });
-  game.players[fbusername].jailed = true;
+  game.players[fbid].jailed = true;
 }
 
-function handleTax(game, space, socketid, fbusername){
+function handleTax(game, space, socketid, fbid){
   if (space === 38) {
-    debit(game, socketid, 100, fbusername);
+    debit(game, socketid, 100, fbid);
   }
   if (space === 4) {
     //todo: incometax()
   }
 }
 
-function handleSpace(game, socketid, space, fbusername) {
+function handleSpace(game, socketid, space, fbid) {
   if (isOwnable(space)) {
     if (isOwned(game, space)) {
-      collectRent(game, space, socketid, fbusername);
+      collectRent(game, space, socketid, fbid);
     } else {
-      shortSell(space, socketid, fbusername);
+      shortSell(space, socketid, fbid);
     }
   }
   if (isCorner(space)) {
     if (space === 0) {
-      credit(game,socketid,200, fbusername);
+      credit(game,socketid,200, fbid);
       // do we want double money for landing on go???
     }
     if (space === 20) {
-      credit(game,socketid,500, fbusername);
+      credit(game,socketid,500, fbid);
       // do we want free parking to be a straight $500??
     }
     if (space === 30) {
-      sendToJail(game, socketid, fbusername);
+      sendToJail(game, socketid, fbid);
     }
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
   }
   if (isTax(space)) {
-    handleTax(game, space, socketid, fbusername);
+    handleTax(game, space, socketid, fbid);
   }
 }
 
-function credit(game,socketid, amt, fbusername) {
-  game.players[fbusername].money = game.players[fbusername].money + amt;
+function credit(game,socketid, amt, fbid) {
+  game.players[fbid].money = game.players[fbid].money + amt;
   //need to ensure atomicity later on probably...
 }
 
-function debit(game, socketid, amt, fbusername) {
-      if (game.players[fbusername].money - amt < 0) {
+function debit(game, socketid, amt, fbid) {
+      if (game.players[fbid].money - amt < 0) {
         //handle mortgage conditions, loss conditions, etc;
       } else {
-        game.players[fbusername].money = game.players[fbusername].money - amt;
+        game.players[fbid].money = game.players[fbid].money - amt;
         return true;
       }
   //saveGame(game);
@@ -801,7 +802,7 @@ function userMaintain(socket, data, cback) {
     user.first_name = data.first_name;
     user.last_name = data.last_name;
     user.full_name = data.name;
-    user.fbusername = data.username; 
+    user.fbid = data.id; 
     user.id = data.id;
     user.gender = data.gender;
     user.socketid = socket.id;

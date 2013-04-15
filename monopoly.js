@@ -20,8 +20,8 @@ var Game = function(id, code, name, password, maxPlayers) {
 
 
 
-var Player = function(username, fbusername) {
-  this.fbusername = fbusername
+var Player = function(username, fbid) {
+  this.fbid = fbid
   this.username = username;
   this.money = 1500;
   this.properties = [];
@@ -49,8 +49,8 @@ module.exports.newBoard = function() {
 module.exports.newGame = function(id, code, name, password, maxPlayers) {
   return new Game(id, code, name, password, maxPlayers);
 }
-module.exports.newPlayer = function(username, fbusername) {
-  return new Player(username, fbusername);
+module.exports.newPlayer = function(username, fbid) {
+  return new Player(username, fbid);
 }
 module.exports.newProperty = new Property();
 

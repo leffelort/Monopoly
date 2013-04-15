@@ -7,7 +7,7 @@ var selectedGameIndex;
 var socket;
 
 var username = undefined;
-var fbusername = undefined;
+var fbid = undefined;
 
 var gameCode; //need this to be a global for now :/ ~pjm
 
@@ -44,7 +44,7 @@ function hostGame() {
           socket.emit('hostgame', {
             gameID: data.id,
             username: window.username,
-            fbusername: window.fbusername
+            fbid: window.fbid
           });
         }
       }
@@ -70,7 +70,7 @@ function joinGame() {
     socket.emit('joingame', {
       code: gameCode,
       username: window.username,
-      fbusername: window.fbusername
+      fbid: window.fbid
     });
   }
 }
@@ -80,7 +80,7 @@ function leaveGame() {
   currentGame = undefined;
   socket.emit('leavegame', {
     gameID: gameID,
-    fbusername: fbusername
+    fbid: fbid
   });
   openHomeScreen($("#gameLobbyScreen"));
 }
@@ -170,7 +170,7 @@ function createGameLobby() {
       row = $("<div>").addClass("gameLobbyRow");
     }
     var userSquare = $("<div>").addClass("userSquare");
-    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbusername + "/picture?width=75&height=75"))
+    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbid + "/picture?width=75&height=75"))
               .append($("<h2>").html("Player " + index + ": " + player.username.split(" ")[0]));
     row.append(userSquare);
     if (index % 2 === 1)
@@ -320,7 +320,7 @@ var afterLogin = function() {
   FB.api('/me', function(me) {
     console.log(me);
     window.username = me.name;
-    window.fbusername = me.username;
+    window.fbid = me.id;
     socket.emit('login', me);
   });
   attachSocketHandlers();
