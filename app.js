@@ -255,11 +255,11 @@ function queryPlayer(sockid, callback) {
   });
 }
 
-function socketsInGame(gameid, callback) {
+function socketsInGame(gameid, cxn, callback) {
   console.log("Looking for sockets for game id " + gameid);
-  client.collection('users', function(error, users) {
+  client.collection(cxn, function(error, collect) {
     if (error) throw error;
-    users.find({gameInProgress: gameid}).toArray(function(err, arr) {
+    collect.find({gameInProgress: gameid}).toArray(function(err, arr) {
       if (err) throw err;
       console.log("dese are the sockets i found", arr);
       if (arr === undefined || arr.length === 0) throw ("socketInGame exception");
@@ -863,13 +863,15 @@ function startGame(gameID) {
   if (game !== undefined) {
     game.isStarted = true;
   }
+  saveGame(game);
   sendToPlayers(gameID, 'gameReady', {});
   sendToBoards(gameID, 'gameReady', {});
+  delete currentGames[gameID];
 }
 
 
 function sendToPlayers(gameID, emitString, emitArgs) {
-  socketsInGame(gameID, function(sockets) {
+  socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
       connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
@@ -879,16 +881,15 @@ function sendToPlayers(gameID, emitString, emitArgs) {
 // TODO This needs to actually send stuff to the baord and like we should
 // have the right sockets for boards and stuff. - thedrick
 function sendToBoards(gameID, emitString, emitArgs) {
-   var game = currentGames[gameID];
-    if (game != undefined) {
-      for (var boardID in game.boards) {
-        connections[game.boards[boardID].socketid].emit(emitString, emitArgs);
+   socketsInGame(gameID, 'boards', function(sockets) {
+    for (var i = 0; i < sockets.length; i++) {
+      connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
-  }
+  });
 }
 
 function sendToOthers(gameID, emitString, emitArgs, senderID) {
-  socketsInGame(gameID, function(sockets) {
+  socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
       if (sockets[i].socketid !== senderID) {
         connections[sockets[i].socketid].emit(emitString, emitArgs);
