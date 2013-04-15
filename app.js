@@ -873,8 +873,8 @@ function sendToPlayers(gameID, emitString, emitArgs) {
 function sendToBoards(gameID, emitString, emitArgs) {
    var game = currentGames[gameID];
     if (game != undefined) {
-      for (var socketid in game.boards) {
-        connections[socketid].emit(emitString, emitArgs);
+      for (var boardID in game.boards) {
+        connections[game.boards[boardID].socketid].emit(emitString, emitArgs);
     }
   }
 }
