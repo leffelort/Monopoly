@@ -42,6 +42,7 @@ var Property = function() {
 var Board = function(id, boardnumber) {
   this.id = id;
 	this.boardNumber = boardnumber;
+  this.socketid;
 }
 
 module.exports.newBoard = function(id, boardnumber) {

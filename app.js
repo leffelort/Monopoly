@@ -480,22 +480,25 @@ io.sockets.on('connection', function (socket) {
         game.numBoards++;
         var boardID = shortid.generate();
         var board = monopoly.newBoard(boardID, game.numBoards);
-        game.boards[socket.id] = board;
-        socket.emit('boardjoin', {
-          success: true,
-          gameID: game.id,
-          boardID: board.id
-        });
-        sendToPlayers(game.id, 'boardjoin', {
-          gameID: game.id,
-          number: game.numBoards
-        });
-        if ((game.playersWaiting === game.numPlayers) && 
-            (game.numPlayers > 1) && (!game.isStarted) && 
-            (game.numBoards > 0)) {
-          startGame(game.id);
-        }
+        board.socketid = socket.id;
+        game.boards[boardID] = board;
+        saveObjectToDB("boards", board, function() {
+          socket.emit('boardjoin', {
+            success: true,
+            gameID: game.id,
+            boardID: board.id
+          });
+          sendToPlayers(game.id, 'boardjoin', {
+            gameID: game.id,
+            number: game.numBoards
+          });
+          if ((game.playersWaiting === game.numPlayers) && 
+              (game.numPlayers > 1) && (!game.isStarted) && 
+              (game.numBoards > 0)) {
+            startGame(game.id);
+          }
         saveGame(game);
+        });
       }
     }
     if (!gameFound) {
@@ -566,7 +569,12 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
-  socket.on('getBoardMe', function () {
+  socket.on('boardReconnect', function (data) {
+    var boar = new Board(data.id, data.id);
+    boar.socketid = socket.id;
+    saveObjectToDB('boards', boar, function(socket) {
+      socket.emit('boardReconnect', {success: true});   
+    });
   });
   
   socket.on('diceroll', function(data) {
