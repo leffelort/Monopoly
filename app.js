@@ -697,30 +697,30 @@ function collectRent(game, space, socketid,fbusername) {
   var property = game[fbusername].propertyOwners[space];
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
-  
-  if (property.mortgaged) {
-    amt = 0; //todo: mention this to the clients?
-  }
-  if (!property.monopoly) {
-    amt = property.rent;
-  }
-  if ((property.monopoly) && (property.numHouses === 0) && (!property.hotel)) {
-    amt = (property.rent * 2)
-  }
-  if (property.numHouses === 1) {
-    amt = property.onehouse;
-  }
-  if (property.numHouses === 2) {
-    amt = property.twohouse;
-  }
-  if (property.numHouses === 3) {
-    amt = property.threehouse;
-  }
-  if (property.numHouses === 4) {
-    amt = property.fourhouse;
-  }
-  if (property.hotel) {
-    amt = property.hotel;
+  switch(property.numHouses) {
+    case 0 :
+      if (property.mortgaged) {
+        amt = 0;
+      }
+      if (property.monopoly) {
+        amt = (property.rent * 2)
+      }
+      if (property.hotel) {
+        amt = property.hotel
+      }
+      break;   
+    case 1: 
+      amt = property.onehouse;
+      break; 
+    case 2: 
+      amt = property.twohouse;
+      break;
+    case 3: 
+      amt = property.threehouse;
+      break;
+    case 4: 
+      amt = property.fourhouse;
+      break;
   }
   atom = debit(game, socketid, amt);
   if (atom) credit(game, socketid, amt);
