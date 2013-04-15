@@ -44,6 +44,7 @@ var Property = function(card) {
 var Board = function(id) {
   this.id = id;
   this.socketid;
+  this.gameInProgress;
 }
 
 module.exports.newBoard = function(id) {

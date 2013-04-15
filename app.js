@@ -483,6 +483,7 @@ io.sockets.on('connection', function (socket) {
         var boardID = shortID.generate();
         var board = monopoly.newBoard(boardID);
         board.socketid = socket.id;
+        board.gameInProgress = game.id;
         game.boards[boardID] = board;
         saveObjectToDB("boards", board, function() {
           socket.emit('boardjoin', {
