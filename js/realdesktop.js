@@ -259,6 +259,7 @@ function attachSocketHandlers() {
     console.log(socketdata);
     if (socketdata.success) {
       boardID = socketdata.boardID;
+      localStorage["cmuopoly_boardID"] = boardID;
       openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
     }
     else {
@@ -299,7 +300,7 @@ function attachSocketHandlers() {
   
 	socket.on('gameReady', function () {
 		console.log("READY.");
-		window.location = "/board.html";
+		window.location = "/board/monopoly.html";
 	});
 }
 
