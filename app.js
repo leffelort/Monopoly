@@ -587,30 +587,38 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
-    console.log("socket disconnect: " + socket.id);
-    queryUser(socket.id, function(user) {
-      var game = currentGames[user.gameInProgress];
-      if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
-        console.log("HERRO");
-        if (game.players[user.fbid] === game.host) {
-          console.log("going to delete because host left");
-          // If the host disconnected, delete the entire game
-          sendToOthers(gameID, 'hostleft', {}, socket.id);
-          sendToBoards(gameID, 'hostleft', {});
-          deleteGame(game);
+    try {
+      queryUser(socket.id, function(user) {
+        var game = currentGames[user.gameInProgress];
+        if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
+          console.log("HERRO");
+          if (game.players[user.fbid] === game.host) {
+            console.log("going to delete because host left");
+            // If the host disconnected, delete the entire game
+            sendToOthers(gameID, 'hostleft', {}, socket.id);
+            sendToBoards(gameID, 'hostleft', {});
+            deleteGame(game);
+          } else {
+            // Otherwise, the user leaves
+            delete game.players[user.fbid];
+            game.numPlayers--;
+            sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+            sendToBoards(gameID, 'playerleft', {gameID: game.id});
+            saveGame(game);
+          }
         } else {
-          // Otherwise, the user leaves
-          delete game.players[user.fbid];
-          game.numPlayers--;
-          sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-          sendToBoards(gameID, 'playerleft', {gameID: game.id});
-          saveGame(game);
+          // TODO: handle disconnections while in game elegantly.
+          console.log("player disconnected: " + socket.id)
         }
-      } else {
-        // TODO: handle disconnections while in game elegantly.
-      }
+      });
+    } catch (err) {
+      // If no user found, query for boards
+      queryBoard(socket.id, function (board) {
+        console.log("board disconnected: " + socket.id)
+      });
+    } finally {
       delete connections[socket.id];
-    });
+    }
   });
 });
 
