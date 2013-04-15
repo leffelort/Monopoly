@@ -7,6 +7,7 @@ var fs = require("fs");
 var shortID = require("shortid");
 var monopoly = require("./monopoly.js");
 var phoneCodeGen = require("./phoneCodeGen.js");
+var _ = require("underscore");
 
 app.use(express.bodyParser());
 
@@ -86,7 +87,11 @@ app.post("/hostGame", function (req, resp) {
     password, numPlayers);
 
     getPropertiesFromDatabase(function (arr) {
-      currentGames[gameID].availableProperties = arr;
+      for (var i = 0; i < arr.length; i++) {
+        var card = arr[i];
+        var prop = monopoly.newProperty(card);
+        currentGames[gameID].availableProperties.push(prop);
+      }
     });
 
   resp.send({
@@ -229,6 +234,21 @@ function queryGame(sockid, callback) {
     });
   });
 }
+
+// get the list of ALL property objects for a given game.
+function getPropertiesForGame(sockid, callback) {
+  queryGame(sockid, function(game) {
+    var props = game.availableProperties;
+    for (var fbid in game.players) {
+      var player = game.players[fbid];
+      props = _.union(props, player.properties);
+    }
+    if (props.length > 0) console.log("Successfully retrieved properties");
+    else console.log("Wir haben keine Properties. Ich bin traurig :'(");
+    callback(props);
+  });
+}
+
 //DON'T USE THIS. READ ONLY, ONLY USED IN THE SOCKET.ON("GETME") HANDLER. - pmarino
 // this is a copy and paste of queryGame because... I didn't know how else
 // to do it for some reason? Calling queryGame wasn't working for whatever
@@ -577,6 +597,12 @@ io.sockets.on('connection', function (socket) {
       socket.emit('getme', res);
     });
   });
+
+  socket.on('getProperties', function() {
+    getPropertiesForGame(socket.id, function(props) {
+      socket.emit('getProperties', props);
+    });
+  });
   
   socket.on('boardReconnect', function (data) {
     var boar = monopoly.newBoard(data.id);
@@ -667,13 +693,13 @@ function handleSale(space, socketid, fbid) {
         delete game.availableProperties[index];
       }
     }
-   // var user = game.players[socketid].fbid;
+    prop.owner = game.players[fbid].first_name;
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
     debit(game, socketid, property.price, fbid);
     sendToBoards('propertySold', {property : space, fbid: fbid});
     endTurn(game);
-    });
+  });
 }
 
 function handleRoll(z, dbls, socketid, fbid) {
@@ -731,8 +757,8 @@ function isCorner(space) {
 
 function isOwned(game, space) {
   var avails = game.availableProperties;
-  for (var prop in avails) {
-    if (avails[prop].id === space) { 
+  for (var idx in avails) {
+    if (avails[idx].id === space) { 
       return false;
     }
   return true;
@@ -741,7 +767,7 @@ function isOwned(game, space) {
 }
 
 function collectRent(game, space, socketid,fbid) {
-  var property = game[fbid].propertyOwners[space];
+  var property = game[fbid].propertyOwners[space].card;
   //todo Railroads && utilities!!!!!!!!!!!!
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";

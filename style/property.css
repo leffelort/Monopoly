@@ -41,6 +41,7 @@ body {
 	margin: 3% auto;
 	font-family: 'Kabel-ExtraBold';
 	text-transform: capitalize;
+	color: black;
 }
 
 .propertyName h1:before {
