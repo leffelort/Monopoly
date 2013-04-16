@@ -929,7 +929,14 @@ function collectRent(game, space, socketid, fbid) { //this fbid is the person pa
   atom = debit(game, socketid, amt, fbid);
   if (atom) credit(game, socketid, amt, owner);
   else throw exn;
-  connections[socketid].emit('payingRent', {space: space, amount: amt});
+  connections[socketid].emit('payingRent', {
+    owner: owner,
+    tenant: fbid,
+    space: space, 
+    amount: amt,
+    tenantMoney: game.players[fbid].money,
+    ownerMoney: game.players[owner].money
+  });
   endTurn(game);
 }
 
@@ -942,11 +949,14 @@ function propertyBuy(game, property, socketid, fbid) {
 }
 
 function sendToJail(game, socketid, fbid) {
-  var jail = 30;
+  var jail = 10;
+  var initial = game.players[fbid].space;
   game.players[fbid].space = jail;
-  sendToBoards(game.id, 'goToJail', {fbid: game.players[fbid].fbid, 
-                                       space : jail });
   game.players[fbid].jailed = true;
+  sendToBoards(game.id, 'goToJail', {
+    fbid: fbid,
+    initial: initial
+  });
 }
 
 function handleTax(game, space, socketid, fbid){

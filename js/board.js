@@ -3,6 +3,7 @@ var boardID;
 
 // Map from fbid to player number (1-indexed).
 var players = {};
+var playerNames = {};
 
 var eventQueue = [];
 var currentEvent = undefined;
@@ -28,6 +29,7 @@ function refreshBoardState(game) {
     var player = game.players[fbid];
     var playerNum = player.playerNumber + 1;
     window.players[player.fbid] = playerNum;
+    window.playerNames[player.fbid] = player.username;
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + player.username);
     $("#playermoney" + playerNum).html("Money: $" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
@@ -87,6 +89,18 @@ function movePlayer(fbid, initial, end) {
   $("#space" + initial + " .playerpiece" + players[fbid])
     .removeClass("visible");
   $("#space" + end + " .playerpiece" + players[fbid]).addClass("visible");
+  if (end === 10) {
+    // Special case just visiting the jail
+    // see jailPlayer() for the special case of going to jail
+    $("#jail .playerpiece" + players[fbid]).removeClass("visible");
+  }
+}
+
+function jailPlayer(fbid, initial) {
+  console.log("jailPlayer:", fbid);
+  $("#space" + initial + " .playerpiece" + players[fbid])
+    .removeClass("visible");
+  $("#jail .playerpiece" + players[fbid]).addClass("visible");
 }
 
 function updatePlayerMoney(fbid, money) {
@@ -94,14 +108,14 @@ function updatePlayerMoney(fbid, money) {
 }
 
 function propertySold(fbid, propid, money) {
-  console.log("sellProperty: " + fbid);
+  console.log("propertySold: " + fbid);
   $("#space" + propid + " .propertyown").addClass("playerown" + players[fbid]);
   updatePlayerMoney(fbid, money);
-  displayEvent("Player " + players[fbid] + " bought property " + propid);
+  displayEvent(playerNames[fbid] + " bought property " + propid);
 }
 
 function nextTurn(fbid) {
-  displayEvent("Player " + players[fbid] + "'s turn!");
+  displayEvent(playerNames[fbid] + "'s turn!");
 }
 
 function attachSocketHandlers() {
@@ -125,12 +139,22 @@ function attachSocketHandlers() {
     movePlayer(socketdata.fbid, socketdata.initial, socketdata.end);
   });
   
+  socket.on('goToJail', function (socketdata) {
+    jailPlayer(socketdata.fbid, socketdata.initial);
+  })
+  
   socket.on('propertySold', function (socketdata) {
     propertySold(socketdata.fbid, socketdata.property, socketdata.money)
   });
   
   socket.on('nextTurn', function (socketdata) {
     nextTurn(socketdata.fbid);
+  });
+  
+  socket.on('payingRent', function (socketdata) {
+    updatePlayerMoney(socketdata.tenant, socketdata.tenantMoney);
+    updatePlayerMoney(socketdata.owner, socketdata.ownerMoney);
+    displayEvent(playerNames[socketdata.tenant] + " paid " + playerNames[socketdata.owner] + " $" + socketdata.amount + " in rent.");
   });
 }
 
