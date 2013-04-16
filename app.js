@@ -650,6 +650,14 @@ io.sockets.on('connection', function (socket) {
       socket.emit('getProperties', props);
     });
   });
+
+  socket.on('getMyProperties', function() {
+    getPropertiesForGame(socket.id, function(props) {
+      queryPlayer(socket.id, function(player) {
+        socket.emit('getMyProperties', player.properties);
+      });
+    });
+  });
   
   socket.on('boardReconnect', function (data) {
     var boar = monopoly.newBoard(data.id);
@@ -791,7 +799,7 @@ function handleSale(space, socketid, fbid) {
     console.log("I a gonna changa die monezzzz? " + game.players[fbid].money);
     debit(game, socketid, prop.card.price, fbid);
     console.log("Did da moniez change? " + game.players[fbid].money);
-    prop.owner = game.players[fbid].first_name;
+    prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
     
