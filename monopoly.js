@@ -33,7 +33,6 @@ var Player = function(username, fbid) {
 }
 
 var Property = function(card) {
-  //this doesn't jive with our property obj in the database :|
   this.id = card.space;
   this.numHouses = 0;
   this.hotel = false;

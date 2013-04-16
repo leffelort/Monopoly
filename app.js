@@ -9,6 +9,7 @@ var monopoly = require("./monopoly.js");
 var phoneCodeGen = require("./phoneCodeGen.js");
 var _ = require("underscore");
 var retry = 5;
+var boardretry = 5;
 
 app.use(express.bodyParser());
 
@@ -192,37 +193,51 @@ mongo.Db.connect(mongoUri, function(err, db) {
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
-  if (retry <= 0) return;
-  console.log("Retry count: " + retry);
-  //console.log("queryUser ", sockid);
-  client.collection("users", function(error, users) {
-    if (error) throw error; 
-    users.find( { socketid : sockid } ).toArray(function(err, arr) {
-      if (err) throw err;
-      console.log("queryUsername ", sockid, " ", arr);
-      if (arr === undefined || arr.length !== 1) {
-        queryUser(sockid, callback, retry--);
-      } else {
-        callback(arr[0]); 
-        retry = 5;
-        return;
-      }
+  if (retry <= 0) {
+    callback(undefined);
+  } else {
+    console.log("Retry count: " + retry);
+    //console.log("queryUser ", sockid);
+    client.collection("users", function(error, users) {
+      if (error) throw error; 
+      users.find( { socketid : sockid } ).toArray(function(err, arr) {
+        if (err) throw err;
+        console.log("queryUsername ", sockid, " ", arr);
+        if (arr === undefined || arr.length !== 1) {
+          retry--;
+          queryUser(sockid, callback);
+        } else {
+          retry = 5;
+          callback(arr[0]); 
+          return;
+        }
+      });
     });
-  });
+  }
 }
 
 
 function queryBoard(sockid, callback) {
-  console.log("queryBoard ", sockid);
-  client.collection("boards", function(error, boards) {
-    if (error) throw error; 
-    boards.find( { socketid : sockid } ).toArray(function(err, arr) {
-      if (err) throw err;
-      console.log("queryBoards ", sockid, " ", arr);
-      if (arr === undefined || arr.length !== 1) throw ("queryBoards exception");
-      callback(arr[0]); 
+  if (boardretry <= 0) {
+    callback(undefined);
+  } else {
+    console.log("queryBoard ", sockid);
+    client.collection("boards", function(error, boards) {
+      if (error) throw error; 
+      boards.find( { socketid : sockid } ).toArray(function(err, arr) {
+        if (err) throw err;
+        console.log("queryBoards ", sockid, " ", arr);
+        if (arr === undefined || arr.length !== 1) {
+          boardretry--;
+          queryBoard(sockid, callback);
+        } else {
+          boardretry = 5;
+          callback(arr[0]);
+          return;
+        }
+      });
     });
-  });
+  }
 }
 
 
@@ -235,6 +250,20 @@ function queryGame(sockid, callback) {
         if (err) throw err;
         console.log("queryGame", arr);
         if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
+        callback(arr[0]);
+      });
+    });
+  });
+}
+
+function queryGameFromBoard(sockid, callback) {
+  queryBoard(sockid, function(board) {
+    client.collection("games", function(error, games) {
+      games.find({"id" : board.gameInProgress}).toArray(function(err, arr){
+        if (err) throw err;
+        console.log("queryGame", arr);
+        if (arr === undefined || arr.length !== 1) 
+          throw ("queryGameFromBoard exception");
         callback(arr[0]);
       });
     });
@@ -418,6 +447,7 @@ var connections = {};
 var socketToPlayerId = {};
 
 io.sockets.on('connection', function (socket) {
+  socket.id = Math.random();
   connections[socket.id] = socket;
   
   // reopen and login do the exact same thing in that they
@@ -614,7 +644,13 @@ io.sockets.on('connection', function (socket) {
     var boar = monopoly.newBoard(data.id);
     boar.socketid = socket.id;
     saveObjectToDB('boards', boar, function() {
-      socket.emit('boardReconnect', {success: true});   
+      queryBoard(socket.id, function (board) {
+        boar.gameInProgress = board.gameInProgress;
+        socket.emit('boardReconnect', {
+          success: true,
+          gameID: board.gameInProgress
+        });   
+      });
     });
   });
   
@@ -632,6 +668,15 @@ io.sockets.on('connection', function (socket) {
     else {
       //endTurn();
     }
+  });
+  
+  socket.on('boardstate', function (data) {
+    queryGameFromBoard(socket.id, function (game) {
+      socket.emit('boardstate', {
+        success: true,
+        game: game
+      });
+    })
   });
 
   socket.on('disconnect', function () {
@@ -668,7 +713,11 @@ io.sockets.on('connection', function (socket) {
         // If no user found, query for boards
         console.log("catching error", err);
         queryBoard(socket.id, function (board) {
-          console.log("board disconnected: " + socket.id)
+          if (board === undefined) {
+            console.log("no board found, whatevs.");
+          } else {
+            console.log("board disconnected: " + socket.id);
+          }
         });
       } finally {
         delete connections[socket.id];
@@ -716,9 +765,14 @@ function handleRoll(z, dbls, socketid, fbid) {
     }
     var initial = game.players[fbid].space;
     game.players[fbid].space = ((game.players[fbid].space + z) % 40);
-    sendToBoards(game.id, 'movePlayer', {fbid: fbid, player: game.players[fbid].playerNumber,
-                                        initial: initial,  delta : z, end: game.players[fbid].space });
-     // saveGame(game);
+    sendToBoards(game.id, 'movePlayer', {
+      fbid: fbid, 
+      player: game.players[fbid].playerNumber,
+      initial: initial,  
+      delta : z, 
+      end: game.players[fbid].space 
+    });
+    // saveGame(game);
     if (game.players[fbid].space < z) passGo(game, socketid,fbid);
     handleSpace(game, socketid, game.players[fbid].space);
   });

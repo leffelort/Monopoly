@@ -14,12 +14,25 @@
   src: url('../fonts/KabobLight Regular.ttf') format('truetype');
 }
 
+body {
+  background: rgb(0,124,49); /* Old browsers */
+  background: -moz-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%, rgba(0,96,33,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,124,49,1)), color-stop(100%,rgba(0,96,33,1))); /* Chrome,Safari4+ */
+  background: -webkit-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* Opera 12+ */
+  background: -ms-radial-gradient(center, ellipse cover,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* IE10+ */
+  background: radial-gradient(ellipse at center,  rgba(0,124,49,1) 0%,rgba(0,96,33,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#007c31', endColorstr='#006021',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+}
+
 h1 {
   font: 1.6em 'Kabel-Light';
+  color: white;
 }
 
 h2 {
   font: 1.4em 'Lato';
+  color: white;
 }
 
 #wrapper {
@@ -382,37 +395,34 @@ h2 {
 	height:162px;
 }
 
-.player {
+.playerpiece {
   display: inline-block;
   width: 75px;
   height: 75px;
   background-repeat: no-repeat;
   background-size: 75px 75px;
   -webkit-transition: all 300ms ease-in-out;
+  opacity: 0;
 }
 
-.player1 {
+.playerpiece1 {
   background-image: url("../images/car.png");
 }
 
-.player2 {
+.playerpiece2 {
   background-image: url("../images/dog.png");
 }
 
-.player3 {
+.playerpiece3 {
   background-image: url("../images/battleship.png");
 }
 
-.player4 {
+.playerpiece4 {
   background-image: url("../images/hat.png");
 }
 
 .visible {
   opacity: 1;
-}
-
-.hidden {
-  opacity: 0;
 }
 
 .pieces1 {
@@ -495,4 +505,128 @@ h2 {
   height: 240px;
   -webkit-transform: rotate(-45deg);
   background-color: yellow;
+}
+
+.propertyown1 {
+  position: absolute;
+  top: -35px;
+  left: 30px;
+  width: 100px;
+  height: 20px;
+}
+
+.propertyown2 {
+  position: absolute;
+  right: -35px;
+  top: 30px;
+  width: 20px;
+  height: 100px;
+}
+
+.propertyown3 {
+  position: absolute;
+  bottom: -35px;
+  left: 30px;
+  width: 100px;
+  height: 20px;
+}
+
+.propertyown4 {
+  position: absolute;
+  left: -35px;
+  top: 30px;
+  width: 20px;
+  height: 100px;
+}
+
+.playerown1 {
+  background-color: red;
+}
+
+.playerown2 {
+  background-color: green;
+}
+
+.playerown3 {
+  background-color: blue;
+}
+
+.playerown4 {
+  background-color: purple;
+}
+
+.houses1 {
+  position: absolute;
+  top: 10px;
+  left: 5px;
+  width: 100%;
+  height: 35px;
+}
+
+.houses2 {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  width: 35px;
+  height: 100%;
+}
+
+.houses3 {
+  position: absolute;
+  bottom: 10px;
+  left: 5px;
+  width: 100%;
+  height: 35px;
+}
+
+.houses4 {
+  position: absolute;
+  left: 10px;
+  top: 5px;
+  width: 35px;
+  height: 100%;
+}
+
+.house {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  background-image: url("../images/house.png");
+  background-repeat: no-repeat;
+  background-size: 35px 35px;
+  opacity: 0;
+}
+
+.hotel {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  background-image: url("../images/hotel.png");
+  background-repeat: no-repeat;
+  background-size: 50px 50px;
+  opacity: 0;
+}
+
+.hotel1 {
+  position: absolute;
+  top: 5px;
+  left: 55px;
+}
+
+.hotel2 {
+  position: absolute;
+  top: 55px;
+  right: 5px;
+}
+
+.hotel3 {
+  position: absolute;
+  bottom: 5px;
+  left: 55px;
+}
+
+.hotel4 {
+  position: absolute;
+  left: 5px;
+  top: 55px;
 }

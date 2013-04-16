@@ -10,16 +10,22 @@
   <div id="wrapper">
     <div id="leftbar">
       <div id="player1info" class="playerinfo">
-        <h1>Player 1: Andrew Mittereder</h1>
-        <h2>Money: $1500</h2>
+        <h1 id="playertitle1"></h1>
+        <h2 id="playermoney1"></h2>
       </div>
       <div id="player3info" class="playerinfo">
+        <h1 id="playertitle3"></h1>
+        <h2 id="playermoney3"></h2>
       </div>
     </div>
     <div id="rightbar">
       <div id="player2info" class="playerinfo">
+        <h1 id="playertitle2"></h1>
+        <h2 id="playermoney2"></h2>
       </div>
       <div id="player4" class="playerinfo">
+        <h1 id="playertitle4"></h1>
+        <h2 id="playermoney4"></h2>
       </div>
     </div>
     <div id="board">
@@ -30,369 +36,550 @@
       </div>
       <div id="space0">
         <div class="cornerpiece">
-          <div class="player player1 visible"></div>
-          <div class="player player2 visible"></div>
-          <div class="player player3 visible"></div>
-          <div class="player player4 visible"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img0" src="monopoly-41.png" width="271" height="269" alt="" />
       </div>
       <div id="space1">
+        <div class="propertyown propertyown1"></div>
+        <div class="houses houses1">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img1" src="monopoly-40.png" width="167" height="269" alt="" />
       </div>
       <div id="space2">
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img2" src="monopoly-39.png" width="153" height="269" alt="" />
       </div>
       <div id="space3">
+        <div class="houses houses1">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel1"></div>
+        <div class="propertyown propertyown1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img3" src="monopoly-38.png" width="160" height="269" alt="" />
       </div>
       <div id="space4">
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img4" src="monopoly-37.png" width="162" height="269" alt="" />
       </div>
       <div id="space5">
+        <div class="propertyown propertyown1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img5" src="monopoly-36.png" width="163" height="269" alt="" />
       </div>
       <div id="space6">
+        <div class="houses houses1">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel1"></div>
+        <div class="propertyown propertyown1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img6" src="monopoly-35.png" width="164" height="269" alt="" />
       </div>
       <div id="space7">
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img7" src="monopoly-34.png" width="162" height="269" alt="" />
       </div>
       <div id="space8">
+        <div class="houses houses1">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel1"></div>
+        <div class="propertyown propertyown1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img8" src="monopoly-33.png" width="163" height="269" alt="" />
       </div>
       <div id="space9">
+        <div class="houses houses1">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel1"></div>
+        <div class="propertyown propertyown1"></div>
         <div class="pieces1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img9" src="monopoly-32.png" width="164" height="269" alt="" />
       </div>
       <div id="space10">
         <div id="justVisiting1">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
         </div>
         <div id="jail">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <div id="justVisiting2">
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img10" src="monopoly-31.png" width="271" height="269" alt="" />
       </div>
       <div id="space11">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel2"></div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img11" src="monopoly-29.png" width="271" height="162" alt="" />
       </div>
       <div id="space12">
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img12" src="monopoly-27.png" width="271" height="157" alt="" />
       </div>
       <div id="space13">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel2"></div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img13" src="monopoly-25.png" width="271" height="165" alt="" />
       </div>
       <div id="space14">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img14" src="monopoly-23.png" width="271" height="162" alt="" />
       </div>
       <div id="space15">
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img15" src="monopoly-21.png" width="271" height="162" alt="" />
       </div>
       <div id="space16">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel2"></div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img16" src="monopoly-19.png" width="271" height="165" alt="" />
       </div>
       <div id="space17">
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img17" src="monopoly-17.png" width="271" height="162" alt="" />
       </div>
       <div id="space18">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel2"></div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img18" src="monopoly-15.png" width="271" height="162" alt="" />
       </div>
       <div id="space19">
+        <div class="houses houses2">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel2"></div>
+        <div class="propertyown propertyown2"></div>
         <div class="pieces2">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img19" src="monopoly-12.png" width="271" height="165" alt="" />
       </div>
       <div id="space20">
         <div class="cornerpiece">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img20" src="monopoly-01.png" width="271" height="269" alt="" />
       </div>
       <div id="space21">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img21" src="monopoly-02.png" width="165" height="269" alt="" />
       </div>
       <div id="space22">
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img22" src="monopoly-03.png" width="158" height="269" alt="" />
       </div>
       <div id="space23">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img23" src="monopoly-04.png" width="164" height="269" alt="" />
       </div>
       <div id="space24">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img24" src="monopoly-05.png" width="162" height="269" alt="" />
       </div>
       <div id="space25">
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img25" src="monopoly-06.png" width="163" height="269" alt="" />
       </div>
       <div id="space26">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img26" src="monopoly-07.png" width="164" height="269" alt="" />
       </div>
       <div id="space27">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img27" src="monopoly-08.png" width="162" height="269" alt="" />
       </div>
       <div id="space28">
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img28" src="monopoly-09.png" width="162" height="269" alt="" />
       </div>
       <div id="space29">
+        <div class="houses houses3">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel3"></div>
+        <div class="propertyown propertyown3"></div>
         <div class="pieces3">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img29" src="monopoly-10.png" width="158" height="269" alt="" />
       </div>
       <div id="space30">
         <div class="cornerpiece">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img30" src="monopoly-11.png" width="271" height="269" alt="" />
       </div>
       <div id="space31">
+        <div class="houses houses4">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel4"></div>
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img31" src="monopoly-14.png" width="271" height="165" alt="" />
       </div>
       <div id="space32">
+        <div class="houses houses4">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel4"></div>
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img32" src="monopoly-16.png" width="271" height="162" alt="" />
       </div>
       <div id="space33">
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img33" src="monopoly-18.png" width="271" height="162" alt="" />
       </div>
       <div id="space34">
+        <div class="houses houses4">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel4"></div>
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img34" src="monopoly-20.png" width="271" height="165" alt="" />
       </div>
       <div id="space35">
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img35" src="monopoly-22.png" width="271" height="162" alt="" />
       </div>
       <div id="space36">
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img36" src="monopoly-24.png" width="271" height="162" alt="" />
       </div>
       <div id="space37">
+        <div class="houses houses4">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel4"></div>
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img37" src="monopoly-26.png" width="271" height="165" alt="" />
       </div>
       <div id="space38">
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img38" src="monopoly-28.png" width="271" height="157" alt="" />
       </div>
       <div id="space39">
+        <div class="houses houses4">
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+          <div class="house"></div>
+        </div>
+        <div class="hotel hotel4"></div>
+        <div class="propertyown propertyown4"></div>
         <div class="pieces4">
-          <div class="player player1 hidden"></div>
-          <div class="player player2 hidden"></div>
-          <div class="player player3 hidden"></div>
-          <div class="player player4 hidden"></div>
+          <div class="playerpiece playerpiece1"></div>
+          <div class="playerpiece playerpiece2"></div>
+          <div class="playerpiece playerpiece3"></div>
+          <div class="playerpiece playerpiece4"></div>
         </div>
         <img id="img39" src="monopoly-30.png" width="271" height="162" alt="" />
       </div>
