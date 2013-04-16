@@ -447,7 +447,6 @@ var connections = {};
 var socketToPlayerId = {};
 
 io.sockets.on('connection', function (socket) {
-  socket.id = Math.random();
   connections[socket.id] = socket;
   
   // reopen and login do the exact same thing in that they
@@ -678,7 +677,12 @@ io.sockets.on('connection', function (socket) {
       });
     })
   });
+  
+  socket.on('disconnect', function() {
+    delete connections[socket.id];
+  });
 
+  /*
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
     console.log("trying to disconnect user");
@@ -724,6 +728,7 @@ io.sockets.on('connection', function (socket) {
       }
     });
   });
+  */
 });
 
 
