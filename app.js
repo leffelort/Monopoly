@@ -800,38 +800,60 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid, fbid) {
-  var property = game.propertyOwners[space].card;
+function collectRent(game, space, socketid, fbid) { //this fbid is the person paying the rent
+  var owner = game.propertyOwners[space]; //this fbid is the person collecting the rent
+  var property;
+  for (var ind in game.players[owner].properties) {
+    console.log(ind);
+    console.log(game.players[owner].properties[ind]);
+      if (game.players[owner].properties[ind]) {
+        if (game.players[owner].properties[ind].id === space) property = game.players[owner].properties[ind];
+    }
+  }  
+  
+  console.log("sp:", property.id);
   //todo Railroads && utilities!!!!!!!!!!!!
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
+  if (property === undefined) throw exn;
+  //console.log("#hs", property.numHouses);
   switch(property.numHouses) {
     case 0 :
+    // console.log(00);
+      amt = property.card.rent;
       if (property.mortgaged) {
+      //   console.log(01);
         amt = 0;
       }
       if (property.monopoly) {
-        amt = (property.rent * 2)
+      // console.log(02);
+        amt = (property.card.rent * 2);
       }
       if (property.hotel) {
-        amt = property.hotel
+       //console.log(03);
+        amt = property.card.hotel;
       }
       break;   
     case 1: 
-      amt = property.onehouse;
+     //console.log(10);
+      amt = property.card.onehouse;
       break; 
     case 2: 
-      amt = property.twohouse;
+    // console.log(20);
+      amt = property.card.twohouse;
       break;
     case 3: 
-      amt = property.threehouse;
+     //console.log(30);
+      amt = property.card.threehouse;
       break;
     case 4: 
-      amt = property.fourhouse;
+     //console.log(40);
+      amt = property.card.fourhouse;
       break;
   }
+  console.log("RENT: ", amt);
   atom = debit(game, socketid, amt, fbid);
-  if (atom) credit(game, socketid, amt, fbid);
+  if (atom) credit(game, socketid, amt, owner);
   else throw exn;
   connections[socketid].emit('payingRent', {space: space, amount: amt});
   endTurn(game);
@@ -840,7 +862,7 @@ function collectRent(game, space, socketid, fbid) {
 function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
   var sock = connections[socketid];
-  dsaveGame(game);
+  saveGame(game);
   sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
 }
 
