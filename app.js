@@ -764,7 +764,7 @@ function endTurn(game) {
 }
 
 function passGo(game, socketid,fbid) {
-  debit(game, socketid, 200, fbid);
+  credit(game, socketid, 200, fbid);
   connections[socketid].emit('passGo!', {fbid: fbid});
 }
 
