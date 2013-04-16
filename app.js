@@ -200,13 +200,11 @@ function queryUser(sockid, callback) {
   if (retry <= 0) {
     callback(undefined);
   } else {
-    console.log("Retry count: " + retry);
-    //console.log("queryUser ", sockid);
+    console.log("queryUser: sockid=", sockid, " retry=", retry);
     client.collection("users", function(error, users) {
       if (error) throw error; 
       users.find( { socketid : sockid } ).toArray(function(err, arr) {
         if (err) throw err;
-        console.log("queryUsername ", sockid, " ", arr);
         if (arr === undefined || arr.length !== 1) {
           retry--;
           queryUser(sockid, callback);
@@ -225,12 +223,11 @@ function queryBoard(sockid, callback) {
   if (boardretry <= 0) {
     callback(undefined);
   } else {
-    console.log("queryBoard ", sockid);
+    console.log("queryBoard: sockid=", sockid, " retry=", boardretry);
     client.collection("boards", function(error, boards) {
       if (error) throw error; 
       boards.find( { socketid : sockid } ).toArray(function(err, arr) {
         if (err) throw err;
-        console.log("queryBoards ", sockid, " ", arr);
         if (arr === undefined || arr.length !== 1) {
           boardretry--;
           queryBoard(sockid, callback);
@@ -248,11 +245,11 @@ function queryBoard(sockid, callback) {
 // get back the game the player at socket id is a part of
 function queryGame(sockid, callback) {
   retry = 5;
+  console.log("queryGame: sockid=", sockid);
   queryUser(sockid, function(user) {
     client.collection("games", function(error, games) {
       games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
         if (err) throw err;
-        console.log("queryGame", arr);
         if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
         callback(arr[0]);
       });
@@ -261,11 +258,11 @@ function queryGame(sockid, callback) {
 }
 
 function queryGameFromBoard(sockid, callback) {
+  console.log("queryGameFromBoard: sockid=", sockid);
   queryBoard(sockid, function(board) {
     client.collection("games", function(error, games) {
       games.find({"id" : board.gameInProgress}).toArray(function(err, arr){
         if (err) throw err;
-        console.log("queryGame", arr);
         if (arr === undefined || arr.length !== 1) 
           throw ("queryGameFromBoard exception");
         callback(arr[0]);
@@ -318,12 +315,11 @@ function queryPlayer(sockid, callback) {
 }
 
 function socketsInGame(gameid, cxn, callback) {
-  console.log("socketsInGame " + gameid + " " + cxn);
+  console.log("socketsInGame: gameid=" + gameid + " cxn=" + cxn);
   client.collection(cxn, function(error, collect) {
     if (error) throw error;
     collect.find({gameInProgress: gameid}).toArray(function(err, arr) {
       if (err) throw err;
-      console.log("dese are the sockets i found", arr);
       if (arr === undefined || arr.length === 0) {
         callback([]);
       } else {
@@ -372,7 +368,8 @@ function saveObjectToDB(collection, obj, cback) {
         });
       } else if (obj.socketid !== undefined) {
         console.log("Updating socket id for obj: " + obj.socketid);
-        collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, function(err) {
+        collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, 
+          function(err) {
           if (err)
             throw err;
             console.log("finished.");
@@ -774,8 +771,12 @@ function handleSale(space, socketid, fbid) {
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
     
-    checkMonopoly(game,fbid,space);
-    sendToBoards('propertySold', {property : space, fbid: fbid});
+    checkMonopoly(game, fbid, space);
+    sendToBoards(game.id, 'propertySold', {
+      property : space, 
+      fbid: fbid,
+      money: game.players[fbid].money
+    });
     endTurn(game);
   });
 }

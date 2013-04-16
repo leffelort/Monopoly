@@ -1,6 +1,15 @@
 var socket;
 var boardID;
 
+// Map from fbid to player number (1-indexed).
+var players = {};
+
+var eventQueue = [];
+var currentEvent = undefined;
+var eventUpdateFreq = 500;
+var eventTimer = 0;
+var eventDuration = 3000;
+
 function scaleBoard() {
   //var boardScale = 0.5;
   var boardScale = document.documentElement.clientHeight / 2000;
@@ -13,11 +22,12 @@ function scaleBoard() {
   $("#rightbar").css("width", offset);
 }
 
-function updateBoardState(game) {
+function refreshBoardState(game) {
   // update players
   for (var fbid in game.players) {
     var player = game.players[fbid];
     var playerNum = player.playerNumber + 1;
+    window.players[player.fbid] = playerNum;
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + player.username);
     $("#playermoney" + playerNum).html("Money: $" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
@@ -25,30 +35,73 @@ function updateBoardState(game) {
       .addClass("visible");
     
     player.properties.forEach(function (property) {
-      $("#space" + property.id + " .propertyown")
-        .addClass("playerown" + playerNum);
+      if (property !== null) {
+        $("#space" + property.id + " .propertyown")
+          .addClass("playerown" + playerNum);
       
-      var houses = $("#space" + property.id + " .houses");
-      houses.removeClass("visible");
-      var houseArray = houses.toArray();
-      for (var i = 0; i < property.numHouses; i++) {
-        houses[i].addClass("visible");
-      }
+        var houses = $("#space" + property.id + " .houses");
+        houses.removeClass("visible");
+        var houseArray = houses.toArray();
+        for (var i = 0; i < property.numHouses; i++) {
+          houses[i].addClass("visible");
+        }
       
-      if (property.hotel) {
-        $("#space" + property.id + " .hotel").addClass("visible");
-      } else {
-        $("#space" + property.id + " .hotel").removeClass("visible");
+        if (property.hotel) {
+          $("#space" + property.id + " .hotel").addClass("visible");
+        } else {
+          $("#space" + property.id + " .hotel").removeClass("visible");
+        }
       }
     });
   }
 }
 
-function movePlayer(data) {
-  $("#space" + data.initial + " .playerpiece" + (data.player + 1))
+function updateGameEvents() {
+  // If no event currently active, check queue
+  if (currentEvent === undefined) {
+    if (eventQueue.length > 0) {
+      console.log(eventQueue);
+      currentEvent = eventQueue.shift();
+      console.log("display new event: ", currentEvent)
+      eventTimer = 0;
+      $(".gameEvent").html(currentEvent);
+      $(".gameEvent").addClass("visible");
+    }
+  } else {
+    // If the current event has been there for the duration, remove it
+    eventTimer += eventUpdateFreq;
+    if (eventTimer >= eventDuration) {
+      console.log("removing event: ", currentEvent)
+      currentEvent = undefined;
+      $(".gameEvent").removeClass("visible");
+    }
+  }
+}
+
+function displayEvent(eventStr) {
+  eventQueue.push(eventStr);
+}
+
+function movePlayer(fbid, initial, end) {
+  console.log("movePlayer: ", fbid);
+  $("#space" + initial + " .playerpiece" + players[fbid])
     .removeClass("visible");
-  $("#space" + data.end + " .playerpiece" + (data.player + 1))
-    .addClass("visible");
+  $("#space" + end + " .playerpiece" + players[fbid]).addClass("visible");
+}
+
+function updatePlayerMoney(fbid, money) {
+  $("#playermoney" + players[fbid]).html("Money: $" + money);
+}
+
+function propertySold(fbid, propid, money) {
+  console.log("sellProperty: " + fbid);
+  $("#space" + propid + " .propertyown").addClass("playerOwn" + players[fbid]);
+  updatePlayerMoney(fbid, money);
+  displayEvent("Player " + players[fbid] + " bought property " + propid);
+}
+
+function nextTurn(fbid) {
+  displayEvent("Player " + players[fbid] + "'s turn!");
 }
 
 function attachSocketHandlers() {
@@ -63,12 +116,21 @@ function attachSocketHandlers() {
   
   socket.on('boardstate', function (socketdata) {
     if (socketdata.success) {
-      updateBoardState(socketdata.game);
+      refreshBoardState(socketdata.game);
+      setInterval(updateGameEvents, eventUpdateFreq);
     }
   });
   
-  socket.on('moveplayer', function (socketdata) {
-    movePlayer(socketdata);
+  socket.on('movePlayer', function (socketdata) {
+    movePlayer(socketdata.fbid, socketdata.initial, socketdata.end);
+  });
+  
+  socket.on('propertySold', function (socketdata) {
+    propertySold(socketdata.fbid, socketdata.property, socketdata.money)
+  });
+  
+  socket.on('nextTurn', function (socketdata) {
+    nextTurn(socketdata.fbid);
   });
 }
 
