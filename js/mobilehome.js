@@ -1,7 +1,26 @@
 var fbobj = undefined;
 var ppd = 70; // ppd = profile pic dimensions
 var me = undefined; // variable to store player information
+var socket;
 
+
+function socketSetup() {
+  socket.on('propertyBuy', function(prop) {
+    var promptText = "Would you like to purchase " + prop.card.title;
+    promptText += " for $" + prop.card.price;
+    displayPrompt(promptText, function(res) {
+      socket.emit('propertyBuy', {result: res});
+    });
+  });
+
+  socket.on('debit', function(obj) {
+
+  });
+
+  socket.on('credit', function(obj) {
+    
+  });
+}
 
 // @TODO: Need to update this with actual information about the current state
 // of the player in the game once the database supports it.
@@ -40,6 +59,7 @@ function loadFBData() {
       getoutcards.append(getoutcommunity);
     }
     info.append(getoutcards);
+    socketSetup();
   }
   
   // add the profile picture and offset it to line it up with the roll button.
@@ -101,6 +121,45 @@ window.fbAsyncInit = function() {
      js.src = "//connect.facebook.net/en_US/all.js";
      ref.parentNode.insertBefore(js, ref);
    }(document));
+
+
+function displayPrompt(msg, callback) {
+  if (callback === undefined) {
+    callback = function(bool) {
+      console.log(bool);
+    };
+  }
+  var height = $(window).height() * 0.8;
+  var confirmWrapper = $("<div>").addClass("confirmWrapper");
+  var blackness = $("<div>").addClass("blackness");
+  confirmWrapper.append(blackness);
+  var confirmbox = $("<div>").addClass("confirmbox")
+                             .html($("<div>")
+                                   .addClass("promptmsg")
+                                   .html("<p>" + msg + "</p>"));
+                             //.height(height)
+                             //.width(height);
+  var boxes = $("<div>").addClass("boxeyboxes");
+  var yesbox = $("<div>").attr("id", "yesbox")
+                         .addClass("promptbox")
+                         .html("<p>&#10003;</p>");
+  var nobox = $("<div>").attr("id", "nobox")
+                        .addClass("promptbox")
+                        .html("<p>&#10060;</p>");
+  boxes.append(yesbox, nobox);
+  confirmbox.append(boxes);
+  confirmWrapper.append(confirmbox);
+  $("#content").append(confirmWrapper);
+
+  $("#yesbox").click(function() {
+    callback(true);
+    $(".confirmWrapper").remove();
+  });
+  $("#nobox").click(function() {
+    callback(false);
+    $(".confirmWrapper").remove();
+  });
+}
 
 $(document).ready(function() {
   window.addEventListener('load', function() {

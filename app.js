@@ -89,10 +89,14 @@ app.post("/hostGame", function (req, resp) {
     password, numPlayers);
 
     getPropertiesFromDatabase(function (arr) {
-      for (var i = 0; i < arr.length; i++) {
+      for (var i = 0; i < 40; i++) {
         var card = arr[i];
-        var prop = monopoly.newProperty(card);
-        currentGames[gameID].availableProperties.push(prop);
+        if (card) {
+          var prop = monopoly.newProperty(card);
+          currentGames[gameID].availableProperties[card.space] = prop;
+        } else {
+          currentGames[gameID].availableProperties[i] = undefined;
+        }
       }
     });
 
@@ -294,7 +298,7 @@ function queryPlayer(sockid, callback) {
     client.collection("games", function(error, games) {
       games.find({"id" : user.gameInProgress}).toArray(function(err, arr){
         if (err) throw err;
-        console.log("queryGame", arr);
+        console.log("queryGame found ");
         if (arr === undefined || arr.length !== 1) throw ("queryGame exception");
         for (var i = 0; i < arr.length; i++) { // no idea why i did a for loop cause it shouldn't actually have more than 1.
           var game = arr[i];
@@ -463,6 +467,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('hostgame', function (data) {
+    retry = 5;
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
       game.host = monopoly.newPlayer(data.username, data.fbid);
@@ -481,6 +486,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('joingame', function (data) {
+    retry = 5;
     var gameFound = false;
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
@@ -660,12 +666,12 @@ io.sockets.on('connection', function (socket) {
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
   
-  socket.on('shortSell', function(data) {
+  socket.on('propertyBuy', function(data) {
     if (data.result) {
-      handleSale(data.property, socket.id, data.fbid);
+      handleSale(data.space, socket.id, data.fbid);
     }
     else {
-      //endTurn();
+      //endTurn(game);;
     }
   });
   
@@ -738,9 +744,16 @@ function endTurn(game) {
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
   }
+  var fbid;
+  for (var index in game.players) {
+    if (game.players[index].playerNumber === game.currentTurn) {
+      fbid = game.players[index].fbid;
+    }
+  }
+  if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
   saveGame(game);
-  sendToBoards('nextTurn', {player: game.currentTurn});
-  sendToPlayers('nextTurn', {player: game.currentTurn});
+  sendToBoards(game.id, 'nextTurn', {fbid: fbid});
+  sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
 }
 
 
@@ -748,15 +761,20 @@ function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     var prop;
     for (var index in game.availableProperties) {
-      if (game.availableProperties[index].id === space) {
+      if (game.availableProperties[index] &&
+        game.availableProperties[index].id === space) {
         prop = game.availableProperties[index];
         delete game.availableProperties[index];
       }
     }
+    console.log("I a gonna changa die monezzzz? " + game.players[fbid].money);
+    debit(game, socketid, prop.card.price, fbid);
+    console.log("Did da moniez change? " + game.players[fbid].money);
     prop.owner = game.players[fbid].first_name;
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
-    debit(game, socketid, property.price, fbid);
+    
+    checkMonopoly(game,fbid,space);
     sendToBoards('propertySold', {property : space, fbid: fbid});
     endTurn(game);
   });
@@ -764,6 +782,8 @@ function handleSale(space, socketid, fbid) {
 
 function handleRoll(z, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
+    console.log("Handling roll for player ", game.players[fbid]);
+    console.log("Found a game??", game.id);
     game.doubles = dbls;
     if ((game.players[fbid].jailed) && (!dbls)) {
       endTurn(game);//todo handle in-jail rolls. 
@@ -784,29 +804,33 @@ function handleRoll(z, dbls, socketid, fbid) {
 }
 
 //tyler's not going to like this function... 
-function createsMonopoly(owned, space) {
-  return false;
+function checkMonopoly(game, fbid, space) {
+  var propertyOwners = game.propertyOwners;
+  var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
+  var group = _.reduce(colors, function(l, r) { 
+              if (_.contains (l, space)) return l; 
+              if (_.contains (r, space)) return r;
+              return [];
+              }, []);
+  var first = propertyOwners[group[0]];       
+  var result = _.every(group, function(z) { return (propertyOwners[z] === first);});
+  if (result) {
+    for (var index in group) {
+      game.players[fbid].properties[group[index]].monopoly = true;
+    }
+  }
 }
 
 // thedrick - this is kind of ugly, but apparently map is relatively new?
 // I was going to port this to a map reduce, but this is fine.
 function isOwnable(space) {
+  console.log("inside is ownable with space " + space);
+//todo actually port this to map/reduce -pmarino
   var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
   var railroads = [5,15,25,35]
   var utilities = [12,28]
-  for (var i in properties) {
-    if (space === i) 
-      return true;
-  }
-  for (var i in railroads) {
-    if (space === i) 
-      return true;
-  }
-  for (var i in utilities) {
-    if (space === i)
-      return true;
-  }
-  return false;
+  var total = properties.indexOf(space) + railroads.indexOf(space) + utilities.indexOf(space);
+  return (total > -3);
 }
 
 function isChance(space) {
@@ -823,56 +847,81 @@ function isCorner(space) {
 }
 
 function isOwned(game, space) {
+  console.log("inside is owned with space " + space);
   var avails = game.availableProperties;
   for (var idx in avails) {
-    if (avails[idx].id === space) { 
+    if (avails[idx] && avails[idx].id === space) { 
       return false;
     }
-  return true;
   }
+  return true;
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid,fbid) {
-  var property = game[fbid].propertyOwners[space].card;
+function collectRent(game, space, socketid, fbid) { //this fbid is the person paying the rent
+  var owner = game.propertyOwners[space]; //this fbid is the person collecting the rent
+  var property;
+  for (var ind in game.players[owner].properties) {
+    console.log(ind);
+    console.log(game.players[owner].properties[ind]);
+      if (game.players[owner].properties[ind]) {
+        if (game.players[owner].properties[ind].id === space) property = game.players[owner].properties[ind];
+    }
+  }  
+  
+  console.log("sp:", property.id);
   //todo Railroads && utilities!!!!!!!!!!!!
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
+  if (property === undefined) throw exn;
+  //console.log("#hs", property.numHouses);
   switch(property.numHouses) {
     case 0 :
+    // console.log(00);
+      amt = property.card.rent;
       if (property.mortgaged) {
+      //   console.log(01);
         amt = 0;
       }
       if (property.monopoly) {
-        amt = (property.rent * 2)
+      // console.log(02);
+        amt = (property.card.rent * 2);
       }
       if (property.hotel) {
-        amt = property.hotel
+       //console.log(03);
+        amt = property.card.hotel;
       }
       break;   
     case 1: 
-      amt = property.onehouse;
+     //console.log(10);
+      amt = property.card.onehouse;
       break; 
     case 2: 
-      amt = property.twohouse;
+    // console.log(20);
+      amt = property.card.twohouse;
       break;
     case 3: 
-      amt = property.threehouse;
+     //console.log(30);
+      amt = property.card.threehouse;
       break;
     case 4: 
-      amt = property.fourhouse;
+     //console.log(40);
+      amt = property.card.fourhouse;
       break;
   }
-  atom = debit(game, socketid, amt);
-  if (atom) credit(game, socketid, amt);
+  console.log("RENT: ", amt);
+  atom = debit(game, socketid, amt, fbid);
+  if (atom) credit(game, socketid, amt, owner);
   else throw exn;
   connections[socketid].emit('payingRent', {space: space, amount: amt});
   endTurn(game);
 }
 
-function shortSell(space, socketid, fbid) {
+function propertyBuy(game, property, socketid, fbid) {
+  console.log("Trying to buy property " + property.id);
   var sock = connections[socketid];
-  sock.emit('shortSell', {'property' : space, fbid: fbid}); //naming convention?
+  saveGame(game);
+  sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
 }
 
 function sendToJail(game, socketid, fbid) {
@@ -894,11 +943,12 @@ function handleTax(game, space, socketid, fbid){
 }
 
 function handleSpace(game, socketid, space, fbid) {
+  console.log("inside handle space with space " + space);
   if (isOwnable(space)) {
     if (isOwned(game, space)) {
       collectRent(game, space, socketid, fbid);
     } else {
-      shortSell(space, socketid, fbid);
+      propertyBuy(game, game.availableProperties[space], socketid, fbid);
     }
   }
   if (isCorner(space)) {
@@ -913,10 +963,11 @@ function handleSpace(game, socketid, space, fbid) {
     if (space === 30) {
       sendToJail(game, socketid, fbid);
     }
-    endTurn();
+    endTurn(game);
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
+    endTurn(game);
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
@@ -925,17 +976,18 @@ function handleSpace(game, socketid, space, fbid) {
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
-  //need to ensure atomicity later on probably...
+  //need to ensure atomicity later on probably...  
+  connections[socketid].emit('credit', {fbid : fbid, amt: amt});
 }
 
 function debit(game, socketid, amt, fbid) {
   if (game.players[fbid].money - amt < 0) {
     //handle mortgage conditions, loss conditions, etc;
   } else {
-    game.players[fbid].money = game.players[fbid].money - amt;
+    game.players[fbid].money = Number(Number(game.players[fbid].money) - Number(amt));
+    connections[socketid].emit('debit', {fbid : fbid, amt: amt});
     return true;
   }
-  //saveGame(game);
 }
 
 
