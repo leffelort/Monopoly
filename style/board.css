@@ -37,7 +37,7 @@ h2 {
   float: right;
 }
 
-.player {
+.playerinfo {
   box-sizing: border-box;
   height: 50%;
   padding: 10px;
@@ -380,4 +380,119 @@ h2 {
 	top:1569px;
 	width:271px;
 	height:162px;
+}
+
+.player {
+  display: inline-block;
+  width: 75px;
+  height: 75px;
+  background-repeat: no-repeat;
+  background-size: 75px 75px;
+  -webkit-transition: all 300ms ease-in-out;
+}
+
+.player1 {
+  background-image: url("../images/car.png");
+}
+
+.player2 {
+  background-image: url("../images/dog.png");
+}
+
+.player3 {
+  background-image: url("../images/battleship.png");
+}
+
+.player4 {
+  background-image: url("../images/hat.png");
+}
+
+.visible {
+  opacity: 1;
+}
+
+.hidden {
+  opacity: 0;
+}
+
+.pieces1 {
+  position: absolute;
+  top: 75px;
+  left: 5px;
+  width: 155px;
+  height: 155px;
+}
+
+.pieces2 {
+  position: absolute;
+  top: 5px;
+  left: 40px;
+  width: 155px;
+  height: 155px;
+}
+
+.pieces3 {
+  position: absolute;
+  top: 40px;
+  left: 5px;
+  width: 155px;
+  height: 155px;
+}
+
+.pieces4 {
+  position: absolute;
+  top: 5px;
+  left: 75px;
+  width: 155px;
+  height: 155px;
+}
+
+.cornerpiece {
+  position: absolute;
+  top: 60px;
+  left: 60px;
+  width: 155px;
+  height: 155px;
+}
+
+#justVisiting1 {
+  position: absolute;
+  width: 75px;
+  height: 150px;
+}
+
+#justVisiting2 {
+  position: absolute;
+  left: 100px;
+  bottom: 0px;
+  width: 155px;
+  height: 75px;
+}
+
+#jail {
+  position: absolute;
+  left: 100px;
+  top: 25px;
+  width: 155px;
+  height: 155px;
+}
+
+#chancedeck {
+  position: absolute;
+  bottom: 180px;
+  right: 140px;
+  width: 360px;
+  height: 240px;
+  -webkit-transform: rotate(-45deg);
+  background-color: orange;
+}
+
+#communitychestdeck {
+  position: absolute;
+  top: 200px;
+  left: 145px;
+  width: 360px;
+  height: 240px;
+  -webkit-transform: rotate(-45deg);
+  background-color: yellow;
 }
