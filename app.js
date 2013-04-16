@@ -93,9 +93,10 @@ app.post("/hostGame", function (req, resp) {
         var card = arr[i];
         if (card) {
           var prop = monopoly.newProperty(card);
+          console.log("at index " + i + " and card " + card.title + " with space " + card.space); 
           currentGames[gameID].availableProperties[card.space] = prop;
         } else {
-          currentGames[gameID].availableProperties[i] = undefined;
+          // currentGames[gameID].availableProperties[i] = null;
         }
       }
     });
@@ -183,15 +184,15 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
-    u.drop();
+    //u.drop();
    });
    client.collection("games", function (e,g) {
     if (e) throw e;
-    g.drop();
+    //g.drop();
    });
    client.collection("boards", function (e,b) {
     if (e) throw e;
-    b.drop();
+    //b.drop();
    });
 });
 
