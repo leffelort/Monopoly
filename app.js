@@ -714,9 +714,10 @@ function handleRoll(z, dbls, socketid, fbid) {
     if ((game.players[fbid].jailed) && (!dbls)) {
       endTurn(game);//todo handle in-jail rolls. 
     }
+    var initial = game.players[fbid].space;
     game.players[fbid].space = ((game.players[fbid].space + z) % 40);
-    sendToBoards(game.id, 'movePlayer', {fbid: fbid, 
-                                           space : game.players[fbid].space });
+    sendToBoards(game.id, 'movePlayer', {fbid: fbid, player: game.players[fbid].playerNumber,
+                                        initial: initial,  delta : z, end: game.players[fbid].space });
      // saveGame(game);
     if (game.players[fbid].space < z) passGo(game, socketid,fbid);
     handleSpace(game, socketid, game.players[fbid].space);
