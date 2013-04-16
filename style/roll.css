@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'Entypo';
+  src: url('../fonts/entypo.eot?') format('eot'), url('../fonts/entypo.woff') format('woff'), url('../fonts/entypo.ttf') format('truetype');
+}
+
 body {
   background: rgb(0,130,39); /* Old browsers */
   background: -moz-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%, rgba(0,76,16,1) 100%); /* FF3.6+ */

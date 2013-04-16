@@ -18,6 +18,11 @@ window.fbAsyncInit = function() {
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
         socket.on('getProperties', function(props){
+          props.sort(function(a,b) {
+            if (!a) return 1;
+            if (!b) return -1;
+            return a.card.space - b.card.space;
+          });
           displayProperties(props);
         });
         socket.on('reopen', function(){
