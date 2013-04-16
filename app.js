@@ -800,8 +800,8 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid,fbid) {
-  var property = game[fbid].propertyOwners[space].card;
+function collectRent(game, space, socketid, fbid) {
+  var property = game.propertyOwners[space].card;
   //todo Railroads && utilities!!!!!!!!!!!!
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
@@ -831,15 +831,16 @@ function collectRent(game, space, socketid,fbid) {
       break;
   }
   atom = debit(game, socketid, amt, fbid);
-  if (atom) credit(game, socketid, amt);
+  if (atom) credit(game, socketid, amt, fbid);
   else throw exn;
   connections[socketid].emit('payingRent', {space: space, amount: amt});
   endTurn(game);
 }
 
-function propertyBuy(property, socketid, fbid) {
+function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
   var sock = connections[socketid];
+  dsaveGame(game);
   sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
 }
 
@@ -867,7 +868,7 @@ function handleSpace(game, socketid, space, fbid) {
     if (isOwned(game, space)) {
       collectRent(game, space, socketid, fbid);
     } else {
-      propertyBuy(game.availableProperties[space], socketid, fbid);
+      propertyBuy(game, game.availableProperties[space], socketid, fbid);
     }
   }
   if (isCorner(space)) {
