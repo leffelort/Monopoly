@@ -279,3 +279,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 #nobox p {
 	margin-top: -42px;
 }
+
+
+.disabled {
+	background-color: #bbb;
+	opacity: 0.7;
+}

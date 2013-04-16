@@ -306,6 +306,7 @@ function queryPlayer(sockid, callback) {
             if (player.fbid === user.fbid) {
               p = player;
               p.fbid = user.id;
+              p.myTurn = (p.playerNumber === game.currentTurn);
             }
           }
         }

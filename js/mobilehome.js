@@ -3,6 +3,21 @@ var ppd = 70; // ppd = profile pic dimensions
 var me = undefined; // variable to store player information
 var socket;
 
+var goToRoll = function() {
+  window.location.replace("roll.html");
+}
+
+var goToInspect = function() {
+  window.location.replace("inspect.html");
+}
+
+var goToTrade = function() {
+  window.location.replace("trade.html");
+}
+
+var goToManage = function() {
+  window.location.replace("manage.html");
+}
 
 function socketSetup() {
   socket.on('propertyBuy', function(prop) {
@@ -71,6 +86,20 @@ function loadFBData() {
   //getoutcards.css("right", $(window).width() - $("#tradebtn").offset().left - $("#tradebtn").width() - 2);
 
   info.css("left", $("#rollbtn").offset().left + 2 + ppd + 20);
+
+  if (!me.myTurn) {
+    $("#rollbtn").addClass("disabled");
+    $("#managebtn").addClass("disabled");
+    $("#tradebtn").addClass("disabled");
+    disableButtons();
+  } else {
+    $("#rollbtn").removeClass("disabled");
+    $("#managebtn").removeClass("disabled");
+    $("#tradebtn").removeClass("disabled");
+    enableButtons();
+  }
+
+
   window.scrollTo(0, 1);
 }  
 
@@ -94,10 +123,13 @@ window.fbAsyncInit = function() {
           if (resp.success) {
             socket.emit('getme', {});
           }
-        })
+        });
+        socket.on('nextTurn', function(obj) {
+          socket.emit('getme', {});
+        });
         socket.on('getme', function(resp) {
           if (resp === undefined) {
-            alert("You are not a part of this game.");
+            alert("YOU CAN'T SIT WITH US!");
             window.location.replace("desktop.html");
           }
           console.log("I AM ", resp);
@@ -161,6 +193,14 @@ function displayPrompt(msg, callback) {
   });
 }
 
+function enableButtons() {
+  $("#rollbtn").click(goToRoll);
+}
+
+function disableButtons(){
+  $("#rollbtn").unbind(goToRoll);
+}
+
 $(document).ready(function() {
   window.addEventListener('load', function() {
     new FastClick(document.body);
@@ -169,13 +209,6 @@ $(document).ready(function() {
   // hacky way to resize the view properly.
   var initialHeight = $("#gameButtons").height();
   $("#content").height($(window).height() + 60);
-
-  $("#inspectbtn").click(function() {
-    window.location = "/inspect.html";
-  });
-
-  $("#rollbtn").click(function() {
-    window.location.replace("/roll.html");
-  })
+  $("#inspectbtn").click(goToInspect);
 });
 

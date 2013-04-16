@@ -45,6 +45,7 @@ window.fbAsyncInit = function() {
 
         socket.on('nextTurn', function(player) {
           if (player.fbid === fbobj.id) {
+            allowRolls();
             console.log("I GOTSA DA DOUBLESSSSS. ROLZ AGAIN LOLZ");
           } else {
             setTimeout(function(){
