@@ -1,7 +1,18 @@
 var fbobj = undefined;
 var ppd = 70; // ppd = profile pic dimensions
 var me = undefined; // variable to store player information
+var socket;
 
+
+function socketSetup() {
+  socket.on('propertyBuy', function(prop) {
+    var promptText = "Would you like to purchase " + prop.card.title;
+    promptText += " for $" + prop.card.price;
+    displayPrompt(promptText, function(res) {
+      socket.emit('propertyBuy', {result: res});
+    });
+  });
+}
 
 // @TODO: Need to update this with actual information about the current state
 // of the player in the game once the database supports it.
@@ -40,6 +51,7 @@ function loadFBData() {
       getoutcards.append(getoutcommunity);
     }
     info.append(getoutcards);
+    socketSetup();
   }
   
   // add the profile picture and offset it to line it up with the roll button.
