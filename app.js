@@ -633,7 +633,7 @@ io.sockets.on('connection', function (socket) {
       handleSale(data.property, socket.id, data.fbid);
     }
     else {
-      endTurn();
+      //endTurn(game);;
     }
   });
 
@@ -687,9 +687,16 @@ function endTurn(game) {
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
   }
+  var fbid;
+  for (var index in game.players) {
+    if (game.players[index].playerNumber === game.currentTurn) {
+      fbid = game.players[index].fbid;
+    }
+  }
+  if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
   saveGame(game);
-  sendToBoards('nextTurn', {player: game.currentTurn});
-  sendToPlayers('nextTurn', {player: game.currentTurn});
+  sendToBoards('nextTurn', {fbid: fbid});
+  sendToPlayers('nextTurn', {fbid: fbid});
 }
 
 
@@ -873,7 +880,7 @@ function handleSpace(game, socketid, space, fbid) {
     if (space === 30) {
       sendToJail(game, socketid, fbid);
     }
-    endTurn();
+    endTurn(game);
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
