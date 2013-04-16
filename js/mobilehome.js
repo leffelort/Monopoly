@@ -195,10 +195,12 @@ function displayPrompt(msg, callback) {
 
 function enableButtons() {
   $("#rollbtn").click(goToRoll);
+  $("#managebtn").click(goToManage);
 }
 
 function disableButtons(){
   $("#rollbtn").unbind(goToRoll);
+  $("#managebtn").unbind(goToManage);
 }
 
 $(document).ready(function() {
