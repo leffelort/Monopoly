@@ -30,10 +30,16 @@ window.fbAsyncInit = function() {
         });
 
         socket.on('propertyBuy', function(prop) {
-          var promptText = "Would you like to purchase " + prop.card.title;
-          promptText += " for $" + prop.card.price;
+          console.log("Got propety ", prop);
+          var property = prop.property;
+          var promptText = "Would you like to purchase " + property.card.title;
+          promptText += " for $" + property.card.price;
           displayPrompt(promptText, function(res) {
-            socket.emit('propertyBuy', {result: res});
+            socket.emit('propertyBuy', {
+              result: res,
+              fbid: fbobj.id,
+              space: property.card.space
+            });
           });
         });
 
@@ -72,6 +78,14 @@ $(document).ready(function(){
   $('body').height($(window).height() + 60);
 });
 
+function forceRoll(val) {
+  rollresult = val;
+  socket.emit('diceroll', {
+    result: val,
+    doubles: false,
+    fbid: fbobj.id
+  });
+}
 
 function displayPrompt(msg, callback) {
   if (callback === undefined) {

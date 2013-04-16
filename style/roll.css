@@ -12,6 +12,10 @@ body {
 	height: 100%;
 } 
 
+#content {
+	position: relative;
+}
+
 #dice {
 	width: 80%;
 	margin: 0 auto;
