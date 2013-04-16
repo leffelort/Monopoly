@@ -93,6 +93,9 @@ app.post("/hostGame", function (req, resp) {
         var prop = monopoly.newProperty(card);
         currentGames[gameID].availableProperties.push(prop);
       }
+      currentGames[gameID].availableProperties.sort(function(a, b){
+        return a.card.space - b.card.space;
+      });
     });
 
   resp.send({
@@ -625,12 +628,12 @@ io.sockets.on('connection', function (socket) {
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
   
-  socket.on('shortSell', function(data) {
+  socket.on('propertyBuy', function(data) {
     if (data.result) {
       handleSale(data.property, socket.id, data.fbid);
     }
     else {
-      //endTurn();
+      endTurn();
     }
   });
 
@@ -699,10 +702,12 @@ function handleSale(space, socketid, fbid) {
         delete game.availableProperties[index];
       }
     }
+    debit(game, socketid, property.price, fbid);
     prop.owner = game.players[fbid].first_name;
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
-    debit(game, socketid, property.price, fbid);
+    
+    checkMonopoly(game,fbid,space);
     sendToBoards('propertySold', {property : space, fbid: fbid});
     endTurn(game);
   });
@@ -725,13 +730,27 @@ function handleRoll(z, dbls, socketid, fbid) {
 }
 
 //tyler's not going to like this function... 
-function createsMonopoly(owned, space) {
-  return false;
+function checkMonopoly(game, fbid, space) {
+  var propertyOwners = game.propertyOwners;
+  var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
+  var group = _.reduce(colors, function(l, r) { 
+              if (_.contains (l, space)) return l; 
+              if (_.contains (r, space)) return r;
+              return [];
+              }, []);
+  var first = propertyOwners[group[0]];       
+  var result = _.every(group, function(z) { return (propertyOwners[z] === first);});
+  if (result) {
+    for (var index in group) {
+      game.players[fbid].properties[group[index]].monopoly = true;
+    }
+  }
 }
 
 // thedrick - this is kind of ugly, but apparently map is relatively new?
 // I was going to port this to a map reduce, but this is fine.
 function isOwnable(space) {
+//todo actually port this to map/reduce -pmarino
   var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
   var railroads = [5,15,25,35]
   var utilities = [12,28]
@@ -811,9 +830,9 @@ function collectRent(game, space, socketid,fbid) {
   endTurn(game);
 }
 
-function shortSell(space, socketid, fbid) {
+function propertyBuy(property, socketid, fbid) {
   var sock = connections[socketid];
-  sock.emit('shortSell', {'property' : space, fbid: fbid}); //naming convention?
+  sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
 }
 
 function sendToJail(game, socketid, fbid) {
@@ -839,7 +858,7 @@ function handleSpace(game, socketid, space, fbid) {
     if (isOwned(game, space)) {
       collectRent(game, space, socketid, fbid);
     } else {
-      shortSell(space, socketid, fbid);
+      propertyBuy(game.availableProperties[space], socketid, fbid);
     }
   }
   if (isCorner(space)) {
@@ -866,7 +885,8 @@ function handleSpace(game, socketid, space, fbid) {
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
-  //need to ensure atomicity later on probably...
+  //need to ensure atomicity later on probably...  
+  connections[socketid].emit('credit', {fbid : fbid, amt: amt});
 }
 
 function debit(game, socketid, amt, fbid) {
@@ -876,6 +896,7 @@ function debit(game, socketid, amt, fbid) {
     game.players[fbid].money = game.players[fbid].money - amt;
     return true;
   }
+  connections[socketid].emit('debit', {fbid : fbid, amt: amt});
   //saveGame(game);
 }
 
