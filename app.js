@@ -886,6 +886,7 @@ function handleSpace(game, socketid, space, fbid) {
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
+    endTurn(game);
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
