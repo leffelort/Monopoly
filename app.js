@@ -677,7 +677,9 @@ io.sockets.on('connection', function (socket) {
       handleSale(data.space, socket.id, data.fbid);
     }
     else {
-      //endTurn(game);;
+      queryGame(sockid, function(game) {
+        endTurn(game);
+      });
     }
   });
   
@@ -850,10 +852,10 @@ function isOwnable(space) {
 }
 
 function isChance(space) {
-  return (space === 22 || space === 36);
+  return (space === 7 || space === 22 || space === 36);
 }
 function isCommChest(space) {
-  return (space === 2 || space === 17);
+  return (space === 2 || space === 17 || space === 33);
 }
 function isTax(space) {
   return (space === 4 || space === 38);
@@ -887,6 +889,10 @@ function collectRent(game, space, socketid, fbid) { //this fbid is the person pa
   
   console.log("sp:", property.id);
   //todo Railroads && utilities!!!!!!!!!!!!
+  if (property.id === 12 || property.id === 28) {
+    endTurn(game);
+    return;
+  }
   var amt, atom;
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   if (property === undefined) throw exn;
@@ -961,10 +967,10 @@ function sendToJail(game, socketid, fbid) {
 
 function handleTax(game, space, socketid, fbid){
   if (space === 38) {
-    debit(game, socketid, 100, fbid);
+    debit(game, socketid, 75, fbid);
   }
   if (space === 4) {
-    //todo: incometax()
+    debit(game, socketid, 200, fbid); // always take away 200
   }
   endTurn(game);
 }
@@ -994,6 +1000,7 @@ function handleSpace(game, socketid, space, fbid) {
   }
   if (isCommChest(space) || isChance(space)) {
     //todo: comm chest & chance
+    console.log("Woah there buddy, ya landed on chance or community chest. You special huh?");
     endTurn(game);
   }
   if (isTax(space)) {
