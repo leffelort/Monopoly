@@ -156,6 +156,10 @@ function attachSocketHandlers() {
     updatePlayerMoney(socketdata.owner, socketdata.ownerMoney);
     displayEvent(playerNames[socketdata.tenant] + " paid " + playerNames[socketdata.owner] + " $" + socketdata.amount + " in rent.");
   });
+  
+  socket.on('passGo!', function (socketdata) {
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+  });
 }
 
 $(document).ready(function() {

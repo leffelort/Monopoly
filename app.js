@@ -768,7 +768,10 @@ function endTurn(game) {
 
 function passGo(game, socketid,fbid) {
   credit(game, socketid, 200, fbid);
-  connections[socketid].emit('passGo!', {fbid: fbid});
+  connections[socketid].emit('passGo!', {
+    fbid: fbid,
+    money: game.players[fbid].money
+  });
 }
 
 function handleSale(space, socketid, fbid) {
