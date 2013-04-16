@@ -18,7 +18,9 @@ window.fbAsyncInit = function() {
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
         socket.on('getProperties', function(props){
-          props.sort(function(a, b) {
+          props.sort(function(a,b) {
+            if (!a) return 1;
+            if (!b) return -1;
             return a.card.space - b.card.space;
           });
           displayProperties(props);
@@ -103,9 +105,10 @@ function loadDetailedView(property) {
 // @TODO: Make sure the properties display current data
 function displayProperties(properties) {
   var propDiv = $("#propList");
-  console.log(properties);
   for (var i = 0; i < properties.length; i++) {
     var prop = properties[i];
+    if (!prop) continue;
+
     var card = prop.card;
     propertyDatabase[card.title] = prop;
     var cell = $("<div>").addClass("propertyCell");
@@ -134,7 +137,6 @@ function displayProperties(properties) {
       cur_cell.click(function() {
         $(".propertyCell.selected").removeClass("selected");
         cur_cell.addClass("selected");
-        console.log(cur_prop);
         loadDetailedView(propertyDatabase[cur_prop.card.title].card);
       });
     })();
@@ -151,6 +153,9 @@ var setupPage = function() {
   $("#propDetails").css({
     "height" : document.documentElement.clientHeight + 60,
     "width" : document.documentElement.clientWidth - $("#propList").width()
+  });
+  $("#backbtn").click(function(){
+    window.location.replace("mobileHome.html");
   });
   window.scrollTo(0, 1);
   // get property data from the database.

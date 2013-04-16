@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'Entypo';
+  src: url('../fonts/entypo.eot?') format('eot'), url('../fonts/entypo.woff') format('woff'), url('../fonts/entypo.ttf') format('truetype');
+}
+
 #propList {
   width: 40%;
   -webkit-overflow-scrolling: touch;
@@ -25,7 +30,15 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   top: 0;
   right: 0;
   position: absolute;
-  background-color: white;
+  z-index: 10;
+  background: rgb(0,130,39); /* Old browsers */
+  background: -moz-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%, rgba(0,76,16,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,130,39,1)), color-stop(100%,rgba(0,76,16,1))); /* Chrome,Safari4+ */
+  background: -webkit-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Opera 12+ */
+  background: -ms-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* IE10+ */
+  background: radial-gradient(ellipse at center, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', endColorstr='#004c10',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
 }
 
 #propDetails .propertyCard {
@@ -36,6 +49,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   -o-transform-origin: 0 0;
   -ms-transform-origin: 0 0;
   transform-origin: 0 0;
+  background-color: white;
 }
 
 #propOptions {
@@ -44,19 +58,26 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   position: absolute;
   top: 0;
   right: 0;
-  background: rgb(0,130,39); /* Old browsers */
-background: -moz-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%, rgba(0,76,16,1) 100%); /* FF3.6+ */
-background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,130,39,1)), color-stop(100%,rgba(0,76,16,1))); /* Chrome,Safari4+ */
-background: -webkit-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Chrome10+,Safari5.1+ */
-background: -o-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Opera 12+ */
-background: -ms-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* IE10+ */
-background: radial-gradient(ellipse at center, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* W3C */
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', endColorstr='#004c10',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */}
+  z-index: 15;
+}
 
-.backbtn {
+.optionbtn {
   height: 20%;
   width: 100%;
   position: absolute;
-  top: 0;
   left: 0;
+  color: white;
+  font: 250% 'Entypo';
+  text-align: center;
+}
+
+#backbtn {
+  top: 0;
+}
+
+.btnicon {
+  width: 100%;
+  height: 20%;
+  position: relative;
+  top: -15%;
 }

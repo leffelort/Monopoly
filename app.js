@@ -93,9 +93,10 @@ app.post("/hostGame", function (req, resp) {
         var card = arr[i];
         if (card) {
           var prop = monopoly.newProperty(card);
+          console.log("at index " + i + " and card " + card.title + " with space " + card.space); 
           currentGames[gameID].availableProperties[card.space] = prop;
         } else {
-          currentGames[gameID].availableProperties[i] = undefined;
+          // currentGames[gameID].availableProperties[i] = null;
         }
       }
     });
@@ -183,15 +184,15 @@ mongo.Db.connect(mongoUri, function(err, db) {
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
-    u.drop();
+    //u.drop();
    });
    client.collection("games", function (e,g) {
     if (e) throw e;
-    g.drop();
+    //g.drop();
    });
    client.collection("boards", function (e,b) {
     if (e) throw e;
-    b.drop();
+    //b.drop();
    });
 });
 
@@ -383,12 +384,13 @@ function saveObjectToDB(collection, obj, cback) {
   });
 }
 
-function updateCurrentGame(playerid, gameid) {
+function updateCurrentGame(playerid, gameid, callback) {
   console.log("updating player + " + playerid + " with game id " + gameid);
   client.collection("users", function(error, users) {
     if (error) throw error;
     users.update({fbid: playerid}, {$set : {gameInProgress: gameid} } , function(error) {
       if (error) throw error;
+      if (callback) callback();
       console.log("successfully updated gameinprogress");
     });
   });
@@ -396,7 +398,7 @@ function updateCurrentGame(playerid, gameid) {
 
 // save's a game's current state to the databse. Overwrites
 // a games previous state if it existed.
-function saveGame(game) {
+function saveGame(game, callback) {
   console.log("saving game");
   client.collection("games", function(error, games) {
     if (error) throw error;
@@ -412,6 +414,7 @@ function saveGame(game) {
           if (error) throw error;
         });
       }
+      if (callback) callback();
     });
   });
 }
@@ -473,12 +476,13 @@ io.sockets.on('connection', function (socket) {
       game.host.playerNumber = (game.numPlayers - 1); //ie 0 indexed.
       game.host.gameInProgress = game.id;
       game.players[data.fbid] = game.host;
-      updateCurrentGame(data.fbid, game.id);
-      socket.emit('hostgame', { 
-        success: true,
-        gameID: game.id
+      updateCurrentGame(data.fbid, game.id, function() {
+        socket.emit('hostgame', { 
+          success: true,
+          gameID: game.id
+        });
+        saveGame(game);
       });
-      saveGame(game);
     }
   });
 
@@ -508,23 +512,25 @@ io.sockets.on('connection', function (socket) {
           player.playerNumber = (game.numPlayers - 1);
           player.gameInProgress = game.id;
           game.players[data.fbid] = player;
-          updateCurrentGame(data.fbid, game.id);
-          socket.emit('joingame', {
-            success: true,
-            gameID: game.id
-          });
-          sendToOthers(gameID, 'newplayer', {
-            player: player,
-            gameID: game.id,
-            number: player.playerNumber
-          }, socket.id);
-          sendToBoards(gameID, 'newplayer', {
-            player: player,
-            gameID: game.id,
-            number: player.playerNumber
+          saveGame(game, function() {
+            updateCurrentGame(data.fbid, game.id, function() {
+              socket.emit('joingame', {
+                success: true,
+                gameID: game.id
+              });
+              sendToOthers(gameID, 'newplayer', {
+                player: player,
+                gameID: game.id,
+                number: player.playerNumber
+              }, socket.id);
+              sendToBoards(gameID, 'newplayer', {
+                player: player,
+                gameID: game.id,
+                number: player.playerNumber
+              });
+            });
           });
         }
-        saveGame(game);
       }
     }
     if (!gameFound) {
@@ -549,22 +555,23 @@ io.sockets.on('connection', function (socket) {
         board.socketid = socket.id;
         board.gameInProgress = game.id;
         game.boards[boardID] = board;
-        saveObjectToDB("boards", board, function() {
-          socket.emit('boardjoin', {
-            success: true,
-            gameID: game.id,
-            boardID: board.id
+        saveGame(game, function(){
+          saveObjectToDB("boards", board, function() {
+            socket.emit('boardjoin', {
+              success: true,
+              gameID: game.id,
+              boardID: board.id
+            });
+            sendToPlayers(game.id, 'boardjoin', {
+              gameID: game.id,
+              number: game.numBoards
+            });
+            if ((game.playersWaiting === game.numPlayers) && 
+                (game.numPlayers > 1) && (!game.isStarted) && 
+                (game.numBoards > 0)) {
+              startGame(game.id);
+            }
           });
-          sendToPlayers(game.id, 'boardjoin', {
-            gameID: game.id,
-            number: game.numBoards
-          });
-          if ((game.playersWaiting === game.numPlayers) && 
-              (game.numPlayers > 1) && (!game.isStarted) && 
-              (game.numBoards > 0)) {
-            startGame(game.id);
-          }
-        saveGame(game);
         });
       }
     }
@@ -590,13 +597,14 @@ io.sockets.on('connection', function (socket) {
       else {
         delete game.players[data.fbid];
         game.numPlayers--;
-        sendToPlayers(data.gameID, 'playerleft',  {
-          gameID: game.id
-        });
-        sendToBoards(data.gameID, 'playerleft', {
-          gameID: game.id
-        });
-        saveGame(game);
+        saveGame(game, function(){
+          sendToPlayers(data.gameID, 'playerleft',  {
+            gameID: game.id
+          });
+          sendToBoards(data.gameID, 'playerleft', {
+            gameID: game.id
+          });
+        })
       }
     }
   });
@@ -748,9 +756,10 @@ function endTurn(game) {
     }
   }
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
-  saveGame(game);
-  sendToBoards(game.id, 'nextTurn', {fbid: fbid});
-  sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
+  saveGame(game, function(){
+    sendToBoards(game.id, 'nextTurn', {fbid: fbid});
+    sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
+  });
 }
 
 
@@ -921,8 +930,9 @@ function collectRent(game, space, socketid, fbid) { //this fbid is the person pa
 function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
   var sock = connections[socketid];
-  saveGame(game);
-  sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
+  saveGame(game, function() {
+    sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
+  });
 }
 
 function sendToJail(game, socketid, fbid) {
@@ -1016,10 +1026,11 @@ function startGame(gameID) {
   if (game !== undefined) {
     game.isStarted = true;
   }
-  saveGame(game);
-  sendToPlayers(gameID, 'gameReady', {});
-  sendToBoards(gameID, 'gameReady', {});
-  delete currentGames[gameID];
+  saveGame(game, function() {
+    sendToPlayers(gameID, 'gameReady', {});
+    sendToBoards(gameID, 'gameReady', {});
+    delete currentGames[gameID];
+  });
 }
 
 
