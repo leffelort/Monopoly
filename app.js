@@ -722,6 +722,7 @@ function handleSale(space, socketid, fbid) {
 
 function handleRoll(z, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
+    console.log("Found a game??", game.id);
     game.doubles = dbls;
     if ((game.players[fbid].jailed) && (!dbls)) {
       endTurn(game);//todo handle in-jail rolls. 

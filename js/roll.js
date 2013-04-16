@@ -24,13 +24,29 @@ window.fbAsyncInit = function() {
           if (res.success) {
             $("#rollvalue").html("You rolled a " + rollresult + "!");
             console.log("successfully handled");
-            setTimeout(function() {
-              window.location.replace("mobileHome.html");
-            }, 1500);
           } else {
             console.log("something went wrong... that's not good.");
           }
         });
+
+        socket.on('propertyBuy', function(prop) {
+          var promptText = "Would you like to purchase " + prop.card.title;
+          promptText += " for $" + prop.card.price;
+          displayPrompt(promptText, function(res) {
+            socket.emit('propertyBuy', {result: res});
+          });
+        });
+
+        socket.on('nextTurn', function(player) {
+          if (player.fbid === fbobj.id) {
+            console.log("I GOTSA DA DOUBLESSSSS. ROLZ AGAIN LOLZ");
+          } else {
+            setTimeout(function(){
+              window.location.replace("mobileHome.html");
+            }, 750);
+          }
+        });
+
       });
 
       allowRolls();
@@ -55,6 +71,46 @@ $(document).ready(function(){
   // resize to fit phone screen
   $('body').height($(window).height() + 60);
 });
+
+
+function displayPrompt(msg, callback) {
+  if (callback === undefined) {
+    callback = function(bool) {
+      console.log(bool);
+    };
+  }
+  var height = $(window).height() * 0.8;
+  var confirmWrapper = $("<div>").addClass("confirmWrapper");
+  var blackness = $("<div>").addClass("blackness");
+  confirmWrapper.append(blackness);
+  var confirmbox = $("<div>").addClass("confirmbox")
+                             .html($("<div>")
+                                   .addClass("promptmsg")
+                                   .html("<p>" + msg + "</p>"));
+                             //.height(height)
+                             //.width(height);
+  var boxes = $("<div>").addClass("boxeyboxes");
+  var yesbox = $("<div>").attr("id", "yesbox")
+                         .addClass("promptbox")
+                         .html("<p>&#10003;</p>");
+  var nobox = $("<div>").attr("id", "nobox")
+                        .addClass("promptbox")
+                        .html("<p>&#10060;</p>");
+  boxes.append(yesbox, nobox);
+  confirmbox.append(boxes);
+  confirmWrapper.append(confirmbox);
+  $("#content").append(confirmWrapper);
+
+  $("#yesbox").click(function() {
+    callback(true);
+    $(".confirmWrapper").remove();
+  });
+  $("#nobox").click(function() {
+    callback(false);
+    $(".confirmWrapper").remove();
+  });
+}
+
 
 // get response back from the server about whether or not it handled
 // the user's roll properly

@@ -12,6 +12,14 @@ function socketSetup() {
       socket.emit('propertyBuy', {result: res});
     });
   });
+
+  socket.on('debit', function(obj) {
+
+  });
+
+  socket.on('credit', function(obj) {
+    
+  });
 }
 
 // @TODO: Need to update this with actual information about the current state
