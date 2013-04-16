@@ -95,7 +95,7 @@ function updatePlayerMoney(fbid, money) {
 
 function propertySold(fbid, propid, money) {
   console.log("sellProperty: " + fbid);
-  $("#space" + propid + " .propertyown").addClass("playerOwn" + players[fbid]);
+  $("#space" + propid + " .propertyown").addClass("playerown" + players[fbid]);
   updatePlayerMoney(fbid, money);
   displayEvent("Player " + players[fbid] + " bought property " + propid);
 }
