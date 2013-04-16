@@ -815,7 +815,7 @@ function handleRoll(z, dbls, socketid, fbid) {
     });
     // saveGame(game);
     if (game.players[fbid].space < z) passGo(game, socketid,fbid);
-    handleSpace(game, socketid, game.players[fbid].space);
+    handleSpace(game, socketid, game.players[fbid].space, fbid);
   });
 }
 
