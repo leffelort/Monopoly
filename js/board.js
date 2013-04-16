@@ -107,11 +107,11 @@ function updatePlayerMoney(fbid, money) {
   $("#playermoney" + players[fbid]).html("Money: $" + money);
 }
 
-function propertySold(fbid, propid, money) {
+function propertySold(fbid, propid, propname, money) {
   console.log("propertySold: " + fbid);
   $("#space" + propid + " .propertyown").addClass("playerown" + players[fbid]);
   updatePlayerMoney(fbid, money);
-  displayEvent(playerNames[fbid] + " bought property " + propid);
+  displayEvent(playerNames[fbid] + " bought " + propname);
 }
 
 function nextTurn(fbid) {
@@ -144,7 +144,7 @@ function attachSocketHandlers() {
   })
   
   socket.on('propertySold', function (socketdata) {
-    propertySold(socketdata.fbid, socketdata.property, socketdata.money)
+    propertySold(socketdata.fbid, socketdata.property, socketdata.propName, socketdata.money)
   });
   
   socket.on('nextTurn', function (socketdata) {
@@ -157,8 +157,14 @@ function attachSocketHandlers() {
     displayEvent(playerNames[socketdata.tenant] + " paid " + playerNames[socketdata.owner] + " $" + socketdata.amount + " in rent.");
   });
   
-  socket.on('passGo!', function (socketdata) {
+  socket.on('debit', function (socketdata) {
     updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " paid $" + socketdata.amount + " for " + socketdata.reason);
+  });
+  
+  socket.on('credit', function (socketdata) {
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " received $" + socketdata.amount + " for " + socketdata.reason);
   });
 }
 

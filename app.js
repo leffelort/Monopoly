@@ -747,8 +747,6 @@ io.sockets.on('connection', function (socket) {
 
 
 // MORE FUNCTIONS
-
-
 function endTurn(game) {
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
@@ -772,6 +770,12 @@ function passGo(game, socketid,fbid) {
     fbid: fbid,
     money: game.players[fbid].money
   });
+  sendToBoards(game.id, 'credit', {
+    fbid: fbid,
+    amount: 200,
+    money: game.players[fbid].money,
+    reason: "passing Go!"
+  });
 }
 
 function handleSale(space, socketid, fbid) {
@@ -793,7 +797,8 @@ function handleSale(space, socketid, fbid) {
     
     checkMonopoly(game, fbid, space);
     sendToBoards(game.id, 'propertySold', {
-      property : space, 
+      property : space,
+      propName: prop.card.title,
       fbid: fbid,
       money: game.players[fbid].money
     });
@@ -801,7 +806,7 @@ function handleSale(space, socketid, fbid) {
   });
 }
 
-function handleRoll(z, dbls, socketid, fbid) {
+function handleRoll(delta, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
     console.log("Handling roll for player ", game.players[fbid]);
     console.log("Found a game??", game.id);
@@ -810,17 +815,17 @@ function handleRoll(z, dbls, socketid, fbid) {
       endTurn(game);//todo handle in-jail rolls. 
     }
     var initial = game.players[fbid].space;
-    game.players[fbid].space = ((game.players[fbid].space + z) % 40);
+    game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
     sendToBoards(game.id, 'movePlayer', {
       fbid: fbid, 
       player: game.players[fbid].playerNumber,
       initial: initial,  
-      delta : z, 
+      delta : delta, 
       end: game.players[fbid].space 
     });
     // saveGame(game);
-    if (game.players[fbid].space < z) passGo(game, socketid,fbid);
-    handleSpace(game, socketid, game.players[fbid].space, fbid);
+    if (game.players[fbid].space < delta) passGo(game, socketid,fbid);
+    handleSpace(game, socketid, game.players[fbid].space, fbid, delta);
   });
 }
 
@@ -829,12 +834,14 @@ function checkMonopoly(game, fbid, space) {
   var propertyOwners = game.propertyOwners;
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
   var group = _.reduce(colors, function(l, r) { 
-              if (_.contains (l, space)) return l; 
-              if (_.contains (r, space)) return r;
-              return [];
-              }, []);
+    if (_.contains (l, space)) return l; 
+    if (_.contains (r, space)) return r;
+    return [];
+  }, []);
   var first = propertyOwners[group[0]];       
-  var result = _.every(group, function(z) { return (propertyOwners[z] === first);});
+  var result = _.every(group, function(z) { 
+    return (propertyOwners[z] === first);
+  });
   if (result) {
     for (var index in group) {
       game.players[fbid].properties[group[index]].monopoly = true;
@@ -864,7 +871,36 @@ function isTax(space) {
   return (space === 4 || space === 38);
 }
 function isCorner(space) { 
-  return (space%10 === 0);
+  return (space % 10 === 0);
+}
+
+function isRailroad(space) {
+  return ((space % 5 === 0) && (space % 10 !== 0) && (space !== 0));
+}
+
+function numRailroadsOwned(game, owner) {
+  var railroads = [5,15,25,35];
+  var result = 0;
+  railroads.forEach(function (space) {
+    if (game.propertyOwners[space] === owner) {
+      result++;
+    }
+  });
+  return result;
+}
+
+function isUtility(space) {
+  return (space === 12 || space === 28);
+}
+
+function isUtilityMonopoly(game, owner, space) {
+  if (space === 12) {
+    return (game.propertyOwners[28] === owner);
+  }
+  else if (space === 28) {
+    return (game.propertyOwners[12] === owner);
+  }
+  return false;
 }
 
 function isOwned(game, space) {
@@ -879,73 +915,104 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
-function collectRent(game, space, socketid, fbid) { //this fbid is the person paying the rent
-  var owner = game.propertyOwners[space]; //this fbid is the person collecting the rent
+function collectRent(game, space, socketid, tenant, roll) { 
+  var owner = game.propertyOwners[space];
   var property;
-  for (var ind in game.players[owner].properties) {
-    console.log(ind);
-    console.log(game.players[owner].properties[ind]);
-      if (game.players[owner].properties[ind]) {
-        if (game.players[owner].properties[ind].id === space) property = game.players[owner].properties[ind];
-    }
-  }  
-  
-  console.log("sp:", property.id);
-  //todo Railroads && utilities!!!!!!!!!!!!
-  if (property.id === 12 || property.id === 28) {
-    endTurn(game);
-    return;
-  }
   var amt, atom;
-  var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
-  if (property === undefined) throw exn;
-  //console.log("#hs", property.numHouses);
-  switch(property.numHouses) {
-    case 0 :
-    // console.log(00);
-      amt = property.card.rent;
-      if (property.mortgaged) {
-      //   console.log(01);
-        amt = 0;
-      }
-      if (property.monopoly) {
-      // console.log(02);
-        amt = (property.card.rent * 2);
-      }
-      if (property.hotel) {
-       //console.log(03);
-        amt = property.card.hotel;
-      }
-      break;   
-    case 1: 
-     //console.log(10);
-      amt = property.card.onehouse;
-      break; 
-    case 2: 
-    // console.log(20);
-      amt = property.card.twohouse;
-      break;
-    case 3: 
-     //console.log(30);
-      amt = property.card.threehouse;
-      break;
-    case 4: 
-     //console.log(40);
-      amt = property.card.fourhouse;
-      break;
+  
+  // Get property at the space landed on
+  for (var ind in game.players[owner].properties) {
+    if (game.players[owner].properties[ind]) {
+      if (game.players[owner].properties[ind].id === space) 
+        property = game.players[owner].properties[ind];
+    }
+  } 
+  
+  // Error checking
+  if (property === undefined) throw "property undefined";
+  
+  // Figure out amount to pay based on the space.
+  if (isUtility(space)) {
+    if (isUtilityMonopoly(game, owner, space)) {
+      // rent is 10x the roll.
+      amt = 10 * roll;
+    } else {
+      // rent is 4x the roll.
+      amt = 4 * roll;
+    }
+  } else if (isRailroad(space)) {
+    var numRailroads = numRailroadsOwned(game, owner);
+    switch (numRailroads) {
+      case 1:
+        amt = 25;
+        break;
+      case 2:
+        amt = 50;
+        break;
+      case 3:
+        amt = 100;
+        break;
+      case 4:
+        amt = 200;
+        break;
+      default:
+        throw "more than 4 railroads? dayum gurl. Wait, maybe you have 0 railroads. trololol.";
+    }
+  } else {
+    switch(property.numHouses) {
+      case 0:
+        amt = property.card.rent;
+        if (property.mortgaged) {
+          amt = 0;
+        }
+        if (property.monopoly) {
+          amt = (property.card.rent * 2);
+        }
+        if (property.hotel) {
+          amt = property.card.hotel;
+        }
+        break;   
+      case 1: 
+        amt = property.card.onehouse;
+        break; 
+      case 2: 
+        amt = property.card.twohouse;
+        break;
+      case 3: 
+        amt = property.card.threehouse;
+        break;
+      case 4: 
+        amt = property.card.fourhouse;
+        break;
+      default:
+        throw "err...more than 4 houses? wut";
+    }
   }
-  console.log("RENT: ", amt);
-  atom = debit(game, socketid, amt, fbid);
+  
+  // Proceed with transaction
+  // TODO: handle extraordinary conditions
+  var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
+  atom = debit(game, socketid, amt, tenant);
   if (atom) credit(game, socketid, amt, owner);
   else throw exn;
+  
   connections[socketid].emit('payingRent', {
     owner: owner,
-    tenant: fbid,
+    tenant: tenant,
     space: space, 
     amount: amt,
-    tenantMoney: game.players[fbid].money,
+    tenantMoney: game.players[tenant].money,
     ownerMoney: game.players[owner].money
   });
+  sendToBoards(game.id, 'payingRent', {
+    owner: owner,
+    tenant: tenant,
+    space: space, 
+    amount: amt,
+    tenantMoney: game.players[tenant].money,
+    ownerMoney: game.players[owner].money
+  });
+  
   endTurn(game);
 }
 
@@ -969,20 +1036,37 @@ function sendToJail(game, socketid, fbid) {
 }
 
 function handleTax(game, space, socketid, fbid){
+  var amt;
   if (space === 38) {
-    debit(game, socketid, 75, fbid);
-  }
-  if (space === 4) {
-    debit(game, socketid, 200, fbid); // always take away 200
+    amt = 75;
+    debit(game, socketid, amt, fbid); 
+    sendToBoards(game.id, 'debit', {
+      fbid: fbid,
+      amount: amt,
+      money: game.players[fbid].money,
+      reason: "Luxury Tax"
+    });
+  } else if (space === 4) {
+    // always take away 200
+    amt = 200;
+    debit(game, socketid, amt, fbid); 
+    sendToBoards(game.id, 'debit', {
+      fbid: fbid,
+      amount: amt,
+      money: game.players[fbid].money,
+      reason: "Income Tax"
+    });
+  } else {
+    throw "should not have called this";
   }
   endTurn(game);
 }
 
-function handleSpace(game, socketid, space, fbid) {
+function handleSpace(game, socketid, space, fbid, roll) {
   console.log("inside handle space with space " + space);
   if (isOwnable(space)) {
     if (isOwned(game, space)) {
-      collectRent(game, space, socketid, fbid);
+      collectRent(game, space, socketid, fbid, roll);
     } else {
       propertyBuy(game, game.availableProperties[space], socketid, fbid);
     }
@@ -990,10 +1074,22 @@ function handleSpace(game, socketid, space, fbid) {
   if (isCorner(space)) {
     if (space === 0) {
       credit(game,socketid,200, fbid);
+      sendToBoards(game.id, 'credit', {
+        fbid: fbid,
+        amount: 200,
+        money: game.players[fbid].money,
+        reason: "landing on Go"
+      });
       // do we want double money for landing on go???
     }
     if (space === 20) {
       credit(game,socketid,500, fbid);
+      sendToBoards(game.id, 'credit', {
+        fbid: fbid,
+        amount: 500,
+        money: game.players[fbid].money,
+        reason: "landing on Free Parking"
+      });
       // do we want free parking to be a straight $500??
     }
     if (space === 30) {
@@ -1027,8 +1123,6 @@ function debit(game, socketid, amt, fbid) {
   }
 }
 
-
-
 function userMaintain(socket, data, cback) {
   console.log("userMaintain " + socket.id);
   var user = {};
@@ -1045,7 +1139,6 @@ function userMaintain(socket, data, cback) {
   socketToPlayerId[socket.id] = user.id;
 }
 
-
 function startGame(gameID) {
   var game = currentGames[gameID];
   game.currentTurn = 0;
@@ -1058,7 +1151,6 @@ function startGame(gameID) {
     delete currentGames[gameID];
   });
 }
-
 
 function sendToPlayers(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'users', function(sockets) {
