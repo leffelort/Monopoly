@@ -745,6 +745,7 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 
+
 function endTurn(game) {
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
@@ -762,6 +763,10 @@ function endTurn(game) {
   });
 }
 
+function passGo(game, socketid,fbid) {
+  debit(game, socketid, 200, fbid);
+  connections[socketid].emit('passGo!', {fbid: fbid});
+}
 
 function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
