@@ -923,6 +923,11 @@ function isOwned(game, space) {
   //return false; //TODO, get spaceIDs into the db
 }
 
+function isOwnedByOther(game, space, fbid) {
+  return (isOwned(game, space)) && 
+    (game.propertyOwners[space] !== game.players[fbid]);
+}
+
 function collectRent(game, space, socketid, tenant, roll) { 
   var owner = game.propertyOwners[space];
   var property;
@@ -1073,7 +1078,7 @@ function handleTax(game, space, socketid, fbid){
 function handleSpace(game, socketid, space, fbid, roll) {
   console.log("inside handle space with space " + space);
   if (isOwnable(space)) {
-    if (isOwned(game, space)) {
+    if (isOwnedByOther(game, space, fbid)) {
       collectRent(game, space, socketid, fbid, roll);
     } else {
       propertyBuy(game, game.availableProperties[space], socketid, fbid);
