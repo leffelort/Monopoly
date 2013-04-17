@@ -680,17 +680,35 @@ io.sockets.on('connection', function (socket) {
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
   
-  socket.on('propertyBuy', function(data) {
+  socket.on('propertyBuy', function (data) {
     if (data.result) {
       handleSale(data.space, socket.id, data.fbid);
     }
     else {
-      queryGame(sockid, function(game) {
+      queryGame(socket.id, function (game) {
         endTurn(game);
       });
     }
   });
+
+  socket.on('propertyMortgage', function (data) {
+    queryGame(socket.id, function (game) {
+      var owner = game.propertyOwners[data.space];
+      if (owner !== data.fbid) {
+        console.log("Well shit, you're trying to mortgage something you don't own!");
+      } else {
+        var prop = game.players[data.fbid].properties[data.space];
+        prop.mortgaged = true;
+        credit(game, socket.id, prop.card.price / 2, data.fbid);
+        propertyMortgage(game, prop, socket.id, data.fbid);
+      }
+    });
+  });
   
+  socket.on('propertyUnmortgage', function(data) {
+
+  });
+
   socket.on('boardstate', function (data) {
     queryGameFromBoard(socket.id, function (game) {
       socket.emit('boardstate', {
@@ -1046,6 +1064,27 @@ function collectRent(game, space, socketid, tenant, roll) {
   });
   
   endTurn(game);
+}
+
+function propertyMortgage(game, property, socketid, fbid) {
+  console.log("Mortgaging property " + property.id);
+  var sock = connections[socketid];
+  saveGame(game, function() {
+    sock.emit('propertyMortgage', {
+      'property' : property,
+      'fbid' : fbid
+    });
+  });
+}
+
+function propertyUnmortgage(game, property, socketid, fbid) {
+  var sock = connections[socketid];
+  saveGame(game, function() {
+    sock.emit('propertyUnmortgage', {
+      'property' : property,
+      'fbid' : fbid
+    });
+  });
 }
 
 function propertyBuy(game, property, socketid, fbid) {
