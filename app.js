@@ -685,7 +685,7 @@ io.sockets.on('connection', function (socket) {
       handleSale(data.space, socket.id, data.fbid);
     }
     else {
-      queryGame(sockid, function (game) {
+      queryGame(socket.id, function (game) {
         endTurn(game);
       });
     }
