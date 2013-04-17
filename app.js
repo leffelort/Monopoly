@@ -700,6 +700,13 @@ io.sockets.on('connection', function (socket) {
     })
   });
   
+  socket.on('inspectProperty', function (data) {
+    // route request to the boards
+    queryGame(socket.id, function (game) {
+      sendToBoards(game.id, 'inspectProperty', data);
+    });
+  });
+  
   socket.on('disconnect', function() {
     delete connections[socket.id];
   });

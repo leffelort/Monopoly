@@ -1,6 +1,7 @@
 var propertyDatabase = {};
 var setupPage;
 var socket;
+var fbid;
 
 window.fbAsyncInit = function() {
   FB.init({
@@ -15,6 +16,7 @@ window.fbAsyncInit = function() {
     if (response.status === 'connected') {
       // connected
       FB.api('/me', function(response){
+        window.fbid = response.id;
         socket = io.connect(window.location.hostname);
         socket.emit('reopen', response); // tell the server who we are.
         socket.on('getProperties', function(props){
@@ -99,6 +101,12 @@ function loadDetailedView(property) {
   var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   detailedView.show();
+  
+  // Send currently viewed property to the server so the board can update
+  socket.emit('inspectProperty', {
+    fbid: window.fbid,
+    property: propertyDatabase[property.title].id
+  });
 }
 
 
@@ -155,6 +163,10 @@ var setupPage = function() {
     "width" : document.documentElement.clientWidth - $("#propList").width()
   });
   $("#backbtn").click(function(){
+    socket.emit('inspectProperty', {
+      fbid: window.fbid,
+      property: undefined
+    });
     window.location.replace("mobileHome.html");
   });
   window.scrollTo(0, 1);

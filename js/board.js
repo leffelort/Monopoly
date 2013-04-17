@@ -127,6 +127,25 @@ function nextTurn(previd, fbid) {
   displayEvent(playerNames[fbid] + "'s turn!");
 }
 
+function inspectProperty(fbid, propid) {
+  if (propid === undefined) {
+    $("#playerinspect" + players[fbid]).empty();
+  } else {
+    var space = $("#space" + propid).html();
+    var inspect = $("#playerinspect" + players[fbid]).html(space);
+    inspect.attr('class', '').addClass("playerinspect");
+    if (propid > 0 && propid < 10) {
+      inspect.addClass("inspectRow1");
+    } else if (propid > 10 && propid < 20) {
+      inspect.addClass("inspectRow2");
+    } else if (propid > 20 && propid < 30) {
+      inspect.addClass("inspectRow3");
+    } else {
+      inspect.addClass("inspectRow4");
+    }
+  }
+}
+
 function attachSocketHandlers() {
   socket.on("boardReconnect", function (socketdata) {
     if (!socketdata.success) {
@@ -175,6 +194,10 @@ function attachSocketHandlers() {
   socket.on('credit', function (socketdata) {
     updatePlayerMoney(socketdata.fbid, socketdata.money);
     displayEvent(playerNames[socketdata.fbid] + " received $" + socketdata.amount + " for " + socketdata.reason);
+  });
+  
+  socket.on('inspectProperty', function (socketdata) {
+    inspectProperty(socketdata.fbid, socketdata.property);
   });
 }
 
