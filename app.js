@@ -1080,7 +1080,7 @@ function handleSpace(game, socketid, space, fbid, roll) {
   if (isOwnable(space)) {
     if (isOwnedByOther(game, space, fbid)) {
       collectRent(game, space, socketid, fbid, roll);
-    } else {
+    } else if (!isOwned(game, space)) {
       propertyBuy(game, game.availableProperties[space], socketid, fbid);
     }
   }
