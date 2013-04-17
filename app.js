@@ -1072,7 +1072,7 @@ function propertyMortgage(game, property, socketid, fbid) {
 
 function propertyUnmortgage(game, property, socketid, fbid) {
   var sock = connections[socketid];
-  saveGame(game, function) {
+  saveGame(game, function() {
     sock.emit('propertyUnmortgage', {
       'property' : property,
       'fbid' : fbid
