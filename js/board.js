@@ -35,6 +35,10 @@ function refreshBoardState(game) {
     $(".playerpiece" + playerNum).removeClass("visible");
     $("#space" + player.space + " .playerpiece" + playerNum)
       .addClass("visible");
+    if (player.playerNumber === game.currentTurn) {
+      $("#space" + player.space + " .playerpiece" + playerNum)
+        .addClass("currentTurn");
+    }
     
     player.properties.forEach(function (property) {
       if (property !== null) {
@@ -87,20 +91,23 @@ function displayEvent(eventStr) {
 function movePlayer(fbid, initial, end) {
   console.log("movePlayer: ", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
-    .removeClass("visible");
-  $("#space" + end + " .playerpiece" + players[fbid]).addClass("visible");
+    .removeClass("visible").removeClass("currentTurn");
+  $("#space" + end + " .playerpiece" + players[fbid])
+    .addClass("visible").addClass("currentTurn");
   if (end === 10) {
     // Special case just visiting the jail
     // see jailPlayer() for the special case of going to jail
-    $("#jail .playerpiece" + players[fbid]).removeClass("visible");
+    $("#jail .playerpiece" + players[fbid])
+      .removeClass("visible").removeClass("currentTurn");
   }
 }
 
 function jailPlayer(fbid, initial) {
   console.log("jailPlayer:", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
-    .removeClass("visible");
-  $("#jail .playerpiece" + players[fbid]).addClass("visible");
+    .removeClass("visible").removeClass("currentTurn");
+  $("#jail .playerpiece" + players[fbid])
+    .addClass("visible").addClass("currentTurn");
 }
 
 function updatePlayerMoney(fbid, money) {
@@ -114,7 +121,9 @@ function propertySold(fbid, propid, propname, money) {
   displayEvent(playerNames[fbid] + " bought " + propname);
 }
 
-function nextTurn(fbid) {
+function nextTurn(previd, fbid) {
+  $(".playerpiece" + players[previd] + ".visible").removeClass("currentTurn");
+  $(".playerpiece" + players[fbid] + ".visible").addClass("currentTurn");
   displayEvent(playerNames[fbid] + "'s turn!");
 }
 
@@ -141,6 +150,7 @@ function attachSocketHandlers() {
   
   socket.on('goToJail', function (socketdata) {
     jailPlayer(socketdata.fbid, socketdata.initial);
+    displayEvent(playerNames[socketdata.fbid] + " was sent to jail!");
   })
   
   socket.on('propertySold', function (socketdata) {
@@ -148,7 +158,7 @@ function attachSocketHandlers() {
   });
   
   socket.on('nextTurn', function (socketdata) {
-    nextTurn(socketdata.fbid);
+    nextTurn(socketdata.previd, socketdata.fbid);
   });
   
   socket.on('payingRent', function (socketdata) {

@@ -756,18 +756,30 @@ io.sockets.on('connection', function (socket) {
 
 // MORE FUNCTIONS
 function endTurn(game) {
+  var previd;
+  for (var index in game.players) {
+    if (game.players[index].playerNumber === game.currentTurn) {
+      previd = game.players[index].fbid;
+    }
+  }
+  
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
   }
+  
   var fbid;
   for (var index in game.players) {
     if (game.players[index].playerNumber === game.currentTurn) {
       fbid = game.players[index].fbid;
     }
   }
+  
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
   saveGame(game, function(){
-    sendToBoards(game.id, 'nextTurn', {fbid: fbid});
+    sendToBoards(game.id, 'nextTurn', {
+      previd: previd,
+      fbid: fbid
+    });
     sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
   });
 }

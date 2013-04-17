@@ -657,3 +657,7 @@ h2 {
 .visible {
   opacity: 1;
 }
+
+.currentTurn {
+  -webkit-transform: scale(2);
+}
