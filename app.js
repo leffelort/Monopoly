@@ -700,7 +700,6 @@ io.sockets.on('connection', function (socket) {
       if (owner !== data.fbid) {
         console.log("Well shit, you're trying to mortgage something you don't own!");
         propertyMortgage(game, prop, socket.id, data.fbid, false);
-        return;
       } else {
         var prop = game.players[data.fbid].properties[data.space];
         if (prop.mortgaged === true) {
@@ -716,7 +715,25 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('propertyUnmortgage', function(data) {
-
+    queryGame(socket.id, function (game) {
+      var owner = game.propertyOwners[data.space];
+      if (owner !== data.fbid) {
+        console.log("Oh I KNOW you didn't just try to unmortgage someone else's property.");
+        propertyUnmortgage(game, prop, socket.id, data.fbid, false);
+      } else {
+        var prop = game.players[data.fbid].properties[data.space];
+        if (prop.mortgaged === false ||  // isn't mortgaged
+            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) { // not enough money
+          console.log("It's either ummortgaged or we don't have enough money");
+          propertyUnmortgage(game, prop, socket.id, data.fbid, false);
+          return;
+        }
+        console.log("Unmortgaging the property");
+        prop.mortgaged = false;
+        debit(game, socket.id, (prop.card.price / 2) * 1.10, data.fbid);
+        propertyUnmortgage(game, prop, socket.id, data.fbid, true);
+      }
+    });
   });
 
   socket.on('boardstate', function (data) {
@@ -1081,19 +1098,20 @@ function propertyMortgage(game, property, socketid, fbid, success) {
   var sock = connections[socketid];
   saveGame(game, function() {
     sock.emit('propertyMortgage', {
-      'property' : property,
-      'fbid' : fbid,
+      property: property,
+      fbid: fbid,
       success: success
     });
   });
 }
 
-function propertyUnmortgage(game, property, socketid, fbid) {
+function propertyUnmortgage(game, property, socketid, fbid, success) {
   var sock = connections[socketid];
   saveGame(game, function() {
     sock.emit('propertyUnmortgage', {
-      'property' : property,
-      'fbid' : fbid
+      property: property,
+      fbid: fbid,
+      success: success
     });
   });
 }

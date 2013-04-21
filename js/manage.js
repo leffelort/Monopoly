@@ -2,6 +2,7 @@ var propertyDatabase = {};
 var setupPage;
 var socket;
 var fbobj;
+var current_prop;
 
 
 function socketSetup() {
@@ -20,18 +21,22 @@ function socketSetup() {
 
   socket.on('propertyMortgage', function(res) {
     if (res.success) {
+      current_prop.mortgaged = true;
       console.log("property was mortgaged");
     } else {
       console.log("Could not mortgage");
     }
+    setupMortgageBtn();
   });
 
   socket.on('propertyUnmortgage', function(res) {
     if (res.success) {
       console.log("property was UNmortgaged");
+      current_prop.mortgaged = false;
     } else {
       console.log("Could not UNmortgage");
     }
+    setupMortgageBtn();
   });
 }
 
@@ -75,6 +80,7 @@ function getProperties() {
 }
 
 function mortgageHandler(prop) {
+  $("#mortgagebtn").unbind();
   if (prop.mortgaged === true) {
     console.log("I want to unmortgage!");
     socket.emit('propertyUnmortgage', {
@@ -88,9 +94,22 @@ function mortgageHandler(prop) {
       space: prop.id
     });
   }
+  setupMortgageBtn();
+}
+
+function setupMortgageBtn() {
+  if (current_prop.mortgaged === true) {
+    $("#mortgagebtn .btncaption").html("Unmortgage");
+  } else {
+    $("#mortgagebtn .btncaption").html("Mortgage");
+  }
+  $("#mortgagebtn").click(function() {
+    mortgageHandler(current_prop);
+  });
 }
 
 function loadDetailedView(prop) {
+  current_prop = prop;
   enablePropertyOptions();
   $("#mortgagebtn").unbind();
   var property = prop.card;
@@ -142,14 +161,7 @@ function loadDetailedView(prop) {
   var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   detailedView.show();
-  if (prop.mortgaged === true) {
-    $("#mortgagebtn .btncaption").html("Unmortgage");
-  } else {
-    $("#mortgagebtn .btncaption").html("Mortgage");
-  }
-  $("#mortgagebtn").click(function() {
-    mortgageHandler(prop);
-  });
+  setupMortgageBtn(prop); 
 }
 
 
@@ -205,10 +217,11 @@ function enablePropertyOptions() {
   $("#houseplusbtn, #houseminusbtn, #mortgagebtn").removeClass("unavailable");
 }
 
+window.addEventListener('load', function() {
+  new FastClick(document.body);
+}, false);
+
 var setupPage = function() {
-  window.addEventListener('load', function() {
-      new FastClick(document.body);
-  }, false);
   $("#propDetails").css({
     "height" : document.documentElement.clientHeight + 60,
     "width" : document.documentElement.clientWidth - $("#propList").width()
