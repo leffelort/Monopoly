@@ -3,6 +3,12 @@ var ppd = 70; // ppd = profile pic dimensions
 var me = undefined; // variable to store player information
 var socket;
 
+var eventQueue = [];
+var currentEvent = undefined;
+var eventUpdateFreq = 500;
+var eventTimer = 0;
+var eventDuration = 3000;
+
 var goToRoll = function() {
   window.location.replace("roll.html");
 }
@@ -19,6 +25,32 @@ var goToManage = function() {
   window.location.replace("manage.html");
 }
 
+function updateGameEvents() {
+  // If no event currently active, check queue
+  if (currentEvent === undefined) {
+    if (eventQueue.length > 0) {
+      console.log(eventQueue);
+      currentEvent = eventQueue.shift();
+      console.log("display new event: ", currentEvent)
+      eventTimer = 0;
+      $(".gameEvent").html(currentEvent);
+      $(".gameEvent").addClass("visible");
+    }
+  } else {
+    // If the current event has been there for the duration, remove it
+    eventTimer += eventUpdateFreq;
+    if (eventTimer >= eventDuration) {
+      console.log("removing event: ", currentEvent)
+      currentEvent = undefined;
+      $(".gameEvent").removeClass("visible");
+    }
+  }
+}
+
+function displayEvent(eventStr) {
+  eventQueue.push(eventStr);
+}
+
 function socketSetup() {
   socket.on('propertyBuy', function(prop) {
     var promptText = "Would you like to purchase " + prop.card.title;
@@ -27,14 +59,20 @@ function socketSetup() {
       socket.emit('propertyBuy', {result: res});
     });
   });
-
-  socket.on('debit', function(obj) {
-
+  
+  socket.on('payingRent', function (socketdata) {
+    displayEvent("You paid $" + socketdata.amount + " in rent.");
+  });
+  
+  socket.on('debit', function (socketdata) {
+    displayEvent("You paid $" + socketdata.amount + " for " + socketdata.reason);
+  });
+  
+  socket.on('credit', function (socketdata) {
+    displayEvent("You received $" + socketdata.amount + " for " + socketdata.reason);
   });
 
-  socket.on('credit', function(obj) {
-    
-  });
+  setInterval(updateGameEvents, eventUpdateFreq);
 }
 
 // @TODO: Need to update this with actual information about the current state
@@ -126,6 +164,9 @@ window.fbAsyncInit = function() {
         });
         socket.on('nextTurn', function(obj) {
           socket.emit('getme', {});
+          if (obj.fbid === fbobj.id) {
+            displayEvent("Your turn!");
+          }
         });
         socket.on('getme', function(resp) {
           if (resp === undefined) {
@@ -212,5 +253,6 @@ $(document).ready(function() {
   var initialHeight = $("#gameButtons").height();
   $("#content").height($(window).height() + 60);
   $("#inspectbtn").click(goToInspect);
+  setInterval(updateGameEvents, eventUpdateFreq);
 });
 
