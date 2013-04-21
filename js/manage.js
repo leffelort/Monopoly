@@ -3,6 +3,38 @@ var setupPage;
 var socket;
 var fbobj;
 
+
+function socketSetup() {
+  socket.on('getMyProperties', function(props){
+    props.sort(function(a,b) {
+      if (!a) return 1;
+      if (!b) return -1;
+      return a.card.space - b.card.space;
+    });
+    displayProperties(props);
+  });
+
+  socket.on('reopen', function(){
+    setupPage();
+  });
+
+  socket.on('propertyMortgage', function(res) {
+    if (res.success) {
+      console.log("property was mortgaged");
+    } else {
+      console.log("Could not mortgage");
+    }
+  });
+
+  socket.on('propertyUnmortgage', function(res) {
+    if (res.success) {
+      console.log("property was UNmortgaged");
+    } else {
+      console.log("Could not UNmortgage");
+    }
+  });
+}
+
 window.fbAsyncInit = function() {
   FB.init({
     appId      : '448108371933308', // App ID
@@ -18,18 +50,8 @@ window.fbAsyncInit = function() {
       FB.api('/me', function(response){
         fbobj = response;
         socket = io.connect(window.location.hostname);
+        socketSetup();
         socket.emit('reopen', response); // tell the server who we are.
-        socket.on('getMyProperties', function(props){
-          props.sort(function(a,b) {
-            if (!a) return 1;
-            if (!b) return -1;
-            return a.card.space - b.card.space;
-          });
-          displayProperties(props);
-        });
-        socket.on('reopen', function(){
-          setupPage();
-        });
       });
     } else {
       // not_authorized
@@ -52,7 +74,26 @@ function getProperties() {
   socket.emit("getMyProperties", {});
 }
 
-function loadDetailedView(property) {
+function mortgageHandler(prop) {
+  if (prop.mortgaged === true) {
+    console.log("I want to unmortgage!");
+    socket.emit('propertyUnmortgage', {
+      fbid: fbobj.id,
+      space: prop.id
+    });
+  } else {
+    console.log("I'm going to mortgage now!");
+    socket.emit('propertyMortgage', {
+      fbid: fbobj.id,
+      space: prop.id
+    });
+  }
+}
+
+function loadDetailedView(prop) {
+  enablePropertyOptions();
+  $("#mortgagebtn").unbind();
+  var property = prop.card;
   $("#propDetails").html(" ");
   var detailedView = $("<div>").addClass("propertyCard");
   var titleDeed = $("<div>").addClass("titleDeed");
@@ -101,6 +142,14 @@ function loadDetailedView(property) {
   var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   detailedView.show();
+  if (prop.mortgaged === true) {
+    $("#mortgagebtn .btncaption").html("Unmortgage");
+  } else {
+    $("#mortgagebtn .btncaption").html("Mortgage");
+  }
+  $("#mortgagebtn").click(function() {
+    mortgageHandler(prop);
+  });
 }
 
 
@@ -139,13 +188,21 @@ function displayProperties(properties) {
       cur_cell.click(function() {
         $(".propertyCell.selected").removeClass("selected");
         cur_cell.addClass("selected");
-        loadDetailedView(propertyDatabase[cur_prop.card.title].card);
+        loadDetailedView(propertyDatabase[cur_prop.card.title]);
       });
     })();
     
     propDiv.append(cell);
   }
   $("#propList").css("height", document.documentElement.clientHeight + 60);
+}
+
+function disablePropertyOptions() {
+  $("#houseplusbtn, #houseminusbtn, #mortgagebtn").addClass("unavailable");
+}
+
+function enablePropertyOptions() {
+  $("#houseplusbtn, #houseminusbtn, #mortgagebtn").removeClass("unavailable");
 }
 
 var setupPage = function() {
@@ -159,6 +216,7 @@ var setupPage = function() {
   $("#backbtn").click(function(){
     window.location.replace("mobileHome.html");
   });
+  disablePropertyOptions();
   window.scrollTo(0, 1);
   // get property data from the database.
   getProperties();

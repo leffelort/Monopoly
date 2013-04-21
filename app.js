@@ -181,7 +181,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
     throw err;
   console.log("successfully connected to the database.")
   client = db;
-  
+
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
@@ -695,14 +695,22 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('propertyMortgage', function (data) {
     queryGame(socket.id, function (game) {
+      console.log("Got the game, now going to try and mortgage");
       var owner = game.propertyOwners[data.space];
       if (owner !== data.fbid) {
         console.log("Well shit, you're trying to mortgage something you don't own!");
+        propertyMortgage(game, prop, socket.id, data.fbid, false);
+        return;
       } else {
         var prop = game.players[data.fbid].properties[data.space];
+        if (prop.mortgaged === true) {
+          propertyMortgage(game, prop, socket.id, data.fbid, false);
+          return;
+        }
+        console.log("Mortgaging the property");
         prop.mortgaged = true;
         credit(game, socket.id, prop.card.price / 2, data.fbid);
-        propertyMortgage(game, prop, socket.id, data.fbid);
+        propertyMortgage(game, prop, socket.id, data.fbid, true);
       }
     });
   });
@@ -1068,13 +1076,14 @@ function collectRent(game, space, socketid, tenant, roll) {
   endTurn(game);
 }
 
-function propertyMortgage(game, property, socketid, fbid) {
+function propertyMortgage(game, property, socketid, fbid, success) {
   console.log("Mortgaging property " + property.id);
   var sock = connections[socketid];
   saveGame(game, function() {
     sock.emit('propertyMortgage', {
       'property' : property,
-      'fbid' : fbid
+      'fbid' : fbid,
+      success: success
     });
   });
 }
