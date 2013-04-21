@@ -172,7 +172,7 @@ app.get("/properties", function(req, resp) {
 var mongo = require('mongodb');
 
 var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI ||
-  "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly"
+  "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?auto_reconnect=true"
 var dbIsOpen = false;
 var client = undefined;
 
@@ -181,6 +181,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
     throw err;
   console.log("successfully connected to the database.")
   client = db;
+  
   dbIsOpen = true;
   client.collection("users", function (e, u) { 
     if (e) throw e;
@@ -195,6 +196,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
     //b.drop();
    });
 });
+
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
