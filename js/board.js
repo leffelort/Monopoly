@@ -46,18 +46,17 @@ function refreshBoardState(game) {
       if (property !== null) {
         $("#space" + property.id + " .propertyown")
           .addClass("playerown" + playerNum);
-      
-        var houses = $("#space" + property.id + " .houses");
-        houses.removeClass("visible");
-        var houseArray = houses.toArray();
-        for (var i = 0; i < property.numHouses; i++) {
-          houses[i].addClass("visible");
-        }
-      
+                
         if (property.hotel) {
           $("#space" + property.id + " .hotel").addClass("visible");
         } else {
           $("#space" + property.id + " .hotel").removeClass("visible");
+          
+          var houses = $("#space" + property.id + " .houses");
+          houses.addClass("visible");
+          for (var i = 1; i <= property.numHouses; i++) {
+            $("#space" + property.id + " .house" + i).addClass("visible");
+          }
         }
       }
     });
@@ -150,6 +149,52 @@ function inspectProperty(fbid, propid) {
   }
 }
 
+function houseBuy(propid) {
+  var visibleHouses = $("#space" + propid + " .house.visible").toArray();
+  switch (visibleHouses.length) {
+    case 0:
+      $("#space" + propid + " .house1").addClass("visible");
+      break;
+    case 1:
+      $("#space" + propid + " .house2").addClass("visible");
+      break;
+    case 2:
+      $("#space" + propid + " .house3").addClass("visible");
+      break;
+    case 3:
+      $("#space" + propid + " .house4").addClass("visible");
+      break;
+  }
+}
+
+function houseSell(propid) {
+  var visibleHouses = $("#space" + propid + " .house.visible").toArray();
+  switch (visibleHouses.length) {
+    case 1:
+      $("#space" + propid + " .house1").removeClass("visible");
+      break;
+    case 2:
+      $("#space" + propid + " .house2").removeClass("visible");
+      break;
+    case 3:
+      $("#space" + propid + " .house3").removeClass("visible");
+      break;
+    case 4:
+      $("#space" + propid + " .house4").removeClass("visible");
+      break;
+  }
+}
+
+function hotelBuy(propid) {
+  $("#space" + propid + " .houses").removeClass("visible");
+  $("#space" + propid + " .hotel").addClass("visible");
+}
+
+function hotelSell(propid) {
+  $("#space" + propid + " .hotel").removeClass("visible");
+  $("#space" + propid + " .houses").addClass("visible");
+}
+
 function attachSocketHandlers() {
   socket.on("boardReconnect", function (socketdata) {
     if (!socketdata.success) {
@@ -210,6 +255,30 @@ function attachSocketHandlers() {
   
   socket.on('inspectProperty', function (socketdata) {
     inspectProperty(socketdata.fbid, socketdata.property);
+  });
+  
+  socket.on('houseBuy', function (socketdata) {
+    houseBuy(socketdata.space);
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " bought a house on " + propName);
+  });
+  
+  socket.on('houseSell', function (socketdata) {
+    houseSell(socketdata.space);
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " sold a house on " + propName);
+  });
+  
+  socket.on('hotelBuy', function (socketdata) {
+    hotelBuy(socketdata.space);
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " bought a hotel on " + propName);
+  });
+  
+  socket.on('hotelSell', function (socketdata) {
+    hotelSell(socketdata.space);
+    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + propName);
   });
 }
 

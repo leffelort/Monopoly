@@ -562,6 +562,10 @@ h2 {
   background-color: purple;
 }
 
+.houses {
+  opacity: 0;
+}
+
 .houses1 {
   position: absolute;
   top: 10px;

@@ -960,8 +960,8 @@ function ensureBuildingParity(game, space, fbid, buildFlag) { //buildFlag is tru
   }, []);
   if (group.length === 0) {return false;} //catch the case where we're checking for monopoly of railroads or somesuch.
   for (var spaceid in group) {
-    var temp = game.players[fbid].properties[spaceid].numHouses;
-    if (game.players[fbid].properties[spaceid].hotel) temp = (temp+5);
+    var temp = game.players[fbid].properties[group[spaceid]].numHouses;
+    if (game.players[fbid].properties[group[spaceid]].hotel) temp = (temp+5);
     if ((Math.abs(target - temp)) > 1) {
       return false;
     }
@@ -974,12 +974,22 @@ function handleConstruction(space, socketid, fbid){
     console.log('handling construction case');
     var prop = game.players[fbid].properties[space];
     if ((prop === undefined) || (prop === null)) { 
-      connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: false, reason: 'no ownership'});
+      connections[socketid].emit('houseBuy', {
+        space: space, 
+        fbid: fbid, 
+        success: false, 
+        reason: 'no ownership'
+      });
       return;
     }
     if ((prop.monopoly) && (!prop.hotel)) { //able 
       if (!ensureBuildingParity(game, space, fbid, true)) {
-        connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: false, reason: 'not building evenly'});
+        connections[socketid].emit('houseBuy', {
+          space: space, 
+          fbid: fbid, 
+          success: false, 
+          reason: 'not building evenly'
+        });
         return;
       }
       if (prop.numHouses === 4) { //buying a hotel
@@ -992,14 +1002,34 @@ function handleConstruction(space, socketid, fbid){
             prop.numHouses = 0;
             prop.hotel = true;
             saveGame(game, function () { 
-              connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: true});
-              sendToBoards(game.id, 'hotelBuy', {space: space, fbid: fbid, success: true});
+              connections[socketid].emit('houseBuy', {
+                space: space, 
+                fbid: fbid, 
+                success: true
+              });
+              sendToBoards(game.id, 'hotelBuy', {
+                space: space,
+                propName: prop.card.title,
+                money: game.players[fbid].money,
+                fbid: fbid, 
+                success: true
+              });
             });
           } else {
-            connections[socketid].emit('houseBuy', {space:space, fbid: fbid, success: false, reason: 'no money'});
+            connections[socketid].emit('houseBuy', {
+              space: space, 
+              fbid: fbid, 
+              success: false, 
+              reason: 'no money'
+            });
           }
         } else {
-          connections[socketid].emit('houseBuy', {space:space, fbid: fbid, success: false, reason: 'no hotels left'});
+          connections[socketid].emit('houseBuy', {
+            space:space, 
+            fbid: fbid, 
+            success: false, 
+            reason: 'no hotels left'
+          });
         }
       } else {
         if (game.availableHouses > 0) {
@@ -1009,18 +1039,43 @@ function handleConstruction(space, socketid, fbid){
             game.availableHouses = (game.availableHouses - 4);
             prop.numHouses = (prop.numHouses + 1);
             saveGame(game, function () { 
-              connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: true});
-              sendToBoards(game.id, 'houseBuy', {space: space, fbid: fbid, success: true});
+              connections[socketid].emit('houseBuy', {
+                space: space, 
+                fbid: fbid, 
+                success: true
+              });
+              sendToBoards(game.id, 'houseBuy', {
+                space: space,
+                propName: prop.card.title,
+                money: game.players[fbid].money,
+                fbid: fbid, 
+                success: true
+              });
             });
           } else {
-            connections[socketid].emit('houseBuy', {space:space, fbid: fbid, success: false, reason: 'no money'});
+            connections[socketid].emit('houseBuy', {
+              space:space, 
+              fbid: fbid, 
+              success: false, 
+              reason: 'no money'
+            });
           }
         } else { 
-          connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: false, reason: 'no houses left'});
+          connections[socketid].emit('houseBuy', {
+            space: space, 
+            fbid: fbid, 
+            success: false, 
+            reason: 'no houses left'
+          });
         }   
       } 
     } else {
-      connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: false, reason: 'already hotel or no monopoly'});
+      connections[socketid].emit('houseBuy', {
+        space: space, 
+        fbid: fbid, 
+        success: false, 
+        reason: 'already hotel or no monopoly'
+      });
     }
   });
 }
@@ -1030,28 +1085,53 @@ function handleDemolition(space, socketid, fbid) {
     console.log('handling demolition case');
     var prop = game.players[fbid].properties[space];
     if ((prop === undefined) || (prop === null)) { 
-      connections[socketid].emit('houseSell', {space: space, fbid: fbid, success: false, reason: 'no ownership'});
+      connections[socketid].emit('houseSell', {
+        space: space, 
+        fbid: fbid, 
+        success: false, 
+        reason: 'no ownership'
+      });
       return;
     }
     if ((prop.monopoly) && ((prop.numHouses > 0)||(prop.hotel))) { //able     
       if (!ensureBuildingParity(game, space, fbid, false)) {
-        connections[socketid].emit('houseSell', {space: space, fbid: fbid, success: false, reason: 'not demolishing evenly'});
+        connections[socketid].emit('houseSell', {
+          space: space, 
+          fbid: fbid, 
+          success: false, 
+          reason: 'not demolishing evenly'
+        });
         return;
       }
       if (prop.hotel) { //selling a hotel
         var amt = (prop.card.hotelcost / 2);
-          if (game.availableHotels > 3) {
+          if (game.availableHouses > 3) {
             credit(game, socketid, amt, fbid);
             game.availableHotels = (game.availableHotels + 1);
             game.availableHouses = (game.availableHouses - 4);
             prop.numHouses = 4;
             prop.hotel = false;
             saveGame(game, function () { 
-              connections[socketid].emit('houseSell', {space: space, fbid: fbid, success: true});
-              sendToBoards(game.id, 'hotelSell', {space: space, fbid: fbid, success: true});
+              connections[socketid].emit('houseSell', {
+                space: space, 
+                fbid: fbid, 
+                success: true
+              });
+              sendToBoards(game.id, 'hotelSell', {
+                space: space,
+                propName: prop.card.title,
+                money: game.players[fbid].money,
+                fbid: fbid, 
+                success: true
+              });
             });            
           } else {
-            connections[socketid].emit('houseSell', {space:space, fbid: fbid, success: false, reason: 'not enough houses to sell a hotel'});
+            connections[socketid].emit('houseSell', {
+              space: space, 
+              fbid: fbid, 
+              success: false, 
+              reason: 'not enough houses to sell a hotel'
+            });
           }
       } else {
         var amt = (prop.card.housecost/2);
@@ -1059,12 +1139,27 @@ function handleDemolition(space, socketid, fbid) {
         game.availableHouses = (game.availableHouses + 1);
         prop.numHouses = (prop.numHouses - 1);
         saveGame(game, function () { 
-          connections[socketid].emit('houseSell', {space: space, fbid: fbid, success: true});
-          sendToBoards(game.id, 'houseSell', {space: space, fbid: fbid, success: true});
+          connections[socketid].emit('houseSell', {
+            space: space, 
+            fbid: fbid, 
+            success: true
+          });
+          sendToBoards(game.id, 'houseSell', {
+            space: space,
+            propName: prop.card.title,
+            money: game.players[fbid].money,
+            fbid: fbid, 
+            success: true
+          });
         });    
       }   
     } else {
-      connections[socketid].emit('houseBuy', {space: space, fbid: fbid, success: false, reason: 'no monopoly or no building'});
+      connections[socketid].emit('houseSell', {
+        space: space, 
+        fbid: fbid, 
+        success: false, 
+        reason: 'no monopoly or no building'
+      });
     }
   });
 }
