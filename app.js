@@ -753,6 +753,27 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
+  socket.on('getOutOfJail', function (data) {
+    queryGame(socket.id, function (game) {
+      if (data.paid) {
+        debit(game, socket.id, 50, data.fbid);
+        game.players[data.fbid].jailed = false;
+      } else {
+        game.players[data.fbid].jailCards.shift();
+        game.players[data.fbid].jailed = false;
+      }
+      sendToBoards(game.id, 'getOutOfJail', { fbid: data.fbid });
+      saveGame(game);
+    });
+  });
+  
+  socket.on('serveJailTime', function (data) {
+    queryGame(socket.id, function (game) {
+      game.players[data.fbid].jailTime++;
+      saveGame(game);
+    });
+  });
+  
   socket.on('disconnect', function() {
     delete connections[socket.id];
   });
@@ -884,8 +905,15 @@ function handleRoll(delta, dbls, socketid, fbid) {
     console.log("Handling roll for player ", game.players[fbid]);
     console.log("Found a game??", game.id);
     game.doubles = dbls;
-    if ((game.players[fbid].jailed) && (!dbls)) {
-      endTurn(game);//todo handle in-jail rolls. 
+    if (game.players[fbid].jailed) {
+      if (dbls) {
+        sendToBoards(game.id, 'getOutOfJail', { fbid: fbid });
+        game.players[fbid].jailed = false;
+      } else {
+        sendToBoards(game.id, 'stayInJail', { fbid: fbid });
+        endTurn(game);
+        return;
+      }
     }
     var initial = game.players[fbid].space;
     game.players[fbid].space = ((game.players[fbid].space + delta) % 40);

@@ -108,6 +108,8 @@ function jailPlayer(fbid, initial) {
   console.log("jailPlayer:", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
     .removeClass("visible").removeClass("currentTurn");
+  $("#space30 .playerpiece" + players[fbid])
+    .removeClass("visible").removeClass("currentTurn");
   $("#jail .playerpiece" + players[fbid])
     .addClass("visible").addClass("currentTurn");
 }
@@ -172,7 +174,15 @@ function attachSocketHandlers() {
   socket.on('goToJail', function (socketdata) {
     jailPlayer(socketdata.fbid, socketdata.initial);
     displayEvent(playerNames[socketdata.fbid] + " was sent to jail!");
-  })
+  });
+  
+  socket.on('getOutOfJail', function (socketdata) {
+    displayEvent(playerNames[socketdata.fbid] + " got out of jail!");
+  });
+  
+  socket.on('stayInJail', function (socketdata) {
+    displayEvent(playerNames[socketdata.fbid] + " stayed in jail.");
+  });
   
   socket.on('propertySold', function (socketdata) {
     propertySold(socketdata.fbid, socketdata.property, socketdata.propName, socketdata.money)

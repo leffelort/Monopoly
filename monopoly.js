@@ -27,6 +27,7 @@ var Player = function(username, fbid) {
   this.money = 1500;
   this.properties = [];
   this.jailed = false;
+  this.jailTime = 0;
   this.jailCards = [];
   this.space = 0;
   this.playerNumber = 0;

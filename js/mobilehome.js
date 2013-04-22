@@ -71,7 +71,7 @@ function socketSetup() {
   socket.on('credit', function (socketdata) {
     displayEvent("You received $" + socketdata.amount + " for " + socketdata.reason);
   });
-
+  
   setInterval(updateGameEvents, eventUpdateFreq);
 }
 
@@ -135,6 +135,56 @@ function loadFBData() {
     $("#managebtn").removeClass("disabled");
     $("#tradebtn").removeClass("disabled");
     enableButtons();
+    
+    if (me.jailed) {
+      if (me.jailCards.length > 0) {
+        if (me.jailTime === 3) {
+          displayPrompt("You will use your Get out of Jail Free card to get out of jail.", function (res) {
+            socket.emit('getOutOfJail', {
+              paid: false,
+              fbid: me.fbid
+            });
+          });
+        } else {
+          displayPrompt("Do you want to use your Get out of Jail Free card?", 
+          function (res) {
+            if (res) {
+              socket.emit('getOutOfJail', {
+                paid: false,
+                fbid: me.fbid
+              });
+            } else {
+              socket.emit('serveJailTime', {
+                fbid: me.fbid
+              });
+            }
+          });
+        }
+      } else {
+        if (me.jailTime === 3) {
+          displayPrompt("You must pay $50 to get out of jail.", function (res) {
+            socket.emit('getOutOfJail', {
+              paid: true,
+              fbid: me.fbid
+            });
+          });
+        } else {
+          displayPrompt("Do you want to pay $50 to get out of jail?", 
+          function (res) {
+            if (res) {
+              socket.emit('getOutOfJail', {
+                paid: true,
+                fbid: me.fbid
+              });
+            } else {
+              socket.emit('serveJailTime', {
+                fbid: me.fbid
+              });
+            }
+          });
+        }
+      }
+    }
   }
 
 
