@@ -38,6 +38,22 @@ function socketSetup() {
     }
     setupMortgageBtn();
   });
+
+  socket.on('houseBuy', function(res) {
+    if (res.success) {
+      console.log("you bought a house!");
+    } else {
+      console.log("LOL SUCKS you didn't buy a house cause, ", res.reason);
+    }
+  });
+
+  socket.on('houseSell', function(res) {
+    if (res.success) {
+      console.log("you sold a house!");
+    } else {
+      console.log("LOL SUCKS you didn't sell a house cause, ", res.reason);
+    }
+  });
 }
 
 window.fbAsyncInit = function() {
@@ -98,6 +114,12 @@ function mortgageHandler(prop) {
 }
 
 function setupMortgageBtn() {
+  if (current_prop.numHouses > 0 || current_prop.hotel === true) {
+    $("#mortgagebtn").addClass("unavailable")
+                     .unbind();
+    $("#mortgagebtn .btncaption").html("Mortgage");
+    return;
+  }
   if (current_prop.mortgaged === true) {
     $("#mortgagebtn .btncaption").html("Unmortgage");
   } else {
@@ -106,6 +128,30 @@ function setupMortgageBtn() {
   $("#mortgagebtn").click(function() {
     mortgageHandler(current_prop);
   });
+}
+
+function setupHouseButtons() {
+  if (current_prop.monopoly === true) {
+    $("#houseminusbtn").removeClass("unavailable");
+    $("#houseplusbtn").removeClass("unavailable");
+    $("#houseplusbtn").click(function() {
+      socket.emit('houseBuy', {
+        space: current_prop.id,
+        fbid: fbobj.id
+      });
+    });
+    $("#houseminusbtn").click(function() {
+      socket.emit('houseSell', {
+        space: current_prop.id,
+        fbid: fbobj.id
+      });
+    }); 
+  } else {
+    $("#houseminusbtn").addClass("unavailable")
+                      .unbind();
+    $("#houseplusbtn").addClass("unavailable")
+                     .unbind();
+  }
 }
 
 function loadDetailedView(prop) {
@@ -223,6 +269,7 @@ function loadDetailedView(prop) {
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   detailedView.show();
   setupMortgageBtn(prop);
+  setupHouseButtons();
   
   // Send currently viewed property to the server so the board can update
   socket.emit('inspectProperty', {
