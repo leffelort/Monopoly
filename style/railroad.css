@@ -44,42 +44,6 @@ body {
   color: black;
 }
 
-.railroadImg {
-  background-image: url('../images/railroad.png');
-  text-align: center;
-  width: 123px;
-  height: 100px;
-  margin: 3% auto 0 auto;
-}
-
-.electricImg {
-  background-image: url('../images/lightbulb.png');
-  text-align: center;
-  width: 123px;
-  height: 140px;
-  margin: 3% auto 0 auto;
-}
-
-.waterImg {
-  background-image: url('../images/faucet.png');
-  text-align: center;
-  width: 163px;
-  height: 140px;
-  margin: 3% auto 0 auto;
-}
-
-.utilityText {
-  text-indent: 5%;
-  text-align: left;
-  display: block;
-  width: 80%;
-  margin: 0 auto;
-}
-
-.utilityCostTable {
-  margin-bottom: 5%;
-}
-
 .propertyName h1:before {
   content: 'TITLE DEED';
   display: block;
@@ -87,7 +51,7 @@ body {
   font-size: 0.7em;
 }
 
-.propertyName.railroad, .propertyName.utility {
+.propertyName.railroad {
   border-right: none;
   border-left: none;
   margin: 4% auto;
@@ -99,9 +63,16 @@ body {
   display: none;
 }
 
-.propertyName.utility h1:before {
-  content: '.';
-  display: none;
+.railroadImgWrapper {
+  text-align: center;
+}
+
+.railroadImg {
+  background-image: url('../images/railroad.png');
+  text-align: center;
+  width: 123px;
+  height: 100px;
+  margin: 3% auto 0 auto;
 }
 
 .propertyName h1 {
@@ -180,4 +151,8 @@ table.railroad {
 
 td:nth-child(even) {
   text-align: right;
+}
+
+.mortgageFooter {
+  
 }
