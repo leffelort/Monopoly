@@ -734,7 +734,8 @@ io.sockets.on('connection', function (socket) {
       } else {
         var prop = game.players[data.fbid].properties[data.space];
         if (prop.mortgaged === false ||  // isn't mortgaged
-            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) { // not enough money
+            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) { 
+              // not enough money
           console.log("It's either ummortgaged or we don't have enough money");
           propertyUnmortgage(game, prop, socket.id, data.fbid, false);
           return;
@@ -1398,7 +1399,8 @@ function startGame(gameID) {
 function sendToPlayers(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
-      connections[sockets[i].socketid].emit(emitString, emitArgs);
+      if (connections[sockets[i].socketid] !== undefined)
+        connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
   });
 } 
@@ -1408,7 +1410,8 @@ function sendToPlayers(gameID, emitString, emitArgs) {
 function sendToBoards(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'boards', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
-      connections[sockets[i].socketid].emit(emitString, emitArgs);
+      if (connections[sockets[i].socketid] !== undefined)
+        connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
   });
 }
@@ -1417,7 +1420,8 @@ function sendToOthers(gameID, emitString, emitArgs, senderID) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
       if (sockets[i].socketid !== senderID) {
-        connections[sockets[i].socketid].emit(emitString, emitArgs);
+        if (connections[sockets[i].socketid] !== undefined)
+          connections[sockets[i].socketid].emit(emitString, emitArgs);
       }
     }
   });
