@@ -38,6 +38,22 @@ function socketSetup() {
     }
     setupMortgageBtn();
   });
+
+  socket.on('houseBuy', function(res) {
+    if (res.success) {
+      console.log("you bought a house!");
+    } else {
+      console.log("LOL SUCKS you didn't buy a house cause, ", res.reason);
+    }
+  });
+
+  socket.on('houseSell', function(res) {
+    if (res.success) {
+      console.log("you sold a house!");
+    } else {
+      console.log("LOL SUCKS you didn't sell a house cause, ", res.reason);
+    }
+  });
 }
 
 window.fbAsyncInit = function() {
@@ -98,6 +114,12 @@ function mortgageHandler(prop) {
 }
 
 function setupMortgageBtn() {
+  if (current_prop.numHouses > 0 || current_prop.hotel === true) {
+    $("#mortgagebtn").addClass("unavailable")
+                     .unbind();
+    $("#mortgagebtn .btncaption").html("Mortgage");
+    return;
+  }
   if (current_prop.mortgaged === true) {
     $("#mortgagebtn .btncaption").html("Unmortgage");
   } else {
@@ -106,6 +128,30 @@ function setupMortgageBtn() {
   $("#mortgagebtn").click(function() {
     mortgageHandler(current_prop);
   });
+}
+
+function setupHouseButtons() {
+  if (current_prop.monopoly === true) {
+    $("#houseminusbtn").removeClass("unavailable");
+    $("#houseplusbtn").removeClass("unavailable");
+    $("#houseplusbtn").click(function() {
+      socket.emit('houseBuy', {
+        space: current_prop.id,
+        fbid: fbobj.id
+      });
+    });
+    $("#houseminusbtn").click(function() {
+      socket.emit('houseSell', {
+        space: current_prop.id,
+        fbid: fbobj.id
+      });
+    }); 
+  } else {
+    $("#houseminusbtn").addClass("unavailable")
+                      .unbind();
+    $("#houseplusbtn").addClass("unavailable")
+                     .unbind();
+  }
 }
 
 function loadDetailedView(prop) {
@@ -120,39 +166,100 @@ function loadDetailedView(prop) {
   if (property.color === "blue" || property.color === "purple") {
     titleTextColor = "white";
   }
-  titleDeed.append($("<div>").addClass("propertyName")
+  var details;
+  var costTable;
+  if (property.color === "rr") { // handle railroad
+    titleDeed.append($("<div>").addClass("railroadImg"));
+    titleDeed.append($("<div>").addClass("propertyName")
+                 .addClass("railroad")
+                 .append($("<h1>").html(property.title))
+                 .css("color", titleTextColor));
+    details = $("<div>").addClass("details")
+                        .addClass("railroad");
+    details.append($("<div>").addClass("rentDisplay")
+                 .html(property.rent + "."));
+    var houseCosts = $("<div>").addClass("houseCosts");
+  
+    costTable = $("<table>").addClass("railroad");
+    costTable.append($("<tr>").append($("<td>").html("If 2 R.R.'s are owned"),
+                      $("<td>").html("$ " + property.tworr + ".")));
+    costTable.append($("<tr>").append($("<td>").html("If 3  &nbsp; &nbsp; \" &nbsp; &nbsp; \" &nbsp; &nbsp; \""),
+                      $("<td>").html(property.threerr + ".")));
+    costTable.append($("<tr>").append($("<td>").html("If 4  &nbsp; &nbsp; \" &nbsp; &nbsp; \" &nbsp; &nbsp; \""),
+                      $("<td>").html(property.fourrr + ".")));
+    houseCosts.append(costTable);
+    
+    details.append(houseCosts);
+    details.addClass("railroad");
+    details.append($("<div>").addClass("mortgage")
+                           .html(property.mortgage + "."));
+    details.append($("<div>").addClass("copyright")
+                .html("&copy;1935 Hasbro, Inc."));
+
+  } else if (property.color === "utility") {
+    if (property.title.indexOf("Light") != -1) {
+      titleDeed.append($("<div>").addClass("electricImg"));
+    } else { 
+      titleDeed.append($("<div>").addClass("waterImg"));
+    }
+
+    titleDeed.append($("<div>").addClass("propertyName")
+                 .addClass("utility")
+                 .append($("<h1>").html(property.title))
+                 .css("color", titleTextColor));
+    details = $("<div>").addClass("details")
+                        .addClass("utility");
+    var houseCosts = $("<div>").addClass("houseCosts");
+  
+    costTable = $("<div>").addClass("utilityCostTable");
+    costTable.append($("<span>").addClass("utilityText")
+                                .html("If one \"Utility\" is owned rent is 4 times amount shown on dice."));
+    costTable.append($("<span>").addClass("utilityText")
+                                .html("If both \"Utilities\" are owned rent is 10 times amount shown on dice."));
+    houseCosts.append(costTable);
+    
+    details.append(houseCosts);
+    details.append($("<div>").addClass("mortgage")
+                           .html(property.mortgage + "."));
+    details.append($("<div>").addClass("copyright")
+                .html("&copy;1935 Hasbro, Inc."));
+
+  } else { // handle regular property
+    titleDeed.append($("<div>").addClass("propertyName")
                  .addClass(property.color)
                  .append($("<h1>").html(property.title))
                  .css("color", titleTextColor));
-  var details = $("<div>").addClass("details");
-  details.append($("<div>").addClass("rentDisplay")
-               .html(property.rent + "."));
-  var houseCosts = $("<div>").addClass("houseCosts");
-
-  var costTable = $("<table>");
-  costTable.append($("<tr>").append($("<td>").html("With 1 House"),
-                    $("<td>").html("$ " + property.onehouse + ".")));
-  costTable.append($("<tr>").append($("<td>").html("With 2 Houses"),
-                    $("<td>").html(property.twohouse + ".")));
-  costTable.append($("<tr>").append($("<td>").html("With 3 Houses"),
-                    $("<td>").html(property.threehouse + ".")));
-  costTable.append($("<tr>").append($("<td>").html("With 4 Houses"),
-                    $("<td>").html(property.fourhouse + ".")));
-  houseCosts.append(costTable);
-  details.append(houseCosts);
-
-  details.append($("<div>").addClass("hotel")
-                         .html(property.hotel + "."));
-  details.append($("<div>").addClass("mortgage")
-                         .html(property.mortgage + "."));
-  details.append($("<div>").addClass("houses")
-                         .html(property.housecost + "."));
-  details.append($("<div>").addClass("hotelCost")
-                         .html(property.hotelcost + "."));
-  details.append($("<div>").addClass("monopoly")
-                         .html("If a player owns ALL the Lots of any Color-Group, the rent is Doubled on Unimproved Lots in that group."));
-  details.append($("<div>").addClass("copyright")
-               .html("&copy;1935 Hasbro, Inc."));
+    details = $("<div>").addClass("details");
+    details.append($("<div>").addClass("rentDisplay")
+                 .html(property.rent + "."));
+    var houseCosts = $("<div>").addClass("houseCosts");
+  
+    var costTable = $("<table>");
+    costTable.append($("<tr>").append($("<td>").html("With 1 House"),
+                      $("<td>").html("$ " + property.onehouse + ".")));
+    costTable.append($("<tr>").append($("<td>").html("With 2 Houses"),
+                      $("<td>").html(property.twohouse + ".")));
+    costTable.append($("<tr>").append($("<td>").html("With 3 Houses"),
+                      $("<td>").html(property.threehouse + ".")));
+    costTable.append($("<tr>").append($("<td>").html("With 4 Houses"),
+                      $("<td>").html(property.fourhouse + ".")));
+    houseCosts.append(costTable);
+    details.append(houseCosts);
+  
+    details.append($("<div>").addClass("hotel")
+                           .html(property.hotel + "."));
+    details.append($("<div>").addClass("mortgage")
+                           .html(property.mortgage + "."));
+    details.append($("<div>").addClass("houses")
+                           .html(property.housecost + "."));
+    details.append($("<div>").addClass("hotelCost")
+                           .html(property.hotelcost + "."));
+    details.append($("<div>").addClass("monopoly")
+                           .html("If a player owns ALL the Lots of any Color-Group, the rent is Doubled on Unimproved Lots in that group."));
+    details.append($("<div>").addClass("copyright")
+                .html("&copy;1935 Hasbro, Inc."));
+  }
+  
 
   titleDeed.append(details);
   detailedView.append(titleDeed);
@@ -161,9 +268,15 @@ function loadDetailedView(prop) {
   var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   detailedView.show();
-  setupMortgageBtn(prop); 
+  setupMortgageBtn(prop);
+  setupHouseButtons();
+  
+  // Send currently viewed property to the server so the board can update
+  socket.emit('inspectProperty', {
+    fbid: window.fbid,
+    property: propertyDatabase[property.title].id
+  });
 }
-
 
 // @TODO: Make sure the properties display current data
 function displayProperties(properties) {
@@ -186,9 +299,11 @@ function displayProperties(properties) {
                   .addClass("price")
                   .html("$" + card.price));
     } else {
-      bottom.append($("<span>").addClass("proptext")
-                    .addClass("rent")
-                    .html("$" + card.rent));
+      if (prop.card.color !== "utility") {
+        bottom.append($("<span>").addClass("proptext")
+                      .addClass("rent")
+                      .html("$" + card.rent));
+      }
     }
     bottom.append($("<span>").addClass("owner")
                  .html(fbobj.first_name));
