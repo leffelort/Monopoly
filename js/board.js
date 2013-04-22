@@ -14,9 +14,9 @@ var eventDuration = 3000;
 function scaleBoard() {
   var boardScale = document.documentElement.clientHeight / 2000;
   $("#board").css("-webkit-transform", "scale(" + boardScale + ")");
-  $(".pieces2").css("-webkit-transform", "scale(" + boardScale + ") rotate(" + -90 + "deg)");
-  $(".pieces3").css("-webkit-transform", "scale(" + boardScale + ") rotate(" + -180 + "deg)");
-  $(".pieces4").css("-webkit-transform", "scale(" + boardScale + ") rotate(" + -270 + "deg)");
+  $(".pieces2").css("-webkit-transform", "rotate(" + -90 + "deg)");
+  $(".pieces3").css("-webkit-transform", "rotate(" + -180 + "deg)");
+  $(".pieces4").css("-webkit-transform", "rotate(" + -270 + "deg)");
   $("#wrapper").css("height", boardScale * 2000);
   
   var offset = (document.documentElement.clientWidth / 2) - (($("#board").height() * boardScale) / 2);
