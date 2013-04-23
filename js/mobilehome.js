@@ -71,6 +71,14 @@ function socketSetup() {
   socket.on('credit', function (socketdata) {
     displayEvent("You received $" + socketdata.amount + " for " + socketdata.reason);
   });
+
+  socket.on('passGo!', function (socketdata) {
+    displayEvent("You collect $" + socketdata.amount + " for " + socketdata.reason);
+  });
+
+  socket.on('getOutOfJail', function (socketdata) {
+    displayEvent("You collect got out of Jail!");
+  });
   
   setInterval(updateGameEvents, eventUpdateFreq);
 }
@@ -79,6 +87,7 @@ function socketSetup() {
 // of the player in the game once the database supports it.
 function loadFBData() {
   var infodiv = $("#playerinfo");
+  infodiv.empty();
   var picurl;
   var name = me.username;
   picurl = "https://graph.facebook.com/" + me.fbid + "/picture?width=" + ppd + "&height=" + ppd

@@ -772,6 +772,7 @@ io.sockets.on('connection', function (socket) {
         game.players[data.fbid].jailed = false;
       }
       sendToBoards(game.id, 'getOutOfJail', { fbid: data.fbid });
+      socket.emit('getOutOfJail', {});
       saveGame(game);
     });
   });
@@ -871,7 +872,9 @@ function passGo(game, socketid,fbid) {
   credit(game, socketid, 200, fbid);
   connections[socketid].emit('passGo!', {
     fbid: fbid,
-    money: game.players[fbid].money
+    money: game.players[fbid].money,
+    amount: 200,
+    reason: "passing Go!"
   });
   sendToBoards(game.id, 'credit', {
     fbid: fbid,
@@ -1383,7 +1386,10 @@ function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
   var sock = connections[socketid];
   saveGame(game, function() {
-    sock.emit('propertyBuy', {'property' : property, fbid: fbid}); //naming convention?
+    sock.emit('propertyBuy', {
+    'property' : property, 
+    fbid: fbid
+    }); //naming convention?
   });
 }
 
@@ -1395,6 +1401,9 @@ function sendToJail(game, socketid, fbid) {
   sendToBoards(game.id, 'goToJail', {
     fbid: fbid,
     initial: initial
+  });
+  connections[socketid].emit('goToJail', {
+    reason: "Go to Jail"
   });
 }
 
@@ -1409,6 +1418,10 @@ function handleTax(game, space, socketid, fbid){
       money: game.players[fbid].money,
       reason: "Luxury Tax"
     });
+    connections[socketid].emit('debit', {
+      amount: amt,
+      reason: "Luxury Tax"
+    });
   } else if (space === 4) {
     // always take away 200
     // TODO: don't always take away 200
@@ -1418,6 +1431,10 @@ function handleTax(game, space, socketid, fbid){
       fbid: fbid,
       amount: amt,
       money: game.players[fbid].money,
+      reason: "Income Tax"
+    });
+    connections[socketid].emit('debit', {
+      amount: amt,
       reason: "Income Tax"
     });
   } else {
@@ -1444,6 +1461,10 @@ function handleSpace(game, socketid, space, fbid, roll) {
         money: game.players[fbid].money,
         reason: "landing on Go"
       });
+      connections[socketid].emit('credit', {
+        amount: 200,
+        reason: "landing on Go"
+      });
       // do we want double money for landing on go???
     }
     if (space === 20) {
@@ -1452,6 +1473,10 @@ function handleSpace(game, socketid, space, fbid, roll) {
         fbid: fbid,
         amount: 500,
         money: game.players[fbid].money,
+        reason: "landing on Free Parking"
+      });
+      connections[socketid].emit('credit', {
+        amount: 500,
         reason: "landing on Free Parking"
       });
       // do we want free parking to be a straight $500??
