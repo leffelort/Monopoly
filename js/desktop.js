@@ -361,5 +361,6 @@ var setupHomescreen = function () {
       }
     });
   });
+  window.scrollTo(0,1);
   attachButtonEvents();
 }
