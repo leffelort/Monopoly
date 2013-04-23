@@ -1486,15 +1486,21 @@ function handleSpace(game, socketid, space, fbid, roll) {
     }
     endTurn(game);
   }
-  if (isCommChest(space) || isChance(space)) {
-    //todo: comm chest & chance
-    console.log("Woah there buddy, ya landed on chance or community chest. You special huh?");
-    endTurn(game);
-    return;
+  if (isChance(space)) {
+    handleChance(socketid, fbid);
+  }
+  if (isCommChest(space)) {
+    handleCommChest(socketid, fbid);
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
   }
+}
+
+function handleChance(socketid, fbid) {
+  queryGame(socketid, function (game) {
+    var card = chanceCommChestDeck.drawChance(game);
+  });
 }
 
 function credit(game,socketid, amt, fbid) {
