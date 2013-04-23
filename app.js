@@ -62,9 +62,6 @@ app.get('/desktop/', function(req, res, next){
   });
 });
 
-
-
-
 app.configure(function(){
   app.use(express.static(__dirname));
 });
@@ -175,6 +172,7 @@ var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI ||
   "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?auto_reconnect=true"
 var dbIsOpen = false;
 var client = undefined;
+var chanceCommChestDeck = require('./chanceCommChestDeck.js');
 
 mongo.Db.connect(mongoUri, function(err, db) {
   if (err)
@@ -1467,6 +1465,7 @@ function handleSpace(game, socketid, space, fbid, roll) {
     //todo: comm chest & chance
     console.log("Woah there buddy, ya landed on chance or community chest. You special huh?");
     endTurn(game);
+    return;
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);

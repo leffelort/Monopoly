@@ -17,6 +17,10 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.availableHotels = 12;
   this.availableProperties = [];
   this.propertyOwners = {};
+  this.chanceDeck = [];
+  this.commChestDeck = [];
+  this.chanceJailCardUsed = false;
+  this.commChestJailCardUsed = false;
 }
 
 

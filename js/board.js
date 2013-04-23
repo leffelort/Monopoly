@@ -280,6 +280,14 @@ function attachSocketHandlers() {
     updatePlayerMoney(socketdata.fbid, socketdata.money);
     displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + propName);
   });
+  
+  socket.on('chance', function (socketdata) {
+    displayEvent(playerNames[socketdata.fbid] + ' landed on Chance!\n"' + socketdata.text + '"');
+  });
+  
+  socket.on('communityChest', function (socketdata) {
+    displayEvent(playerNames[socketdata.fbid] + ' landed on Community Chest!\n"' + socketdata.text + '"');
+  });
 }
 
 $(document).ready(function() {
