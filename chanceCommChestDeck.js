@@ -12,7 +12,7 @@ module.exports = function init(c) {
         // If deck is empty, query the database again
         client.collection('chance', function (error, coll) {
           if (!error) {
-            coll.toArray(function (err, arr) {
+            coll.find({}).toArray(function (err, arr) {
               if (!err) {
                 game.chanceDeck = arr;
                 if (game.chanceJailCardUsed) {
@@ -42,7 +42,7 @@ module.exports = function init(c) {
         // If deck is empty, query the database again
         client.collection('communitychest', function (error, coll) {
           if (!error) {
-            coll.toArray(function (err, arr) {
+            coll.find({}).toArray(function (err, arr) {
               if (!err) {
                 game.commChestDeck = arr;
                 if (game.commChestJailCardUsed) {
@@ -66,10 +66,10 @@ module.exports = function init(c) {
         return undefined;
       }
     },
-    returnChanceJailCard = function(game) {
+    returnChanceJailCard: function(game) {
       game.chanceJailCardUsed = false;
     },
-    returnCommChestJailCard = function(game) {
+    returnCommChestJailCard: function(game) {
       game.commChestJailCardUsed = false;
     }
   };
