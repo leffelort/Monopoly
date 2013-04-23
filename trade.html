@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+	<title>Trade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="style/reset.css">
+  <link rel="stylesheet" type="text/css" href="style/trade.css">
+  <link rel="stylesheet" type="text/css" href="style/propertyList.css">
+</head>
+<body>
+<div id="content">
+
+  <!-- PLAYER SELECT START -->
+  <div id="playerSelect">
+    <div class="playerCell">
+      <img src="https://graph.facebook.com/andrew.mittereder/picture?width=64&height=64" />
+      <h1>Andrew Mittereder</h1>
+      <div class="checkmark"></div>
+    </div>
+    <div class="playerCell">
+      <img src="https://graph.facebook.com/pmarino29/picture?width=64&height=64" />
+      <h1>Peter Marino</h1>
+      <div class="checkmark"></div>
+    </div>
+    <div class="playerCell">
+      <img src="https://graph.facebook.com/amalbi/picture?width=64&height=64" />
+      <h1>Anna Albi</h1>
+      <div class="checkmark"></div>
+    </div>
+  </div>
+
+  <!-- TRADE LEFT START -->
+  <div id="tradeleft">
+    <div class="playerName"></div>
+    <div class="playerMoney"></div>
+    <div class="playerProperties"></div>
+  </div>
+
+  <!-- TRADE RIGHT START -->
+  <div id="traderight">
+    <div class="playerName"></div>
+    <div class="playerMoney"></div>
+    <div class="playerProperties"></div>
+  </div>
+</div>
+<!-- <script type="text/javascript" src="/socket.io/socket.io.js"></script> -->
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="js/fastclick/lib/fastclick.js"></script>
+<script type="text/javascript" src="js/trade.js"></script>
+</body>
+</html>

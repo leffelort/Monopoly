@@ -62,22 +62,30 @@ function socketSetup() {
   
   socket.on('payingRent', function (socketdata) {
     displayEvent("You paid $" + socketdata.amount + " in rent.");
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old - socketdata.amount));
   });
   
   socket.on('debit', function (socketdata) {
     displayEvent("You paid $" + socketdata.amount + " for " + socketdata.reason);
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old - socketdata.amount));
   });
   
   socket.on('credit', function (socketdata) {
     displayEvent("You received $" + socketdata.amount + " for " + socketdata.reason);
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old + socketdata.amount));
   });
 
   socket.on('passGo!', function (socketdata) {
     displayEvent("You collect $" + socketdata.amount + " for " + socketdata.reason);
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old + socketdata.amount));
   });
 
   socket.on('getOutOfJail', function (socketdata) {
-    displayEvent("You collect got out of Jail!");
+    displayEvent("You got out of Jail!");
   });
   
   setInterval(updateGameEvents, eventUpdateFreq);
