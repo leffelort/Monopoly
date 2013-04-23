@@ -45,7 +45,7 @@ function refreshBoardState(game) {
     player.properties.forEach(function (property) {
       if (property !== null) {
         $("#space" + property.id + " .propertyown")
-          .addClass("playerown" + playerNum);
+          .addClass("player" + playerNum);
                 
         if (property.hotel) {
           $("#space" + property.id + " .hotel").addClass("visible");
@@ -119,7 +119,7 @@ function updatePlayerMoney(fbid, money) {
 
 function propertySold(fbid, propid, propname, money) {
   console.log("propertySold: " + fbid);
-  $("#space" + propid + " .propertyown").addClass("playerown" + players[fbid]);
+  $("#space" + propid + " .propertyown").addClass("player" + players[fbid]);
   updatePlayerMoney(fbid, money);
   displayEvent(playerNames[fbid] + " bought " + propname);
 }
@@ -134,6 +134,8 @@ function inspectProperty(fbid, propid) {
   if (propid === undefined) {
     $("#playerinspect" + players[fbid]).empty();
   } else {
+    $(".inspect").removeClass("player" + players[fbid]);
+    $("#space" + propid + " .inspect").addClass("player" + players[fbid]);
     var space = $("#space" + propid).html();
     var inspect = $("#playerinspect" + players[fbid]).html(space);
     inspect.attr('class', '').addClass("playerinspect");
