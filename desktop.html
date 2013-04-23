@@ -15,15 +15,12 @@
   <div id="content">
     <div id="homeScreen">
       <h3>CMUOPOLY is a Carnegie Mellon University version of the classic board game. Start playing online with your friends by choosing one of the options below!</h3>
-      <div class="buttons" hidden="true">
-        <input id="hostBtn" class="btn" type="button" value="Host Game"/>
+      <div class="buttons">
+      <!--  <input id="hostBtn" class="btn" type="button" value="Host Game"/> -->
         <input id="joinBtn" class="btn" type="button" value="Join Game"/>
       </div>
-      <div class="facebookLogin">
-        <input id="facebookLoginButton" class="fb btn" type="button" value="Login with Facebook" />
-      </div>
     </div>
-
+<!--
     <div id="hostGameScreen">
       <h1>Host Game</h1>
       <form id="hostGameForm">
@@ -33,12 +30,12 @@
           placeholder="Password (optional)" />
         <input id="numPlayersInput" class="textForm" type="number" min="2" max="4" placeholder="Number of players (2 to 4)" required/>
         <div class="buttons">
-          <input id="hostCancelBtn" class="btn" type="button" value="Cancel"/>
+          <input id="hostCancelBtn" class="btn" type="button" value="Cancel"/> 
           <input id="hostGameSubmit" class="btn" type="submit" value="Host!" />
         </div>
       </form>
     </div>
-
+-->
     <div id="joinGameScreen">
       <h1>Join Game</h1>
     	<form id="codeForm">
@@ -67,7 +64,7 @@
       <div id="gameLobby"></div>
       <h3>Invite your friends with this code:</h3>
       <h1 id="phoneCode"></h1>
-      <div class="buttons">
+     <!-- <div class="buttons">
         <input id="leaveGameBtn" class="btn" type="button" value="Leave Game"/>
         <input id="startGameBtn" class="btn" type="button" value="Start Game!"/>
       </div>
@@ -79,13 +76,14 @@
         <input id="chatBox" class="textForm" type="text" placeholder="Send a message..."/>
         <input id="chatSubmitBtn" class="btn" type="submit" value="Send"/>
       </form>
+	  -->
     </div>
   </div>
 
   <script src="js/jquery-1.9.1.min.js"></script>
   <script type="text/javascript" src="/socket.io/socket.io.js"></script>
   <script src='js/fastclick/lib/fastclick.js'></script>
-  <script src="js/desktop.js"></script>
+  <script src="js/realdesktop.js"></script>
   <script src="js/login.js"></script>
 </body>
 </html>

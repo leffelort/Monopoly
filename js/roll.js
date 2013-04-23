@@ -60,7 +60,7 @@ window.fbAsyncInit = function() {
     } else {
       // not_authorized
       alert("You are not logged in");
-      window.location.replace("desktop.html");
+      window.location.replace("mobile.html");
     }
   });
 };
@@ -139,7 +139,7 @@ function allowRolls() {
     $("#die1 .dieval").html(roll1);
     $("#die2 .dieval").html(roll2);
     // unbind the events
-    window.removeEventListener('devicemotion', shakeEventHandler, false);
+    //window.removeEventListener('devicemotion', shakeEventHandler, false);
     $("#rollstartbtn").unbind('click', shakeEventDidOccur);
 
     var total = roll1 + roll2
@@ -151,38 +151,38 @@ function allowRolls() {
     });
   }
 
-  // Shamelessly taken from 
-  // http://stackoverflow.com/questions/4475219/detect-a-shake-in-ios-safari-with-javascript
-  if (typeof window.DeviceMotionEvent != 'undefined') {
-    // Shake sensitivity (a lower number is more)
-    var sensitivity = 25;
+  // // Shamelessly taken from 
+  // // http://stackoverflow.com/questions/4475219/detect-a-shake-in-ios-safari-with-javascript
+  // if (typeof window.DeviceMotionEvent != 'undefined') {
+  //   // Shake sensitivity (a lower number is more)
+  //   var sensitivity = 25;
 
-    // Position variables
-    var x1 = 0, y1 = 0, z1 = 0, x2 = 0, y2 = 0, z2 = 0;
+  //   // Position variables
+  //   var x1 = 0, y1 = 0, z1 = 0, x2 = 0, y2 = 0, z2 = 0;
 
-    // Listen to motion events and update the position
-    var shakeEventHandler = function (e) {
-      x1 = e.accelerationIncludingGravity.x;
-      y1 = e.accelerationIncludingGravity.y;
-      z1 = e.accelerationIncludingGravity.z;
-    }
-    window.addEventListener('devicemotion', shakeEventHandler, false);
+  //   // Listen to motion events and update the position
+  //   var shakeEventHandler = function (e) {
+  //     x1 = e.accelerationIncludingGravity.x;
+  //     y1 = e.accelerationIncludingGravity.y;
+  //     z1 = e.accelerationIncludingGravity.z;
+  //   }
+  //   window.addEventListener('devicemotion', shakeEventHandler, false);
 
-    // Periodically check the position and fire
-    // if the change is greater than the sensitivity
-    setInterval(function () {
-        var change = Math.abs(x1-x2+y1-y2+z1-z2);
+  //   // Periodically check the position and fire
+  //   // if the change is greater than the sensitivity
+  //   setInterval(function () {
+  //       var change = Math.abs(x1-x2+y1-y2+z1-z2);
 
-        if (change > sensitivity) {
-          shakeEventDidOccur();
-        }
+  //       if (change > sensitivity) {
+  //         shakeEventDidOccur();
+  //       }
 
-        // Update new position
-        x2 = x1;
-        y2 = y1;
-        z2 = z1;
-    }, 150);
-  }
+  //       // Update new position
+  //       x2 = x1;
+  //       y2 = y1;
+  //       z2 = z1;
+  //   }, 150);
+  // }
 
   $("#rollstartbtn").click(shakeEventDidOccur);
 }

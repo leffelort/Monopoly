@@ -77,7 +77,7 @@ window.fbAsyncInit = function() {
     } else {
       // not_authorized
       alert("You are not logged in");
-      window.location.replace("desktop.html");
+      window.location.replace("mobile.html");
     }
   });
 };

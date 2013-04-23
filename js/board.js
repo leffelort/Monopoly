@@ -199,7 +199,7 @@ function attachSocketHandlers() {
   socket.on("boardReconnect", function (socketdata) {
     if (!socketdata.success) {
       alert("Error reconnecting.");
-      window.location.replace("/realdesktop.html");
+      window.location.replace("/desktop.html");
     } else {
       socket.emit('boardstate', {});
     }

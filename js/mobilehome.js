@@ -238,7 +238,7 @@ window.fbAsyncInit = function() {
         socket.on('getme', function(resp) {
           if (resp === undefined) {
             alert("YOU CAN'T SIT WITH US!");
-            window.location.replace("desktop.html");
+            window.location.replace("mobile.html");
           }
           console.log("I AM ", resp);
           window.me = resp;
@@ -248,7 +248,7 @@ window.fbAsyncInit = function() {
     } else {
       // not_authorized
       alert("You are not logged in");
-      window.location.replace("desktop.html");
+      window.location.replace("mobile.html");
     }
   });
 };
