@@ -1526,7 +1526,7 @@ function handleChance(game, socketid, fbid) {
     if (success){
       sendToBoards(game.id, 'debit', {
         fbid: fbid,
-        amount: amt,
+        amount: card.amt,
         money: game.players[fbid].money,
         reason: "Chance."
       });
@@ -1576,7 +1576,7 @@ function handleCommChest(game, socketid, fbid) {
     if (success){
       sendToBoards(game.id, 'debit', {
         fbid: fbid,
-        amount: amt,
+        amount: card.amt,
         money: game.players[fbid].money,
         reason: "Community chest."
       });
