@@ -1490,104 +1490,106 @@ function handleSpace(game, socketid, space, fbid, roll) {
 }
 
 function handleChance(game, socketid, fbid) {
-  var card = chanceCommChestDeck.drawChance(game);
-  var id = card.id;
-  sendToBoards(game.id, 'chance', {
-      fbid: fbid,
-      text: card.text
-  });
-  if (id < 5) { //advance type cards
-    var initial = game.players[fbid].space;
-    var end = card.space;
-    game.players[fbid].space = card.space; 
-    var delta = ((end-initial) % 40)
-    if (end < initial) {
-      passGo(game, socketid, fbid);
-    }
-    sendToBoards(game.id, 'movePlayer', {
-      fbid: fbid, 
-      player: game.players[fbid].playerNumber,
-      initial: initial,  
-      delta : delta, 
-      end: end 
-    });
-  } else if (id === 5) { //send to jail card
-    sendToJail(game, socketid, fbid);
-  } else if (id < 10) { // credit type cards
-    credit(game, socketid, card.amt, fbid);
-    sendToBoards(game.id, 'credit', {
-      fbid: fbid, 
-      amount: card.amt,
-      money: game.players[fbid].money,
-      reason: "Chance."
-    });
-  } else if (id < 12) { //debit type cards
-   var success = debit(game, socketid, card.amt, fbid);
-    if (success){
-      sendToBoards(game.id, 'debit', {
+  chanceCommChestDeck.drawChance(game, function(card) {
+    var id = card.id;
+    sendToBoards(game.id, 'chance', {
         fbid: fbid,
-        amount: amt,
+        text: card.text
+    });
+    if (id < 5) { //advance type cards
+      var initial = game.players[fbid].space;
+      var end = card.space;
+      game.players[fbid].space = card.space; 
+      var delta = ((end-initial) % 40)
+      if (end < initial) {
+        passGo(game, socketid, fbid);
+      }
+      sendToBoards(game.id, 'movePlayer', {
+        fbid: fbid, 
+        player: game.players[fbid].playerNumber,
+        initial: initial,  
+        delta : delta, 
+        end: end 
+      });
+    } else if (id === 5) { //send to jail card
+      sendToJail(game, socketid, fbid);
+    } else if (id < 10) { // credit type cards
+      credit(game, socketid, card.amt, fbid);
+      sendToBoards(game.id, 'credit', {
+        fbid: fbid, 
+        amount: card.amt,
         money: game.players[fbid].money,
         reason: "Chance."
       });
-    }
-  } else if (id === 12) { //GOoJF card
-    game.players[fbid].jailCards.push('chance');
-    connections[socketid].emit('jailCard', {
-      fbid: fbid,
-      type: 'Chance'      
-    });
-  } else console.log('chance card out of bounds'); 
+    } else if (id < 12) { //debit type cards
+     var success = debit(game, socketid, card.amt, fbid);
+      if (success){
+        sendToBoards(game.id, 'debit', {
+          fbid: fbid,
+          amount: amt,
+          money: game.players[fbid].money,
+          reason: "Chance."
+        });
+      }
+    } else if (id === 12) { //GOoJF card
+      game.players[fbid].jailCards.push('chance');
+      connections[socketid].emit('jailCard', {
+        fbid: fbid,
+        type: 'Chance'      
+      });
+    } else console.log('chance card out of bounds'); 
+  });
 }
 
 function handleCommChest(game, socketid, fbid) {
-  var card = chanceCommChestDeck.drawCommChest(game);
-  var id = card.id;
-  sendToBoards(game.id, 'commChest', {
-      fbid: fbid,
-      text: card.text
-  });
-  if (id === 0) { //advance type cards  
-    var initial = game.players[fbid].space;
-    game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
-    var end = card.space;
-    game.players[fbid].space = card.space;
-    var delta = ((end-initial) % 40)
-    if (end < initial) {
-      passGo(game, socketid, fbid);
-    }
-    sendToBoards(game.id, 'movePlayer', {
-      fbid: fbid, 
-      player: game.players[fbid].playerNumber,
-      initial: initial,  
-      delta : delta, 
-      end: end 
-    });
-  } else if (id < 10) { // credit type cards
-    credit(game, socketid, card.amt, fbid);
-    sendToBoards(game.id, 'credit', {
-      fbid: fbid, 
-      amount: card.amt,
-      money: game.players[fbid].money,
-      reason: "Community chest."
-    });
-  } else if (id < 12) { //debit type cards
-    var success = debit(game, socketid, card.amt, fbid);
-    if (success){
-      sendToBoards(game.id, 'debit', {
+  chanceCommChestDeck.drawCommChest(game, function(card) {
+    var id = card.id;
+    sendToBoards(game.id, 'commChest', {
         fbid: fbid,
-        amount: amt,
+        text: card.text
+    });
+    if (id === 0) { //advance type cards  
+      var initial = game.players[fbid].space;
+      game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
+      var end = card.space;
+      game.players[fbid].space = card.space;
+      var delta = ((end-initial) % 40)
+      if (end < initial) {
+        passGo(game, socketid, fbid);
+      }
+      sendToBoards(game.id, 'movePlayer', {
+        fbid: fbid, 
+        player: game.players[fbid].playerNumber,
+        initial: initial,  
+        delta : delta, 
+        end: end 
+      });
+    } else if (id < 10) { // credit type cards
+      credit(game, socketid, card.amt, fbid);
+      sendToBoards(game.id, 'credit', {
+        fbid: fbid, 
+        amount: card.amt,
         money: game.players[fbid].money,
         reason: "Community chest."
       });
-    }
-  } else if (id === 12) { //GOoJF card
-    game.players[fbid].jailCards.push('commChest');
-    connections[socketid].emit('jailCard', {
-      fbid: fbid,
-      type: 'Community Chest'      
-    });
-  } else console.log('commChest card out of bounds');
+    } else if (id < 12) { //debit type cards
+      var success = debit(game, socketid, card.amt, fbid);
+      if (success){
+        sendToBoards(game.id, 'debit', {
+          fbid: fbid,
+          amount: amt,
+          money: game.players[fbid].money,
+          reason: "Community chest."
+        });
+      }
+    } else if (id === 12) { //GOoJF card
+      game.players[fbid].jailCards.push('commChest');
+      connections[socketid].emit('jailCard', {
+        fbid: fbid,
+        type: 'Community Chest'      
+      });
+    } else console.log('commChest card out of bounds');
+  });
 }
 
 function credit(game,socketid, amt, fbid) {
