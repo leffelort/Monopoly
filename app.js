@@ -768,8 +768,13 @@ io.sockets.on('connection', function (socket) {
         debit(game, socket.id, 50, data.fbid);
         game.players[data.fbid].jailed = false;
       } else {
-        game.players[data.fbid].jailCards.shift();
+        var card = game.players[data.fbid].jailCards.shift();
         game.players[data.fbid].jailed = false;
+        if (card === "chance") {
+          chanceCommChestDeck.returnChanceJailCard(game);
+        } else {
+          chanceCommChestDeck.returnCommChestJailCard(game);
+        }
       }
       sendToBoards(game.id, 'getOutOfJail', { fbid: data.fbid });
       socket.emit('getOutOfJail', {});
