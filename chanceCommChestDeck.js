@@ -3,7 +3,11 @@
 
 var client;
 
-exports.drawChance = function(game) {
+module.exports = function init(c) {
+  client = c;
+}
+
+module.exports.drawChance = function(game) {
   if (game.chanceDeck.length === 0) {
     // If deck is empty, query the database again
     client.collection('chance', function (error, coll) {
@@ -34,7 +38,7 @@ exports.drawChance = function(game) {
   }
 }
 
-exports.drawCommChest = function(game) {
+module.exports.drawCommChest = function(game) {
   if (game.commChestDeck.length === 0) {
     // If deck is empty, query the database again
     client.collection('communitychest', function (error, coll) {
@@ -64,14 +68,10 @@ exports.drawCommChest = function(game) {
   }
 }
 
-exports.returnChanceJailCard = function(game) {
+module.exports.returnChanceJailCard = function(game) {
   game.chanceJailCardUsed = false;
 }
 
-exports.returnCommChestJailCard = function(game) {
+module.exports.returnCommChestJailCard = function(game) {
   game.commChestJailCardUsed = false;
-}
-
-exports = function(c) {
-  client = c;
 }
