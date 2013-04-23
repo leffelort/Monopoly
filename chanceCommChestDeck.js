@@ -1,6 +1,8 @@
 /* Node module that manages a chance/community chest deck.
  */
 
+var client;
+
 exports.drawChance = function(game) {
   if (game.chanceDeck.length === 0) {
     // If deck is empty, query the database again
@@ -68,4 +70,8 @@ exports.returnChanceJailCard = function(game) {
 
 exports.returnCommChestJailCard = function(game) {
   game.commChestJailCardUsed = false;
+}
+
+exports = function(c) {
+  client = c;
 }

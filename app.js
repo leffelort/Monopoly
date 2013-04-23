@@ -172,7 +172,7 @@ var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI ||
   "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?auto_reconnect=true"
 var dbIsOpen = false;
 var client = undefined;
-var chanceCommChestDeck = require('./chanceCommChestDeck.js');
+var chanceCommChestDeck;
 
 mongo.Db.connect(mongoUri, function(err, db) {
   if (err)
@@ -193,6 +193,8 @@ mongo.Db.connect(mongoUri, function(err, db) {
     if (e) throw e;
     //b.drop();
    });
+   
+   chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
 });
 
 
