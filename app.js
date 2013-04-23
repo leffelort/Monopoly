@@ -1255,7 +1255,6 @@ function isOwned(game, space) {
     }
   }
   return true;
-  //return false; //TODO, get spaceIDs into the db
 }
 
 function isOwnedByOther(game, space, fbid) {
@@ -1423,10 +1422,6 @@ function handleTax(game, space, socketid, fbid){
       money: game.players[fbid].money,
       reason: "Luxury Tax"
     });
-    connections[socketid].emit('debit', {
-      amount: amt,
-      reason: "Luxury Tax"
-    });
   } else if (space === 4) {
     // always take away 200
     // TODO: don't always take away 200
@@ -1438,14 +1433,9 @@ function handleTax(game, space, socketid, fbid){
       money: game.players[fbid].money,
       reason: "Income Tax"
     });
-    connections[socketid].emit('debit', {
-      amount: amt,
-      reason: "Income Tax"
-    });
   } else {
     throw "should not have called this";
   }
-  endTurn(game);
 }
 
 function handleSpace(game, socketid, space, fbid, roll) {
@@ -1466,10 +1456,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
         money: game.players[fbid].money,
         reason: "landing on Go"
       });
-      connections[socketid].emit('credit', {
-        amount: 200,
-        reason: "landing on Go"
-      });
       // do we want double money for landing on go???
     }
     if (space === 20) {
@@ -1480,10 +1466,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
         money: game.players[fbid].money,
         reason: "landing on Free Parking"
       });
-      connections[socketid].emit('credit', {
-        amount: 500,
-        reason: "landing on Free Parking"
-      });
       // do we want free parking to be a straight $500??
     }
     if (space === 30) {
@@ -1492,20 +1474,118 @@ function handleSpace(game, socketid, space, fbid, roll) {
     endTurn(game);
   }
   if (isChance(space)) {
-    handleChance(socketid, fbid);
+    handleChance(game, socketid, fbid);
+    endTurn(game);
   }
   if (isCommChest(space)) {
-    handleCommChest(socketid, fbid);
+    handleCommChest(game, socketid, fbid);
+    endTurn(game);
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
+    endTurn(game);
   }
 }
 
-function handleChance(socketid, fbid) {
-  queryGame(socketid, function (game) {
-    var card = chanceCommChestDeck.drawChance(game);
+function handleChance(game, socketid, fbid) {
+  var card = chanceCommChestDeck.drawChance(game);
+  var id = card.id;
+  sendToBoards(game.id, 'chance', {
+      fbid: fbid,
+      text: card.text
   });
+  if (id < 5) { //advance type cards
+    var initial = game.players[fbid].space;
+    var end = card.space;
+    game.players[fbid].space = card.space; 
+    var delta = ((end-initial) % 40)
+    if (end < initial) {
+      passGo(game, socketid, fbid);
+    }
+    sendToBoards(game.id, 'movePlayer', {
+      fbid: fbid, 
+      player: game.players[fbid].playerNumber,
+      initial: initial,  
+      delta : delta, 
+      end: end 
+    });
+  } else if (id === 5) { //send to jail card
+    sendToJail(game, socketid, fbid);
+  } else if (id < 10) { // credit type cards
+    credit(game, socketid, card.amt, fbid);
+    sendToBoards(game.id, 'credit', {
+      fbid: fbid, 
+      amount: card.amt,
+      money: game.players[fbid].money,
+      reason: "Chance."
+    });
+  } else if (id < 12) { //debit type cards
+   var success = debit(game, socketid, card.amt, fbid);
+    if (success){
+      sendToBoards(game.id, 'debit', {
+        fbid: fbid,
+        amount: amt,
+        money: game.players[fbid].money,
+        reason: "Chance."
+      });
+    }
+  } else if (id === 12) { //GOoJF card
+    game.players[fbid].jailCards.push('chance');
+    connections[socketid].emit('jailCard', {
+      fbid: fbid,
+      type: 'Chance'      
+    });
+  } else console.log('chance card out of bounds'); 
+}
+
+function handleCommChest(game, socketid, fbid) {
+  var card = chanceCommChestDeck.drawCommChest(game);
+  var id = card.id;
+  sendToBoards(game.id, 'commChest', {
+      fbid: fbid,
+      text: card.text
+  });
+  if (id === 0) { //advance type cards  
+    var initial = game.players[fbid].space;
+    game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
+    var end = card.space;
+    game.players[fbid].space = card.space;
+    var delta = ((end-initial) % 40)
+    if (end < initial) {
+      passGo(game, socketid, fbid);
+    }
+    sendToBoards(game.id, 'movePlayer', {
+      fbid: fbid, 
+      player: game.players[fbid].playerNumber,
+      initial: initial,  
+      delta : delta, 
+      end: end 
+    });
+  } else if (id < 10) { // credit type cards
+    credit(game, socketid, card.amt, fbid);
+    sendToBoards(game.id, 'credit', {
+      fbid: fbid, 
+      amount: card.amt,
+      money: game.players[fbid].money,
+      reason: "Community chest."
+    });
+  } else if (id < 12) { //debit type cards
+    var success = debit(game, socketid, card.amt, fbid);
+    if (success){
+      sendToBoards(game.id, 'debit', {
+        fbid: fbid,
+        amount: amt,
+        money: game.players[fbid].money,
+        reason: "Community chest."
+      });
+    }
+  } else if (id === 12) { //GOoJF card
+    game.players[fbid].jailCards.push('commChest');
+    connections[socketid].emit('jailCard', {
+      fbid: fbid,
+      type: 'Community Chest'      
+    });
+  } else console.log('commChest card out of bounds');
 }
 
 function credit(game,socketid, amt, fbid) {
