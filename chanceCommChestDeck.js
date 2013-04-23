@@ -38,7 +38,7 @@ module.exports = function init(c) {
       }
       
     },
-    drawCommChest: function(game) {
+    drawCommChest: function(game, callback) {
       if (game.commChestDeck.length === 0) {
         // If deck is empty, query the database again
         client.collection('communitychest', function (error, coll) {
