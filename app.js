@@ -2,6 +2,7 @@
 // ==== Express server ====
 // ========================
 var express = require("express");
+var useragent = require("express-useragent");
 var app = express();
 var fs = require("fs");
 var shortID = require("shortid");
@@ -12,46 +13,16 @@ var retry = 5;
 var boardretry = 5;
 
 app.use(express.bodyParser());
+app.use(useragent.express());
 
-/* borrowed from Evan Shapiro's Case Study, from Class notes. */
-/*
-app.all('/', function mobileDesktopRouter(req, res, next){
-    if (!strStartsWith(req.url, '/desktop') && !strStartsWith(req.url, '/mobile')){
-        if (req.useragent.isMobile){
-            wwwExists('/mobile' + req.url, function(exists){
-                if (exists)
-                    req.url = '/mobile' + req.url;
-                next();
-            });
-        }
-        else {
-            wwwExists('static/desktop' + req.url, function(exists){
-                if (exists)
-                    req.url = '/desktop' + req.url;
-                next();
-            });
-        }
-    }
-    else {
-        next();
-    }
+app.get('/', function (req, res) {
+  if (req.useragent.isMobile) {
+    res.sendfile("mobile.html");
+  }
+  else {
+    res.sendfile("desktop.html");
+  }
 });
-
-function wwwExists(url, done){
-    if (strEndsWith(url, '/'))
-        url += 'index.html';
-    fs.exists(url, done);
-}
-
-function strStartsWith(str, prefix) {
-    return str.indexOf(prefix) === 0;
-}
-
-function strEndsWith(str, suffix) {
-    return str.match(suffix + "$") == suffix;
-}
-*/
-/* end of borrowed code */
 
 app.get('/desktop/', function(req, res, next){
   mongoExpressAuth.checkLogin(req, res, function(err){
@@ -65,11 +36,6 @@ app.get('/desktop/', function(req, res, next){
 app.configure(function(){
   app.use(express.static(__dirname));
 });
-/*
-app.get("/:staticFilename", function (request, response) {
-  response.sendfile(request.params.staticFilename);
-});
-*/
 
 // Map of game id's to Game objects
 var currentGames = {};
@@ -791,57 +757,46 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
+  /*
   socket.on('disconnect', function() {
     delete connections[socket.id];
   });
-
-  /*
+  */
+  
   socket.on('disconnect', function () {
     // If the player was in a game, remove them from it
     console.log("trying to disconnect user");
-    queryUser(socket.id, function(user) {
-      try {
-        if (user === undefined) {
-          throw "user not found";
+    var fbid = socketToPlayerId[socket.id];
+    if (fbid !== undefined) {
+      for (var gameID in currentGames) {
+        var game = currentGames[gameID];
+        for (var pid in game.players) {
+          if (fbid === pid) {
+            // Remove them from the game if in the lobby
+            if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
+              console.log("HERRO");
+              if (game.players[fbid] === game.host) {
+                console.log("going to delete because host left");
+                // If the host disconnected, delete the entire game
+                sendToOthers(gameID, 'hostleft', {}, socket.id);
+                sendToBoards(gameID, 'hostleft', {});
+                deleteGame(game);
+              } else {
+                // Otherwise, the user leaves
+                delete game.players[fbid];
+                game.numPlayers--;
+                sendToPlayers(gameID, 'playerleft', {gameID: game.id});
+                sendToBoards(gameID, 'playerleft', {gameID: game.id});
+                saveGame(game);
+              }
+            } 
+          }
         }
-        queryGame(socket.id, function(game) {
-          if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
-            console.log("HERRO");
-            if (game.players[user.fbid] === game.host) {
-              console.log("going to delete because host left");
-              // If the host disconnected, delete the entire game
-              sendToOthers(gameID, 'hostleft', {}, socket.id);
-              sendToBoards(gameID, 'hostleft', {});
-              deleteGame(game);
-            } else {
-              // Otherwise, the user leaves
-              delete game.players[user.fbid];
-              game.numPlayers--;
-              sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-              sendToBoards(gameID, 'playerleft', {gameID: game.id});
-              saveGame(game);
-            }
-          } else {
-            // TODO: handle disconnections while in game elegantly.
-            console.log("player disconnected: " + socket.id)
-          }
-        });
-      } catch (err) {
-        // If no user found, query for boards
-        console.log("catching error", err);
-        queryBoard(socket.id, function (board) {
-          if (board === undefined) {
-            console.log("no board found, whatevs.");
-          } else {
-            console.log("board disconnected: " + socket.id);
-          }
-        });
-      } finally {
-        delete connections[socket.id];
       }
-    });
+    }
+    delete socketToPlayerId[socket.id];
+    delete connections[socket.id];
   });
-  */
 });
 
 

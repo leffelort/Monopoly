@@ -23,8 +23,6 @@ var Game = function(id, code, name, password, maxPlayers) {
   this.commChestJailCardUsed = false;
 }
 
-
-
 var Player = function(username, fbid) {
   this.fbid = fbid;
   this.username = username;
