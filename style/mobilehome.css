@@ -109,8 +109,48 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   text-align: center;
   width: 100%;
   position: absolute;
-  bottom: 15%;
+  top: 45%;
 }
+
+.chatarea {
+  display: block;
+  position: absolute;
+  top: 82%;
+  text-align: center;
+  width: 100%;
+}
+
+.chattext {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 3px;
+
+  font: 14px 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border: 1px solid #333;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
+  min-height: 20px;
+  min-width: 200px;
+}
+
+.chatbtn {
+  -webkit-appearance: none;
+  appearance: none;
+
+  font: 14px 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  border-radius: 3px;
+  background-color: #eee;
+  height: 20px;
+  border: 1px solid #333;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
+  min-height: 28px;
+  min-width: 40px;
+  margin-left: 10px;
+}
+
 
 .btnimg {
   font-size: 64px;
@@ -130,8 +170,6 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 .buttonRow {
   display: block;
   width: 100%;
-/*  position: absolute;
-  bottom: 15%;*/
 }
 
 .gamebtn {
@@ -306,4 +344,3 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 .visible {
   opacity: 1;
 }
-
