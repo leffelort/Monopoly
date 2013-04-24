@@ -1492,6 +1492,7 @@ function handleSpace(game, socketid, space, fbid, roll) {
 function handleChance(game, socketid, fbid) {
   chanceCommChestDeck.drawChance(game, function(card) {
     var id = card.id;
+    console.log(card.text);
     sendToBoards(game.id, 'chance', {
         fbid: fbid,
         text: card.text
@@ -1513,7 +1514,7 @@ function handleChance(game, socketid, fbid) {
       });
     } else if (id === 5) { //send to jail card
       sendToJail(game, socketid, fbid);
-    } else if (id < 10) { // credit type cards
+    } else if (id < 9) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
         fbid: fbid, 
@@ -1521,16 +1522,30 @@ function handleChance(game, socketid, fbid) {
         money: game.players[fbid].money,
         reason: "Chance."
       });
-    } else if (id < 12) { //debit type cards
-     var success = debit(game, socketid, card.amt, fbid);
+    } else if (id === 9) { //has since been removed.
+      console.log("this isn't a thing.");
+    } else if (id < 11) { //debit type cards
+     var amt = Math.abs(card.amt);
+     var success = debit(game, socketid, amt, fbid);
       if (success){
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
-          amount: card.amt,
+          amount: amt,
           money: game.players[fbid].money,
           reason: "Chance."
         });
       }
+    } else if (id === 11) { //go back 3 spaces
+      var initial = game.players[fbid].space;
+      var newspace = ((game.players[fbid].space - 3) % 40);
+      game.players[fbid].space = newspace;
+      sendToBoards(game.id, 'movePlayer', {
+        fbid: fbid, 
+        player: game.players[fbid].playerNumber,
+        initial: initial,  
+        delta : -3, 
+        end: newspace 
+      });    
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');
       connections[socketid].emit('jailCard', {
@@ -1544,6 +1559,8 @@ function handleChance(game, socketid, fbid) {
 function handleCommChest(game, socketid, fbid) {
   chanceCommChestDeck.drawCommChest(game, function(card) {
     var id = card.id;
+    console.log(card.text);
+
     sendToBoards(game.id, 'commChest', {
         fbid: fbid,
         text: card.text
@@ -1573,11 +1590,12 @@ function handleCommChest(game, socketid, fbid) {
         reason: "Community chest."
       });
     } else if (id < 12) { //debit type cards
-      var success = debit(game, socketid, card.amt, fbid);
+      var amt = Math.abs(card.amt);
+      var success = debit(game, socketid, amt, fbid);
       if (success){
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
-          amount: card.amt,
+          amount: amt,
           money: game.players[fbid].money,
           reason: "Community chest."
         });
