@@ -326,8 +326,7 @@ function sendMessage() {
   var message = $("#chatBox").val().trim();
   if (message !== "") {
     socket.emit('gameChat', {
-      gameID: currentGame.id,
-      fbid: window.username,
+      fbid: window.fbobj.id,
       message: message
     });
     $("#chatBox").val("");

@@ -589,12 +589,12 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('gameChat', function(data) {
     queryGame(socket.id, function (game) {
-      sendToBoards(data.gameID, 'chatmessage', {
+      sendToBoards(game.id, 'chatmessage', {
         fbid: data.fbid,
         message: data.message
       });
     });
-  }
+  });
 
   socket.on('chatmessage', function (data) {
     var game = currentGames[data.gameID];

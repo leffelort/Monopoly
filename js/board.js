@@ -120,6 +120,19 @@ function addToEventLog(eventStr) {
   $('#eventLog').scrollTop($('#eventLog')[0].scrollHeight);
 }
 
+function addChatMessage(fbid, message) {
+  var log = $("#chatLog .logMessage").toArray();
+  var li = $("<li>").addClass("logMessage");
+  if (log.length % 2 !== 0) {
+    li.addClass("alt");
+  }
+  var sender = $("<span>").addClass("chatSender").html(playerNames[fbid]);
+  var messageText = $("<span>").html(": " + message);
+  li.append(sender).append(messageText);
+  $("#chatLog").append(li);
+  $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
+}
+
 function movePlayer(fbid, initial, end) {
   console.log("movePlayer: ", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
@@ -320,6 +333,10 @@ function attachSocketHandlers() {
   
   socket.on('commChest', function (socketdata) {
     displayEvent(playerNames[socketdata.fbid] + ' landed on Community Chest!\n"' + socketdata.text + '"');
+  });
+  
+  socket.on('chatmessage', function (socketdata) {
+    addChatMessage(socketdata.fbid, socketdata.message);
   });
 }
 
