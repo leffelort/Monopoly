@@ -37,7 +37,9 @@ function socketSetup() {
     }
   });
 
-  allowRolls();
+  socket.on('reopen', function() {
+    allowRolls();
+  });
 }
 
 
