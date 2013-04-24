@@ -9,8 +9,8 @@
 }
 
 @font-face {
-	font-family: 'Kabel-Light';
-	src: url('../fonts/KabobLight Regular.ttf') format('truetype');
+  font-family: 'Kabel-Light';
+  src: url('../fonts/KabobLight Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -32,258 +32,260 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 
 @media only screen and (max-width : 320px) {
 #portraitcover {
-		width: 100%;
-		height: 100%;
-		z-index: 200;
-		position: absolute;
-		top: 0;
-		left: 0;
-		background-color: #ddd;
-	}
-	
-	#portraitcover p {
-		width: 80%;
-		margin: 20% auto;
-		display: block;
-		text-align: center;
-	}
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #ddd;
+  }
+  
+  #portraitcover p {
+    width: 80%;
+    margin: 20% auto;
+    display: block;
+    text-align: center;
+  }
 }
 
 @media only screen and (min-width: 321px) {
-	#portraitcover {
-		display: none;
-	}
+  #portraitcover {
+    display: none;
+  }
 }
 
 #content {
-	position: relative;
+  position: relative;
 }
 
 #playerwrapper {
-	position: absolute;
-	top: 10%;
-	left: 0;
-	width: 100%;
+  position: absolute;
+  top: 10%;
+  left: 0;
+  width: 100%;
 }
 
 #playerinfo {
-	text-align: left;
-	margin: 0 auto;
-	color: white;
+  text-align: left;
+  margin: 0 auto;
+  color: white;
 }
 
 #playerinfo .infoList {
-	display: inline-block;
-	font: 24px 'Lato';
-	list-style: none;
-	text-align: left;
-	position: absolute;
-	top: -4px;
-	font-weight: 400;
+  display: inline-block;
+  font: 24px 'Lato';
+  list-style: none;
+  text-align: left;
+  position: absolute;
+  top: -4px;
+  font-weight: 400;
 }
 
 #playerinfo .infoList li {
-	margin-bottom: 1%;
+  margin-bottom: 1%;
 }
 
 .moneydisp {
-	font: 20px 'Lato';
+  font: 20px 'Lato';
 }
 
 .playerdisp {
-	font-weight: 700;
+  font-weight: 700;
 }
 
 
 #playerinfo img {
-	display: inline-block;
-	border: 2px solid white;
-	-moz-box-shadow: 0 1px 3px 0 #333;
-	-webkit-box-shadow: 0 1px 3px 0 #333;
-	box-shadow: 0 1px 3px 0 #333;
-	border-radius: 1px;
-	position: absolute;
+  display: inline-block;
+  border: 2px solid white;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
+  border-radius: 1px;
+  position: absolute;
 }
 
 #gameButtons {
-	text-align: center;
-	width: 100%;
+  text-align: center;
+  width: 100%;
+  position: absolute;
+  bottom: 15%;
 }
 
 .btnimg {
-	font-size: 64px;
-	font-family: 'Entypo';
-	width: 70px;
-	height: 51px;
-	margin-top: -5px;
+  font-size: 64px;
+  font-family: 'Entypo';
+  width: 70px;
+  height: 51px;
+  margin-top: -5px;
 }
 
 #rollbtn .btnimg {
-	font-family: 'Lounge Bait';
-	font-size: 52px;
-	height: 46px;
-	margin-top: 0;
+  font-family: 'Lounge Bait';
+  font-size: 52px;
+  height: 46px;
+  margin-top: 0;
 }
 
 .buttonRow {
-	display: block;
-	width: 100%;
-	position: absolute;
-	bottom: 12%;
+  display: block;
+  width: 100%;
+/*  position: absolute;
+  bottom: 15%;*/
 }
 
 .gamebtn {
-	display: inline-block;
-	text-align: center;
-	margin: 10px 3%;
-	padding: 0 3px 6px 3px;
-	border: 1px solid #333;
-	background-color: white;
-	border-radius: 5px;
-	-moz-box-shadow: 0 1px 3px 0 #333;
-	-webkit-box-shadow: 0 1px 3px 0 #333;
-	box-shadow: 0 1px 3px 0 #333;
+  display: inline-block;
+  text-align: center;
+  margin: 10px 3%;
+  padding: 0 3px 6px 3px;
+  border: 1px solid #333;
+  background-color: white;
+  border-radius: 5px;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
 }
 
 .btntitle {
-	font: 18px 'Kabel-Light';
+  font: 18px 'Kabel-Light';
 }
 
 #getoutcards {
-	position: absolute;
-	top: 1px;
-	display: none;
+  position: absolute;
+  top: 1px;
+  display: none;
 }
 
 .getout {
-	width: 40px;
-	height: 20px;
-	display: block;
-	border: 1px solid #333;
-	opacity: 0.45;
-	position: relative;
-	-moz-box-shadow: 0 1px 3px 0 #333;
-	-webkit-box-shadow: 0 1px 3px 0 #333;
-	box-shadow: 0 1px 3px 0 #333;
-	margin-bottom: 12px;
-	margin-top: 5px;
+  width: 40px;
+  height: 20px;
+  display: block;
+  border: 1px solid #333;
+  opacity: 0.45;
+  position: relative;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
+  margin-bottom: 12px;
+  margin-top: 5px;
 }
 
 .getout p {
-	font: 6px 'Kabel-Regular';
-	position: absolute;
-	letter-spacing: 1px;
-	text-align: center;
+  font: 6px 'Kabel-Regular';
+  position: absolute;
+  letter-spacing: 1px;
+  text-align: center;
 }
 
 .getout p:first-child {
-	top: 15%;
-	width: 100%;
-	display: block;
+  top: 15%;
+  width: 100%;
+  display: block;
 }
 .getout p:last-child {
-	bottom: 15%;
-	width: 100%;
-	display: block;
+  bottom: 15%;
+  width: 100%;
+  display: block;
 }
 
 #getoutchance {
-	background-color: orange;
-	opacity: 1.0;
+  background-color: orange;
+  opacity: 1.0;
 }
 
 #getoutcommunity {
-	background-color: blue;
-	color: white;
+  background-color: blue;
+  color: white;
 }
 
 .blackness {
-	position: absolute;
-	top: 0;
-	left: 0;
-	background-color: #333;
-	opacity: 0.7;
-	width: 100%;
-	height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: #333;
+  opacity: 0.7;
+  width: 100%;
+  height: 100%;
 }
 
 .confirmWrapper {
-	position: absolute;
-	z-index: 100;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
 }
 
 .confirmbox {
-	background-color: #ddd;
-	border: 6px solid #333;
-	text-align: center;
-	margin: 5px auto;
-	font: 16px 'Lato';
-	width: 240px;
-	height: 240px;
-	position: relative;
+  background-color: #ddd;
+  border: 6px solid #333;
+  text-align: center;
+  margin: 5px auto;
+  font: 16px 'Lato';
+  width: 240px;
+  height: 240px;
+  position: relative;
 }
 
 .confirmbox p {
-	line-height: 150%;
-	margin-top: 10%;
-	width: 90%;
-	margin: 0 auto;
-	display: block;
+  line-height: 150%;
+  margin-top: 10%;
+  width: 90%;
+  margin: 0 auto;
+  display: block;
 }
 
 .promptmsg {
-	position: absolute;
-	top: 10%;
-	width: 100%;
+  position: absolute;
+  top: 10%;
+  width: 100%;
 }
 
 .promptbox {
-	display: inline-block;
-	font: 68px 'Entypo';
-	margin: 30% 20px 0 20px;
-	border: 2px solid #333;
-	width: 40px;
-	height: 40px;
-	position: relative;
+  display: inline-block;
+  font: 68px 'Entypo';
+  margin: 30% 20px 0 20px;
+  border: 2px solid #333;
+  width: 40px;
+  height: 40px;
+  position: relative;
 }
 
 .promptbox p {
-	position: absolute;
-	top: 0;
-	width: 40px;
-	height: 40px;
-	text-align: center;
-	margin-top: -30px; /* offset for Entypo's weird sizing */
-	color: white;
+  position: absolute;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  margin-top: -30px; /* offset for Entypo's weird sizing */
+  color: white;
 }
 
 .boxeyboxes {
-	position: absolute;
-	bottom: 10%;
-	width: 100%;
+  position: absolute;
+  bottom: 10%;
+  width: 100%;
 }
 
 #yesbox {
-	background-color: #007A30;
+  background-color: #007A30;
 }
 
 #nobox {
-	background-color: #EF3A24;
-	font-size: 84px;
+  background-color: #EF3A24;
+  font-size: 84px;
 }
 
 #nobox p {
-	margin-top: -42px;
+  margin-top: -42px;
 }
 
 
 .disabled {
-	background-color: #bbb;
-	opacity: 0.7;
+  background-color: #bbb;
+  opacity: 0.7;
 }
 
 .gameEvent {

@@ -213,6 +213,8 @@ function displayProperties(properties) {
     bottom.append($("<span>").addClass("owner")
                  .html(prop.owner));
     cell.append(bottom);
+    if (i === 0)
+      cell.addClass("selected");
 
     (function() {
       var cur_prop = prop;
@@ -227,6 +229,7 @@ function displayProperties(properties) {
     propDiv.append(cell);
   }
   $("#propList").css("height", document.documentElement.clientHeight + 60);
+  loadDetailedView(properties[0].card);
 }
 
 var setupPage = function() {

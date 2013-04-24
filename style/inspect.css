@@ -78,6 +78,15 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 .btnicon {
   width: 100%;
   height: 20%;
-  position: relative;
-  top: -15%;
+  display: block;
+  margin-top: -10%;
+}
+
+.btncaption {
+  font: 12px 'Lato';
+  position: absolute;
+  bottom: 5%;
+  width: 100%;
+  text-align: center;
+  display: block;
 }
