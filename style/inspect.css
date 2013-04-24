@@ -62,7 +62,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 }
 
 .optionbtn {
-  height: 20%;
+  height: 25%;
   width: 100%;
   position: absolute;
   left: 0;
@@ -83,9 +83,9 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 }
 
 .btncaption {
-  font: 12px 'Lato';
+  font: 11px 'Lato';
   position: absolute;
-  bottom: 5%;
+  top: 70%;
   width: 100%;
   text-align: center;
   display: block;
