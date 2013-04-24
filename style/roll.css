@@ -23,27 +23,113 @@ body {
 
 #dice {
   width: 80%;
-  margin: 0 auto;
+  margin: 25px auto 0 auto;
   text-align: center;
 }
 
-.die {
+/*.die {
   width: 80px;
   height: 80px;
   font: 40px 'Lato' 'Helvetica Neue' Helvetica Arial sans-serif;
   background-color: white;
-  border-radius: 10px;
+  border-radius: 7px;
   border: 1px solid black;
   display: inline-block;
   margin: 10%;
   position: relative;
-}
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 5px 0 #333;
+}*/
 
-.dieval {
-  position: absolute;
-  top: 20%;
-  width: 100%;
+
+
+/* CSS Dice: An Experiment by Jonathan Sampson - @jonathansampson */
+.die.one .dot { 
+  box-shadow: 0 .2em 0 #FFF 
 }
+.die.two .dot { 
+  background: transparent;
+  box-shadow: -2.3em -2.3em 0 #345, 
+         2.3em  2.3em 0 #345, 
+        -2.3em -2.3em 0 #FFF, 
+         2.3em  2.4em 0 #FFF 
+}
+.die.three .dot { 
+  box-shadow: -2.3em -2.3em 0 #345, 
+         2.3em  2.3em 0 #345, 
+        -2.3em -2.3em 0 #FFF, 
+         2.3em  2.4em 0 #FFF, 
+             0   .2em 0 #FFF 
+}
+.die.four .dot { 
+  background: transparent;
+        box-shadow: -2.3em -2.3em 0 #345, 
+               2.3em  2.3em 0 #345, 
+              -2.3em  2.3em 0 #345, 
+               2.3em -2.3em 0 #345, 
+              -2.3em -2.3em 0 #FFF, 
+               2.3em  2.4em 0 #FFF, 
+              -2.3em  2.4em 0 #FFF, 
+               2.3em -2.3em 0 #FFF 
+}
+.die.five .dot { 
+  box-shadow: -2.3em -2.3em 0 #345, 
+         2.3em  2.3em 0 #345, 
+        -2.3em  2.3em 0 #345, 
+         2.3em -2.3em 0 #345, 
+        -2.3em -2.2em 0 #FFF, 
+         2.3em -2.2em 0 #FFF, 
+         2.3em  2.4em 0 #FFF, 
+        -2.3em  2.4em 0 #FFF,
+             0   .2em 0 #FFF 
+}
+.die.six .dot {
+  background: transparent;
+  box-shadow: -2.3em -2.3em 0 #345,
+        -2.3em      0 0 #345,
+        -2.3em  2.3em 0 #345,
+         2.3em -2.3em 0 #345,
+         2.3em      0 0 #345,
+         2.3em  2.3em 0 #345,
+        -2.3em -2.1em 0 #FFF,
+        -2.3em   .2em 0 #FFF,
+        -2.3em  2.4em 0 #FFF,
+         2.3em  2.4em 0 #FFF,
+         2.3em   .2em 0 #FFF,
+         2.3em -2.1em 0 #FFF
+}
+.die {
+  border-top: 1px solid #f1f1f1;
+  width: 80px; height: 80px;
+  border-radius: 10px;
+  position: relative;
+  margin: 20px 35px;
+  font-size: 9px;
+  display: inline-block;
+  box-shadow: 0px 7px 0 #CCC, 0 9px 3px #444, 0 12px 5px #999;
+  background: rgb(254,254,254); /* Old browsers */
+  background: -moz-linear-gradient(top,  rgba(254,254,254,0.95) 0%, rgba(241,241,241,0.95) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(254,254,254,0.95)), color-stop(100%,rgba(241,241,241,0.95))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  rgba(254,254,254,0.95) 0%,rgba(241,241,241,0.95) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  rgba(254,254,254,0.95) 0%,rgba(241,241,241,0.95) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  rgba(254,254,254,0.95) 0%,rgba(241,241,241,0.95) 100%); /* IE10+ */
+  background: linear-gradient(to bottom,  rgba(254,254,254,0.95) 0%,rgba(241,241,241,0.95) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fefefe', endColorstr='#f1f1f1',GradientType=0 ); /* IE6-9 */
+
+}
+.dot {
+  width: 20%; 
+  height: 20%; 
+  left: 50%; 
+  top: 50%;
+  margin: -10%;
+  background: #345;
+  border-radius: 50%;
+  display: block;
+  position: absolute;
+}
+body { text-align: center }
 
 .btn {
   -webkit-appearance: none;
@@ -63,14 +149,14 @@ body {
 
 .buttons {
   position: absolute;
-  bottom: 15%;
+  bottom: 20%;
   width: 100%;
   text-align: center;
 }
 
 #rollresult {
   position: absolute;
-  bottom: 36%;
+  bottom: 40%;
   width: 100%;
   text-align: center;
 }

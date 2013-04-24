@@ -140,25 +140,51 @@ function displayPrompt(msg, callback) {
 // get response back from the server about whether or not it handled
 // the user's roll properly
 
+var numberWords = {
+  1: "one",
+  2: "two",
+  3: "three",
+  4: "four",
+  5: "five",
+  6: "six"
+}
+
+function rollAnimation() {
+  console.log("calling roll animation");
+  $("#die1").removeClass();
+  $("#die2").removeClass();
+  var rand1 = Math.floor((Math.random() * 6) + 1);
+  var rand2 = Math.floor((Math.random() * 6) + 1);
+  $("#die1").addClass("die").addClass(numberWords[rand1]);
+  $("#die2").addClass("die").addClass(numberWords[rand2]);
+}
+
 function allowRolls() {
   //function to call when shake occurs
   function shakeEventDidOccur () {
-    console.log("I've been shooked fooooool.")
-    var roll1 = Math.floor((Math.random() * 6) + 1);
-    var roll2 = Math.floor((Math.random() * 6) + 1);
-    $("#die1 .dieval").html(roll1);
-    $("#die2 .dieval").html(roll2);
-    // unbind the events
-    //window.removeEventListener('devicemotion', shakeEventHandler, false);
+    console.log("I've been shooked fooooool.");
     $("#rollstartbtn").unbind('click', shakeEventDidOccur);
 
-    var total = roll1 + roll2
-    rollresult = total;
-    socket.emit('diceroll', {
-      result: total,
-      doubles: (roll1 === roll2),
-      fbid: fbobj.id
-    });
+    // unbind the events
+    //window.removeEventListener('devicemotion', shakeEventHandler, false);
+
+    var animation_handle = setInterval(rollAnimation, 100);
+    setTimeout(function() {
+      clearInterval(animation_handle);
+      $("#die1").removeClass();
+      $("#die2").removeClass();
+      var roll1 = Math.floor((Math.random() * 6) + 1);
+      var roll2 = Math.floor((Math.random() * 6) + 1);
+      $("#die1").addClass("die").addClass(numberWords[roll1]);
+      $("#die2").addClass("die").addClass(numberWords[roll2]);
+      var total = roll1 + roll2
+      rollresult = total;
+      socket.emit('diceroll', {
+        result: total,
+        doubles: (roll1 === roll2),
+        fbid: fbobj.id
+      });
+    }, 2000);
   }
 
   // // Shamelessly taken from 
