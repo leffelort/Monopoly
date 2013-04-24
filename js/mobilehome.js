@@ -120,7 +120,7 @@ function loadFBData() {
       getoutcards.append(getoutchance);
     }
     
-    if ($.inArray("community", me.jailCards)) {
+    if ($.inArray("commChest", me.jailCards)) {
       var getoutcommunity = $("<div>").attr({
         "class" : "getout",
         "id" : "getoutcommunity"
@@ -346,7 +346,7 @@ $(document).ready(function() {
   $("#chatform").submit(function (event) {
     event.preventDefault();
     sendMessage();
-    });
+  });
   setInterval(updateGameEvents, eventUpdateFreq);
 });
 
