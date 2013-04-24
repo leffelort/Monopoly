@@ -1288,6 +1288,10 @@ function collectRent(game, space, socketid, tenant, roll) {
   
   // Error checking
   if (property === undefined) throw "property undefined";
+  if (owner.fbid === tenant.fbid) {
+    endTurn(game);
+    return;
+  }
   
   // Figure out amount to pay based on the space.
   if (isUtility(space)) {

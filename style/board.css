@@ -56,12 +56,32 @@ h2 {
 .playerinfo {
   box-sizing: border-box;
   height: 25%;
-  padding: 10px;
+  padding: 10px 10px 0px;
   position: relative;
+  opacity: 0;
+}
+
+.playerinfo:last-child {
+  padding-bottom: 10px;
+}
+
+.playerinfoWrapper {
+  background-color: rgba(255,255,255,0.25);
+  height: 100%;
+  box-sizing: border-box;
+  padding: 10px;
 }
 
 .playertitle {
   margin-bottom: 5px;
+}
+
+.playericon {
+  float: left;
+  width: 75px;
+  height: 75px;
+  background-size: 75px 75px;
+  margin-right: 10px;
 }
 
 .log {
@@ -84,7 +104,7 @@ h2 {
   box-sizing: border-box;
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
-  padding: 10px;
+  padding: 5px 10px 5px;
   border-bottom: 1px solid rgba(255,255,255,0.25);
 }
 
@@ -98,7 +118,7 @@ h2 {
 }
 
 .logMessage {
-  color: white;
+  color: #EEE;
   font: 18px 'Lato';
   text-shadow: 0px 1px 0px black;
   text-indent: -10px;

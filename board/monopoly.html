@@ -9,35 +9,47 @@
 <body>
   <div id="wrapper">
     <div id="leftbar">
-      <div id="player1info" class="playerinfo">
-        <h1 id="playertitle1" class="playertitle"></h1>
-        <h2 id="playermoney1" class="playermoney"></h2>
+      <div id="playerinfo1" class="playerinfo">
+        <div class="playerinfoWrapper">
+          <div class="playericon playerpiece1"></div>
+          <h1 id="playertitle1" class="playertitle"></h1>
+          <h2 id="playermoney1" class="playermoney"></h2>
+        </div>
       </div>
-      <div id="player2info" class="playerinfo">
-        <h1 id="playertitle2" class="playertitle"></h1>
-        <h2 id="playermoney2" class="playermoney"></h2>
+      <div id="playerinfo2" class="playerinfo">
+        <div class="playerinfoWrapper">
+          <div class="playericon playerpiece2"></div>
+          <h1 id="playertitle2" class="playertitle"></h1>
+          <h2 id="playermoney2" class="playermoney"></h2>
+        </div>
       </div>
-      <div id="player3info" class="playerinfo">
-        <h1 id="playertitle3" class="playertitle"></h1>
-        <h2 id="playermoney3" class="playermoney"></h2>
+      <div id="playerinfo3" class="playerinfo">
+        <div class="playerinfoWrapper">
+          <div class="playericon playerpiece3"></div>
+          <h1 id="playertitle3" class="playertitle"></h1>
+          <h2 id="playermoney3" class="playermoney"></h2>
+        </div>
       </div>
-      <div id="player4" class="playerinfo">
-        <h1 id="playertitle4" class="playertitle"></h1>
-        <h2 id="playermoney4" class="playermoney"></h2>
+      <div id="playerinfo4" class="playerinfo">
+        <div class="playerinfoWrapper">
+          <div class="playericon playerpiece4"></div>
+          <h1 id="playertitle4" class="playertitle"></h1>
+          <h2 id="playermoney4" class="playermoney"></h2>
+        </div>
       </div>
     </div>
     <div id="rightbar">
       <div class="log">
         <div class="logWrapper">
-        <h1 class="logTitle">Event Log</h1>
-        <ul id="eventLog" class="logBox"></ul>
-      </div>
+          <h1 class="logTitle">Event Log</h1>
+          <ul id="eventLog" class="logBox"></ul>
+        </div>
       </div>
       <div class="log">
         <div class="logWrapper">
-        <h1 class="logTitle">Chat</h1>
-        <ul id="chatLog" class="logBox"></ul>
-      </div>
+          <h1 class="logTitle">Chat</h1>
+          <ul id="chatLog" class="logBox"></ul>
+        </div>
       </div>
     </div>
     <div id="board">
@@ -189,7 +201,7 @@
         <img id="img9" src="monopoly-32.png" width="164" height="269" alt="" />
       </div>
       <div id="space10">
-        <div id="justVisiting1">
+        <div id="justVisiting1" class="justVisiting">
           <div class="playerpiece playerpiece1"></div>
           <div class="playerpiece playerpiece2"></div>
         </div>
@@ -199,7 +211,7 @@
           <div class="playerpiece playerpiece3"></div>
           <div class="playerpiece playerpiece4"></div>
         </div>
-        <div id="justVisiting2">
+        <div id="justVisiting2" class="justVisiting">
           <div class="playerpiece playerpiece3"></div>
           <div class="playerpiece playerpiece4"></div>
         </div>

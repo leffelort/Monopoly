@@ -14,7 +14,7 @@ var eventDuration = 3000;
 function scaleBoard() {
   var height = Math.max(document.documentElement.clientHeight, 720);
   var scale = height / 2000;
-  var boardHeight = height - 15;    // border compensation
+  var boardHeight = height - 15; // border compensation
   var boardScale = boardHeight / 2000;
   $("#board").css("-webkit-transform", "scale(" + boardScale + ")");
   $(".pieces2").css("-webkit-transform", "rotate(" + 90 + "deg)");
@@ -23,11 +23,14 @@ function scaleBoard() {
   $("#wrapper").css("height", scale * 2000);
   
   var width = Math.max(document.documentElement.clientWidth, 1024);
-  var offset = (width / 2) - 
+  var offset = (width / 2) -
     (($("#board").height() * boardScale) / 2) - 7.5;
   $("#board").css("left", (offset) + "px");
   $("#leftbar").css("width", offset);
   $("#rightbar").css("width", offset);
+  
+  // fix chat log height
+  $(".logBox").css("max-height", scale * 2000 * 0.5 - 60);
 }
 
 function refreshBoardState(game) {
@@ -37,11 +40,22 @@ function refreshBoardState(game) {
     var playerNum = player.playerNumber + 1;
     window.players[player.fbid] = playerNum;
     window.playerNames[player.fbid] = player.username.split(' ')[0];
-    $("#playertitle" + playerNum).html("Player " + playerNum + ": " + player.username);
+    $("#playerinfo" + playerNum).addClass("visible");
+    $("#playertitle" + playerNum).html("Player " + playerNum + ": " + playerNames[player.fbid]);
     $("#playermoney" + playerNum).html("Money: $" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
-    $("#space" + player.space + " .playerpiece" + playerNum)
-      .addClass("visible");
+    if (player.space === 10) {
+      if (player.jailed) {
+        $("#space" + player.space + " #jail .playerpiece" + playerNum)
+          .addClass("visible");
+      } else {
+        $("#space" + player.space + " .justVisiting .playerpiece" + playerNum)
+          .addClass("visible");
+      }
+    } else {
+      $("#space" + player.space + " .playerpiece" + playerNum)
+        .addClass("visible");
+    }
     if (player.playerNumber === game.currentTurn) {
       $("#space" + player.space + " .playerpiece" + playerNum)
         .addClass("currentTurn");
@@ -218,7 +232,7 @@ function attachSocketHandlers() {
   socket.on("boardReconnect", function (socketdata) {
     if (!socketdata.success) {
       alert("Error reconnecting.");
-      window.location.replace("/desktop.html");
+      window.location.replace("/realdesktop.html");
     } else {
       socket.emit('boardstate', {});
     }
