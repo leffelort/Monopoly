@@ -24,15 +24,6 @@ app.get('/', function (req, res) {
   }
 });
 
-app.get('/desktop/', function(req, res, next){
-  mongoExpressAuth.checkLogin(req, res, function(err){
-    if (err)
-      res.sendfile('static/login.html');
-    else
-      next();
-  });
-});
-
 app.configure(function(){
   app.use(express.static(__dirname));
 });
