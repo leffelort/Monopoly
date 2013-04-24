@@ -40,7 +40,8 @@ function refreshBoardState(game) {
     var playerNum = player.playerNumber + 1;
     window.players[player.fbid] = playerNum;
     window.playerNames[player.fbid] = player.username.split(' ')[0];
-    $("#playertitle" + playerNum).html("Player " + playerNum + ": " + player.username);
+    $("#playerinfo" + playerNum).addClass("visible");
+    $("#playertitle" + playerNum).html("Player " + playerNum + ": " + playerNames[player.fbid]);
     $("#playermoney" + playerNum).html("Money: $" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
     if (player.space === 10) {
