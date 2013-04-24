@@ -322,6 +322,18 @@ function disableButtons(){
   $("#managebtn").unbind(goToManage);
 }
 
+function sendMessage() {
+  var message = $("#chatBox").val().trim();
+  if (message !== "") {
+    socket.emit('gameChat', {
+      gameID: currentGame.id,
+      fbid: window.username,
+      message: message
+    });
+    $("#chatBox").val("");
+  }
+}
+
 $(document).ready(function() {
   window.addEventListener('load', function() {
     new FastClick(document.body);
@@ -331,6 +343,10 @@ $(document).ready(function() {
   var initialHeight = $("#gameButtons").height();
   $("#content").height($(window).height() + 60);
   $("#inspectbtn").click(goToInspect);
+  $("#chatform").submit(function (event) {
+    event.preventDefault();
+    sendMessage();
+    });
   setInterval(updateGameEvents, eventUpdateFreq);
 });
 
