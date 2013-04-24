@@ -12,15 +12,20 @@ var eventTimer = 0;
 var eventDuration = 3000;
 
 function scaleBoard() {
-  var boardScale = document.documentElement.clientHeight / 2000;
+  var height = Math.max(document.documentElement.clientHeight, 720);
+  var scale = height / 2000;
+  var boardHeight = height - 15;    // border compensation
+  var boardScale = boardHeight / 2000;
   $("#board").css("-webkit-transform", "scale(" + boardScale + ")");
   $(".pieces2").css("-webkit-transform", "rotate(" + 90 + "deg)");
   $(".pieces3").css("-webkit-transform", "rotate(" + 180 + "deg)");
   $(".pieces4").css("-webkit-transform", "rotate(" + 270 + "deg)");
-  $("#wrapper").css("height", boardScale * 2000);
+  $("#wrapper").css("height", scale * 2000);
   
-  var offset = (document.documentElement.clientWidth / 2) - (($("#board").height() * boardScale) / 2);
-  $("#board").css("left", offset + "px");
+  var width = Math.max(document.documentElement.clientWidth, 1024);
+  var offset = (width / 2) - 
+    (($("#board").height() * boardScale) / 2) - 7.5;
+  $("#board").css("left", (offset) + "px");
   $("#leftbar").css("width", offset);
   $("#rightbar").css("width", offset);
 }
@@ -31,7 +36,7 @@ function refreshBoardState(game) {
     var player = game.players[fbid];
     var playerNum = player.playerNumber + 1;
     window.players[player.fbid] = playerNum;
-    window.playerNames[player.fbid] = player.username;
+    window.playerNames[player.fbid] = player.username.split(' ')[0];
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + player.username);
     $("#playermoney" + playerNum).html("Money: $" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
@@ -87,6 +92,18 @@ function updateGameEvents() {
 
 function displayEvent(eventStr) {
   eventQueue.push(eventStr);
+  addToEventLog(eventStr);
+}
+
+function addToEventLog(eventStr) {
+  var log = $("#eventLog .logMessage").toArray();
+  var li = $("<li>").addClass("logMessage");
+  if (log.length % 2 !== 0) {
+    li.addClass("alt");
+  }
+  li.html(eventStr);
+  $("#eventLog").append(li);
+  $('#eventLog').scrollTop($('#eventLog')[0].scrollHeight);
 }
 
 function movePlayer(fbid, initial, end) {
@@ -287,7 +304,7 @@ function attachSocketHandlers() {
     displayEvent(playerNames[socketdata.fbid] + ' landed on Chance!\n"' + socketdata.text + '"');
   });
   
-  socket.on('communityChest', function (socketdata) {
+  socket.on('commChest', function (socketdata) {
     displayEvent(playerNames[socketdata.fbid] + ' landed on Community Chest!\n"' + socketdata.text + '"');
   });
 }

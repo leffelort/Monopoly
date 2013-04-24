@@ -26,18 +26,21 @@ body {
 }
 
 h1 {
-  font: 1.6em 'Kabel-Light';
-  color: white;
+  font: 1.5em 'Lato';
+  color: #EEE;
+  text-shadow: 0px 1px 0px black;
 }
 
 h2 {
-  font: 1.4em 'Lato';
-  color: white;
+  font: 1.25em 'Lato';
+  color: #EEE;
 }
 
 #wrapper {
   width: 100%;
   height: 100%;
+  min-height: 720px;
+  min-width: 1024px;
 }
 
 #leftbar {
@@ -57,6 +60,10 @@ h2 {
   position: relative;
 }
 
+.playertitle {
+  margin-bottom: 5px;
+}
+
 .log {
   box-sizing: border-box;
   height: 50%;
@@ -64,11 +71,42 @@ h2 {
   position: relative;
 }
 
+.log:last-child {
+  padding-top: 0px;
+}
+
+.logWrapper {
+  background-color: rgba(255,255,255,0.25);
+  height: 100%;
+}
+
+.logTitle {
+  box-sizing: border-box;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  padding: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
+}
+
 .logBox {
-  background-color: rgba(255,255,255,0.5);
   display: block;
   overflow-y: scroll;
-  padding: 10px;
+  padding-bottom: 10px;
+  box-sizing: border-box;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.logMessage {
+  color: white;
+  font: 18px 'Lato';
+  text-shadow: 0px 1px 0px black;
+  text-indent: -10px;
+  padding: 5px 10px 5px 20px;
+}
+
+.alt {
+  background-color: rgba(255,255,255,0.15);
 }
 
 #board {
@@ -80,6 +118,7 @@ h2 {
 	-o-transform-origin: 0 0;
 	-ms-transform-origin: 0 0;
 	transform-origin: 0 0;
+  border: 20px solid black;
 }
 
 #center {
