@@ -319,6 +319,9 @@ var afterLogin = function() {
   socket = io.connect(window.location.hostname);
   FB.api('/me', function(me) {
     console.log(me);
+    if (sessionStorage !== undefined) {
+      sessionStorage["user"] = JSON.stringify(me);
+    }
     window.username = me.name;
     window.fbid = me.id;
     socket.emit('login', me);

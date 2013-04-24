@@ -2,68 +2,78 @@ var socket;
 var rollresult;
 var fbobj;
 
-window.fbAsyncInit = function() {
-  FB.init({
-    appId      : '448108371933308', // App ID
-    channelUrl : '//localhost:11611/channel.html', // Channel File
-    status     : true, // check login status
-    cookie     : true, // enable cookies to allow the server to access the session
-    xfbml      : true  // parse XFBML
-  });
-
-  FB.getLoginStatus(function(response) {
-    if (response.status === 'connected') {
-      // connected
-      window.scrollTo(0, 1); // scroll past broswer bar
-      FB.api('/me', function(response){
-        fbobj = response;
-        socket = io.connect(window.location.hostname);
-        socket.emit('reopen', response); // tell the server who we are.
-
-        socket.on('diceroll', function(res) {
-          if (res.success) {
-            $("#rollvalue").html("You rolled a " + rollresult + "!");
-            console.log("successfully handled");
-          } else {
-            console.log("something went wrong... that's not good.");
-          }
-        });
-
-        socket.on('propertyBuy', function(prop) {
-          console.log("Got propety ", prop);
-          var property = prop.property;
-          var promptText = "Would you like to purchase " + property.card.title;
-          promptText += " for $" + property.card.price;
-          displayPrompt(promptText, function(res) {
-            socket.emit('propertyBuy', {
-              result: res,
-              fbid: fbobj.id,
-              space: property.card.space
-            });
-          });
-        });
-
-        socket.on('nextTurn', function(player) {
-          if (player.fbid === fbobj.id) {
-            allowRolls();
-            console.log("I GOTSA DA DOUBLESSSSS. ROLZ AGAIN LOLZ");
-          } else {
-            setTimeout(function(){
-              window.location.replace("mobileHome.html");
-            }, 750);
-          }
-        });
-
-      });
-
-      allowRolls();
+function socketSetup() {
+  socket.on('diceroll', function(res) {
+    if (res.success) {
+      $("#rollvalue").html("You rolled a " + rollresult + "!");
+      console.log("successfully handled");
     } else {
-      // not_authorized
-      alert("You are not logged in");
-      window.location.replace("mobile.html");
+      console.log("something went wrong... that's not good.");
     }
   });
-};
+
+  socket.on('propertyBuy', function(prop) {
+    console.log("Got propety ", prop);
+    var property = prop.property;
+    var promptText = "Would you like to purchase " + property.card.title;
+    promptText += " for $" + property.card.price;
+    displayPrompt(promptText, function(res) {
+      socket.emit('propertyBuy', {
+        result: res,
+        fbid: fbobj.id,
+        space: property.card.space
+      });
+    });
+  });
+
+  socket.on('nextTurn', function(player) {
+    if (player.fbid === fbobj.id) {
+      allowRolls();
+      console.log("I GOTSA DA DOUBLESSSSS. ROLZ AGAIN LOLZ");
+    } else {
+      setTimeout(function(){
+        window.location.replace("mobileHome.html");
+      }, 750);
+    }
+  });
+
+  allowRolls();
+}
+
+
+if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
+  fbobj = JSON.parse(sessionStorage.user);
+  socket = io.connect(window.location.hostname);
+  socketSetup();
+  socket.emit('reopen', fbobj);
+} else {
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '448108371933308', // App ID
+      channelUrl : '//localhost:11611/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+  
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        // connected
+        window.scrollTo(0, 1); // scroll past broswer bar
+        FB.api('/me', function(response){
+          fbobj = response;
+          socket = io.connect(window.location.hostname);
+          socketSetup();
+          socket.emit('reopen', response); // tell the server who we are.
+        });
+      } else {
+        // not_authorized
+        alert("You are not logged in");
+        window.location.replace("mobile.html");
+      }
+    });
+  };
+}
 
 // Load the FB SDK Asynchronously
 (function(d){

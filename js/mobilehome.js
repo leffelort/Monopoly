@@ -208,50 +208,38 @@ function loadFBData() {
   window.scrollTo(0, 1);
 }  
 
-window.fbAsyncInit = function() {
-  FB.init({
-    appId      : '448108371933308', // App ID
-    channelUrl : '//localhost:11611/channel.html', // Channel File
-    status     : true, // check login status
-    cookie     : true, // enable cookies to allow the server to access the session
-    xfbml      : true  // parse XFBML
-  });
-
-  FB.getLoginStatus(function(response) {
-    if (response.status === 'connected') {
-      // connected
-      FB.api('/me', function(response){
-        window.fbobj = response;
-        socket = io.connect(window.location.hostname);
-        socket.emit('reopen', response); // tell the server who we are.
-        socket.on('reopen', function(resp) {
-          if (resp.success) {
-            socket.emit('getme', {});
-          }
+if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
+  window.fbobj = JSON.parse(sessionStorage.user);
+  socket = io.connect(window.location.hostname);
+  setupSockets();
+  socket.emit('reopen', window.fbobj); // tell the server who we are.
+} else {
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '448108371933308', // App ID
+      channelUrl : '//localhost:11611/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+  
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        // connected
+        FB.api('/me', function(response){
+          window.fbobj = response;
+          socket = io.connect(window.location.hostname);
+          setupSockets();
+          socket.emit('reopen', response); // tell the server who we are.
         });
-        socket.on('nextTurn', function(obj) {
-          socket.emit('getme', {});
-          if (obj.fbid === fbobj.id) {
-            displayEvent("Your turn!");
-          }
-        });
-        socket.on('getme', function(resp) {
-          if (resp === undefined) {
-            alert("YOU CAN'T SIT WITH US!");
-            window.location.replace("mobile.html");
-          }
-          console.log("I AM ", resp);
-          window.me = resp;
-          loadFBData();
-        });
-      });
-    } else {
-      // not_authorized
-      alert("You are not logged in");
-      window.location.replace("mobile.html");
-    }
-  });
-};
+      } else {
+        // not_authorized
+        alert("You are not logged in");
+        window.location.replace("mobile.html");
+      }
+    });
+  }
+}
 
   // Load the SDK Asynchronously
   (function(d){
@@ -262,6 +250,29 @@ window.fbAsyncInit = function() {
      ref.parentNode.insertBefore(js, ref);
    }(document));
 
+
+function setupSockets() {
+  socket.on('reopen', function(resp) {
+    if (resp.success) {
+      socket.emit('getme', {});
+    }
+  });
+  socket.on('nextTurn', function(obj) {
+    socket.emit('getme', {});
+    if (obj.fbid === fbobj.id) {
+      displayEvent("Your turn!");
+    }
+  });
+  socket.on('getme', function(resp) {
+    if (resp === undefined) {
+      alert("YOU CAN'T SIT WITH US!");
+      window.location.replace("mobile.html");
+    }
+    console.log("I AM ", resp);
+    window.me = resp;
+    loadFBData();
+  });
+}
 
 function displayPrompt(msg, callback) {
   if (callback === undefined) {
