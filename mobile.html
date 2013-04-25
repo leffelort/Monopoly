@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link href='http://fonts.googleapis.com/css?family=Lato:400,700' rel='stylesheet' type='text/css'>
 	<link rel="stylesheet" type="text/css" href="style/reset.css">
-	<link rel="stylesheet" type="text/css" href="style/desktop.css">
+	<link rel="stylesheet" type="text/css" href="style/gamelobby.css">
 </head>
 <body>
 	<div id="title">
@@ -29,8 +29,6 @@
       <form id="hostGameForm">
         <input id="nameInput" class="textForm" type="text"
           placeholder="Game name" required/>
-        <input id="passwordInput" class="textForm" type="password"
-          placeholder="Password (optional)" />
         <input id="numPlayersInput" class="textForm" type="number" min="2" max="4" placeholder="Number of players (2 to 4)" required/>
         <div class="buttons">
           <input id="hostCancelBtn" class="btn" type="button" value="Cancel"/>
@@ -50,21 +48,10 @@
     	</form>
     </div>
 
-    <!--
-    <div id="joinGameScreen">
-      <h1>Join Game</h1>
-      <h3 id="noGamesMessage">There are no games being played.  Be the first to make one!</h3>
-      <table id="gameTable" border="1"></table>
-      <div class="buttons">
-        <button id="joinCancelBtn" class="btn" type="button">Cancel</button>
-        <button id="joinBtn" class="btn" type="button">Join!</button>
-      </div>
-    </div>
-    -->
-
     <div id="gameLobbyScreen">
       <h1 id="gameTitle"></h1>
       <div id="gameLobby"></div>
+      <h2 id="boardLobby"></h2>
       <h3>Invite your friends with this code:</h3>
       <h1 id="phoneCode"></h1>
       <div class="buttons">
@@ -85,7 +72,7 @@
   <script src="js/jquery-1.9.1.min.js"></script>
   <script type="text/javascript" src="/socket.io/socket.io.js"></script>
   <script src='js/fastclick/lib/fastclick.js'></script>
-  <script src="js/desktop.js"></script>
+  <script src="js/mobile.js"></script>
   <script src="js/login.js"></script>
 </body>
 </html>

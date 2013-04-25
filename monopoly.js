@@ -1,9 +1,8 @@
-var Game = function(id, code, name, password, maxPlayers) {  
+var Game = function(id, code, name, maxPlayers) {
   this.id = id;
   this.code = code;
   this.host = undefined;
   this.name = name;
-  this.password = password;
   this.maxPlayers = maxPlayers;
   this.numBoards = 0;
   this.numPlayers = 0;
@@ -55,8 +54,8 @@ module.exports.newBoard = function(id) {
 	return new Board(id);
 }
 
-module.exports.newGame = function(id, code, name, password, maxPlayers) {
-  return new Game(id, code, name, password, maxPlayers);
+module.exports.newGame = function(id, code, name, maxPlayers) {
+  return new Game(id, code, name, maxPlayers);
 }
 module.exports.newPlayer = function(username, fbid) {
   return new Player(username, fbid);

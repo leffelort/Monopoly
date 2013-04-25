@@ -32,7 +32,8 @@ h1 {
 
 h2 {
   font: 1.4em 'Lato', Helvetica, Arial, sans-serif;
-  padding: 0.3em;
+  text-align: center;
+  margin-bottom: 0.5em;
 }
 
 h3 {
@@ -133,44 +134,6 @@ h3 {
 #codeInput {
   text-align: center;
   width: 10em;
-}
-
-#noGamesMessage {
-  display: none;
-}
-
-table {
-  width: 100%;
-  margin: 0 auto 1em;
-  border-collapse: collapse;
-  border: 1px solid black;
-}
-
-tr.alt {
-  background-color: #DDD;
-}
-
-tr:hover {
-  background-color: #CCC;
-}
-
-tr.selected {
-  background-color: #BBB;
-}
-
-th {
-  font: 20px 'Kabel-Regular';
-  text-align: left;
-  padding: 10px;
-  background-color: #ED1B24;
-  color: white;
-  text-shadow: -1px 1px 1px black;
-}
-
-td {
-  font: 18px 'Kabel-Light';
-  padding: 10px;
-  vertical-align: middle;
 }
 
 /* Game Lobby */

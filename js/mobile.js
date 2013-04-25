@@ -5,12 +5,13 @@ var currentGame;
 var selectedGameIndex;
 
 var socket;
-var boardID;
+
+var username = undefined;
+var fbid = undefined;
 
 var gameCode; //need this to be a global for now :/ ~pjm
 
 // GAME HOSTING
-/*
 function openHostScreen() {
   $("#homeScreen").hide();
   $("#hostGameScreen").show();
@@ -18,7 +19,6 @@ function openHostScreen() {
 
 function hostGame() {
   var gameName = $("#nameInput").val().trim();
-  var password = $("#passwordInput").val();
   var numPlayers = Number($("#numPlayersInput").val());
 
   // Validate the form
@@ -35,7 +35,6 @@ function hostGame() {
       url: "/hostGame",
       data: {
         gameName: gameName,
-        password: password,
         numPlayers: numPlayers
       },
       success: function(data) {
@@ -43,19 +42,18 @@ function hostGame() {
           socket.emit('hostgame', {
             gameID: data.id,
             username: window.username,
-            fbusername: window.fbusername
+            fbid: window.fbid
           });
         }
       }
     });
   }
 }
-*/
+
 // GAME JOINING
 function openJoinScreen() {
   $("#homeScreen").hide();
   $("#joinGameScreen").show();
-  //getGameList();
 }
 
 function joinGame() {
@@ -66,8 +64,10 @@ function joinGame() {
   }
   else {
     console.log(gameCode);
-    socket.emit('boardjoin', {
+    socket.emit('joingame', {
       code: gameCode,
+      username: window.username,
+      fbid: window.fbid
     });
   }
 }
@@ -76,61 +76,11 @@ function leaveGame() {
   var gameID = currentGame.id;
   currentGame = undefined;
   socket.emit('leavegame', {
-    gameID: gameID
+    gameID: gameID,
+    fbid: fbid
   });
   openHomeScreen($("#gameLobbyScreen"));
 }
-
-/*
-function getGameList() {
-  $.ajax({
-    type: "get",
-    url: "/gameList",
-    success: function(data) {
-      if (data.success) {
-        gameList = data.gameList;
-        createGameListTable();
-      }
-    }
-  });
-}
-
-function createGameListTable() {
-  var gameTable = $("#gameTable");
-  gameTable.empty();
-
-  if (gameList.length === 0) {
-    gameTable.hide();
-    $("#noGamesMessage").show();
-  }
-  else {
-    gameTable.show();
-    $("#noGamesMessage").hide();
-    var headerRow = $("<tr>")
-      .append($("<th>").html("Game name"))
-      .append($("<th>").html("Password"))
-      .append($("<th>").html("Status"));
-    gameTable.append(headerRow);
-
-    gameList.forEach(function (game, index, array) {
-      var row = $("<tr>")
-        .append($("<td>").html(game.name))
-        .append($("<td>").html(game.password))
-        .append($("<td>").html(game.status));
-      if (index % 2 === 1) {
-        row.addClass("alt");
-      }
-      row.click(function (event) {
-        if (selectedGameIndex !== undefined)
-          $("tr.selected").removeClass("selected");
-        $(this).addClass("selected");
-        selectedGameIndex = index;
-      });
-      gameTable.append(row);
-    });
-  }
-}
-*/
 
 // GAME LOBBY
 function openGameLobbyScreen(prevScreen, gameID) {
@@ -146,7 +96,7 @@ function getGameInfo(gameID) {
     success: function(data) {
       if (data.success) {
         currentGame = data.game;
-		gameCode = currentGame.code;
+		    gameCode = currentGame.code;
         createGameLobby();
       }
     }
@@ -173,16 +123,14 @@ function createGameLobby() {
       $("#gameLobby").append(row);
     index++;
   }
+  $("#boardLobby").html("Number of boards connected: " + currentGame.numBoards);
   $("#phoneCode").html(currentGame.code);
-  var numPlayers = (index - 1);
-  if (numPlayers < 2) {
-	$("#startGameBtn")[0].setAttribute("disabled", true);
-  }  else {
-	$("#startGameBtn")[0].removeAttribute("disabled");
+  if (currentGame.numPlayers < 2 || currentGame.numBoards < 1) {
+    $("#startGameBtn")[0].setAttribute("disabled", true);
+  } else {
+    $("#startGameBtn")[0].removeAttribute("disabled");
   }
 }
-
-//todo add message fix for "board" 
 
 function sendMessage() {
   var message = $("#chatBox").val().trim();
@@ -206,26 +154,26 @@ function openHomeScreen(prevScreen) {
 function startWaiting() {
 	$("#startGameBtn").hide();
 	$("#waitingBtn").show();
-	socket.emit('boardwait', {
+	socket.emit('playerWaiting', {
     code: gameCode,
-   // username: window.username
+    username: window.username
   });
 }
 
 function attachButtonEvents() {
-  //$("#hostBtn").click(function (event) {
-   // openHostScreen();
-  //});
+  $("#hostBtn").click(function (event) {
+    openHostScreen();
+  });
   $("#joinBtn").click(function (event) {
     openJoinScreen();
   });
-  //$("#hostGameForm").submit(function (event) {
-  //  event.preventDefault();
-   // hostGame();
-  //});
- // $("#hostCancelBtn").click(function (event) {
-   // openHomeScreen($("#hostGameScreen"));
-  //});
+  $("#hostGameForm").submit(function (event) {
+    event.preventDefault();
+    hostGame();
+  });
+  $("#hostCancelBtn").click(function (event) {
+    openHomeScreen($("#hostGameScreen"));
+  });
   $("#joinCancelBtn").click(function (event) {
     openHomeScreen($("#joinGameScreen"));
   });
@@ -248,39 +196,44 @@ function attachButtonEvents() {
 }
 
 function attachSocketHandlers() {
-  /*socket.on('hostgame', function (socketdata) {
+  socket.on('hostgame', function (socketdata) {
     if (socketdata.success) {
       openGameLobbyScreen($("#hostGameScreen"), socketdata.gameID);
     }
   });
-  */
-  
-  socket.on('boardjoin', function (socketdata) {
+
+  socket.on('joingame', function (socketdata) {
     console.log(socketdata);
     if (socketdata.success) {
-      boardID = socketdata.boardID;
-      localStorage["cmuopoly_boardID"] = boardID;
       openGameLobbyScreen($("#joinGameScreen"), socketdata.gameID);
     }
     else {
       alert(socketdata.message);
     }
   });
-  
+
 	socket.on('newplayer', function (socketdata) {
 		getGameInfo(socketdata.gameID);
 	});
-  
+
   socket.on('playerleft', function (socketdata) {
     getGameInfo(socketdata.gameID);
   });
-  
+
+  socket.on('boardjoin', function (socketdata) {
+    getGameInfo(socketdata.gameID);
+  });
+
+  socket.on('boardleft', function (socketdata) {
+    getGameInfo(socketdata.gameID);
+  });
+
   socket.on('hostleft', function (socketdata) {
     alert("The host has left the game.");
     currentGame = undefined;
     openHomeScreen($("#gameLobbyScreen"));
   });
-  
+
   socket.on('chatmessage', function (socketdata) {
     var message = $("<li>");
     if (socketdata.type === "event") {
@@ -297,28 +250,74 @@ function attachSocketHandlers() {
     $('#chatWindow').scrollTop($('#chatWindow')[0].scrollHeight);
     console.log(socketdata);
   });
-  
+
 	socket.on('gameReady', function () {
 		console.log("READY.");
-		window.location = "/board/monopoly.html";
+		window.location = "/mobileHome.html";
 	});
 }
 
+function login(afterLogin) {
+  FB.login(function(response) {
+      if (response.authResponse) {
+          afterLogin();
+      } else {
+          // cancelled
+      }
+  });
+}
 
 var afterLogin = function() {
- // $(".buttons").show();
+  $(".facebookLogin").hide();
+  $(".buttons").show();
   socket = io.connect(window.location.hostname);
+  FB.api('/me', function(me) {
+    console.log(me);
+    if (sessionStorage !== undefined) {
+      sessionStorage["user"] = JSON.stringify(me);
+    }
+    window.username = me.name;
+    window.fbid = me.id;
+    socket.emit('login', me);
+  });
   attachSocketHandlers();
 }
 
-$(document).ready(function () {
+  window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '448108371933308', // App ID
+      channelUrl : '//localhost:11611/channel.html', // Channel File
+      status     : true, // check login status
+      cookie     : true, // enable cookies to allow the server to access the session
+      xfbml      : true  // parse XFBML
+    });
+
+    // Additional init code here
+    setupHomescreen();
+  };
+
+  // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+
+var setupHomescreen = function () {
 	window.addEventListener('load', function() {
     	new FastClick(document.body);
 	}, false);
+  $("#facebookLoginButton").click(function() {
+    FB.getLoginStatus(function(response) {
+      if (response.status === 'connected') {
+        afterLogin();
+      } else {
+        login(afterLogin);
+      }
+    });
+  });
+  window.scrollTo(0,1);
   attachButtonEvents();
-  afterLogin(); 
-  $(".buttons").show();
-  $("#waitingBtn").show();
-  openHomeScreen();
-  console.log("fack.");
-});
+}

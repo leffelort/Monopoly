@@ -35,61 +35,28 @@ var currentGames = {};
 // on the main screen.
 app.post("/hostGame", function (req, resp) {
   var gameName = req.body.gameName;
-  var password = req.body.password;
   var numPlayers = Number(req.body.numPlayers);
   var gameID = shortID.generate();
   var phoneCode = phoneCodeGen.generate();
   currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName,
-    password, numPlayers);
+    numPlayers);
 
-    getPropertiesFromDatabase(function (arr) {
-      for (var i = 0; i < 40; i++) {
-        var card = arr[i];
-        if (card) {
-          var prop = monopoly.newProperty(card);
-          console.log("at index " + i + " and card " + card.title + " with space " + card.space); 
-          currentGames[gameID].availableProperties[card.space] = prop;
-        } else {
-          // currentGames[gameID].availableProperties[i] = null;
-        }
+  getPropertiesFromDatabase(function (arr) {
+    for (var i = 0; i < 40; i++) {
+      var card = arr[i];
+      if (card) {
+        var prop = monopoly.newProperty(card);
+        console.log("at index " + i + " and card " + card.title + " with space " + card.space);
+        currentGames[gameID].availableProperties[card.space] = prop;
+      } else {
+        // currentGames[gameID].availableProperties[i] = null;
       }
-    });
+    }
+  });
 
   resp.send({
     success: true,
     id: gameID
-  });
-});
-
-// return the list of games to populate the list
-// are we still using this?
-app.get("/gameList", function (req, resp) {
-  var gameList = [];
-  for (var gameID in currentGames) {
-    var game = currentGames[gameID];
-    if (game.isStarted) {
-      var gameStatus = "In Progress";
-    }
-    else {
-      var gameStatus = game.numPlayers + "/" + game.maxPlayers + " players";
-    }
-    if (game.password === "") {
-      var gamePassword = "No";
-    }
-    else {
-      var gamePassword = "Yes";
-    }
-
-    gameList.push({
-      name: game.name,
-      password: gamePassword,
-      status: gameStatus
-    });
-  }
-
-  resp.send({
-    success: true,
-    gameList: gameList
   });
 });
 
@@ -138,7 +105,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
   client = db;
 
   dbIsOpen = true;
-  client.collection("users", function (e, u) { 
+  client.collection("users", function (e, u) {
     if (e) throw e;
     //u.drop();
    });
@@ -150,7 +117,7 @@ mongo.Db.connect(mongoUri, function(err, db) {
     if (e) throw e;
     //b.drop();
    });
-   
+
    chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
 });
 
@@ -162,7 +129,7 @@ function queryUser(sockid, callback) {
   } else {
     console.log("queryUser: sockid=", sockid, " retry=", retry);
     client.collection("users", function(error, users) {
-      if (error) throw error; 
+      if (error) throw error;
       users.find( { socketid : sockid } ).toArray(function(err, arr) {
         if (err) throw err;
         if (arr === undefined || arr.length !== 1) {
@@ -170,7 +137,7 @@ function queryUser(sockid, callback) {
           queryUser(sockid, callback);
         } else {
           retry = 5;
-          callback(arr[0]); 
+          callback(arr[0]);
           return;
         }
       });
@@ -185,7 +152,7 @@ function queryBoard(sockid, callback) {
   } else {
     console.log("queryBoard: sockid=", sockid, " retry=", boardretry);
     client.collection("boards", function(error, boards) {
-      if (error) throw error; 
+      if (error) throw error;
       boards.find( { socketid : sockid } ).toArray(function(err, arr) {
         if (err) throw err;
         if (arr === undefined || arr.length !== 1) {
@@ -223,7 +190,7 @@ function queryGameFromBoard(sockid, callback) {
     client.collection("games", function(error, games) {
       games.find({"id" : board.gameInProgress}).toArray(function(err, arr){
         if (err) throw err;
-        if (arr === undefined || arr.length !== 1) 
+        if (arr === undefined || arr.length !== 1)
           throw ("queryGameFromBoard exception");
         callback(arr[0]);
       });
@@ -289,7 +256,7 @@ function socketsInGame(gameid, cxn, callback) {
     });
   });
 }
- 
+
 function getPropertiesFromDatabase(onOpen) {
 
   client.collection('properties', onPropertyCollectionReady);
@@ -329,7 +296,7 @@ function saveObjectToDB(collection, obj, cback) {
         });
       } else if (obj.socketid !== undefined) {
         console.log("Updating socket id for obj: " + obj.socketid);
-        collec.update({id: obj.id}, { $set : {socketid : obj.socketid }}, 
+        collec.update({id: obj.id}, { $set : {socketid : obj.socketid }},
           function(err) {
           if (err)
             throw err;
@@ -349,6 +316,18 @@ function updateCurrentGame(playerid, gameid, callback) {
   client.collection("users", function(error, users) {
     if (error) throw error;
     users.update({fbid: playerid}, {$set : {gameInProgress: gameid} } , function(error) {
+      if (error) throw error;
+      if (callback) callback();
+      console.log("successfully updated gameinprogress");
+    });
+  });
+}
+
+function updateCurrentGameBoard(boardid, gameid, callback) {
+  console.log("updating board + " + boardid + " with game id " + gameid);
+  client.collection("boards", function(error, boards) {
+    if (error) throw error;
+    boards.update({id: boardid}, {$set : {gameInProgress: gameid} } , function(error) {
       if (error) throw error;
       if (callback) callback();
       console.log("successfully updated gameinprogress");
@@ -409,10 +388,11 @@ server.listen(process.env.PORT || 11611);
 
 var connections = {};
 var socketToPlayerId = {};
+var socketToBoardId = {};
 
 io.sockets.on('connection', function (socket) {
   connections[socket.id] = socket;
-  
+
   // reopen and login do the exact same thing in that they
   // update the server on player's logged in and which socket
   // that player corresponds to.
@@ -423,7 +403,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('login', function (data) {
     userMaintain(socket, data, function() { socket.emit('login', {success: true}); });
-  //  console.log("DOC BROWN.");  
+  //  console.log("DOC BROWN.");
   });
 
   socket.on('hostgame', function (data) {
@@ -437,7 +417,7 @@ io.sockets.on('connection', function (socket) {
       game.host.gameInProgress = game.id;
       game.players[data.fbid] = game.host;
       updateCurrentGame(data.fbid, game.id, function() {
-        socket.emit('hostgame', { 
+        socket.emit('hostgame', {
           success: true,
           gameID: game.id
         });
@@ -501,7 +481,6 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
-  
   socket.on('boardjoin', function (data) {
     connections[socket.id] = socket;
     var gameFound = false;
@@ -515,6 +494,7 @@ io.sockets.on('connection', function (socket) {
         board.socketid = socket.id;
         board.gameInProgress = game.id;
         game.boards[boardID] = board;
+        socketToBoardId[socket.id] = boardID;
         saveGame(game, function(){
           saveObjectToDB("boards", board, function() {
             socket.emit('boardjoin', {
@@ -526,8 +506,8 @@ io.sockets.on('connection', function (socket) {
               gameID: game.id,
               number: game.numBoards
             });
-            if ((game.playersWaiting === game.numPlayers) && 
-                (game.numPlayers > 1) && (!game.isStarted) && 
+            if ((game.playersWaiting === game.numPlayers) &&
+                (game.numPlayers > 1) && (!game.isStarted) &&
                 (game.numBoards > 0)) {
               startGame(game.id);
             }
@@ -540,11 +520,23 @@ io.sockets.on('connection', function (socket) {
         success: false,
         message: "Game does not exist."
       });
-    } 
+    }
   });
-  
-  
-  
+
+  socket.on('boardleave', function (data) {
+    var game = currentGames[data.gameID];
+    if (game !== undefined) {
+      delete game.boards[data.boardID];
+      game.numBoards--;
+      saveGame(game, function() {
+        updateCurrentGameBoard(data.boardID, undefined, function () {
+          sendToPlayers(data.gameID, 'boardleft', { gameID: game.id });
+          sendToBoards(data.gameID, 'boardleft', { gameID: game.id });
+        })
+      });
+    }
+  });
+
   socket.on('leavegame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
@@ -557,14 +549,12 @@ io.sockets.on('connection', function (socket) {
       else {
         delete game.players[data.fbid];
         game.numPlayers--;
-        saveGame(game, function(){
-          sendToPlayers(data.gameID, 'playerleft',  {
-            gameID: game.id
+        saveGame(game, function() {
+          updateCurrentGame(data.fbid, undefined, function() {
+            sendToPlayers(data.gameID, 'playerleft',  { gameID: game.id });
+            sendToBoards(data.gameID, 'playerleft', { gameID: game.id });
           });
-          sendToBoards(data.gameID, 'playerleft', {
-            gameID: game.id
-          });
-        })
+        });
       }
     }
   });
@@ -576,8 +566,6 @@ io.sockets.on('connection', function (socket) {
       var game = currentGames[gameID];
       if (game.code === data.code) {
         game.playersWaiting++;
-        //console.log("Playerswaiting: " + game.playersWaiting);
-        //console.log("numPlayres: " + game.numPlayers);
         if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
           //set playersWaiting = 0 not necessary because of start
           startGame(gameID);
@@ -586,7 +574,7 @@ io.sockets.on('connection', function (socket) {
       }
     }
   });
-  
+
   socket.on('gameChat', function(data) {
     queryGame(socket.id, function (game) {
       sendToBoards(game.id, 'chatmessage', {
@@ -606,7 +594,7 @@ io.sockets.on('connection', function (socket) {
       });
     }
   });
-  
+
   socket.on('getme', function () {
     queryPlayer(socket.id, function(res){
       socket.emit('getme', res);
@@ -626,39 +614,40 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
-  
+
   socket.on('boardReconnect', function (data) {
     var boar = monopoly.newBoard(data.id);
     boar.socketid = socket.id;
+    socketToBoardId[socket.id] = data.id;
     saveObjectToDB('boards', boar, function() {
       queryBoard(socket.id, function (board) {
         boar.gameInProgress = board.gameInProgress;
         socket.emit('boardReconnect', {
           success: true,
           gameID: board.gameInProgress
-        });   
+        });
       });
     });
   });
-  
+
   socket.on('houseBuy', function(data) {
     console.log('trying to buy a house, yo');
     handleConstruction(data.space, socket.id, data.fbid);
     //todo emit?
   });
-  
+
   socket.on('houseSell', function(data) {
     console.log('trying to sell a house, yo');
     handleDemolition(data.space, socket.id, data.fbid);
   });
-  
+
   socket.on('diceroll', function(data) {
     console.log('diceroll??');
     handleRoll(data.result, data.doubles, socket.id, data.fbid);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
-  
+
   socket.on('propertyBuy', function (data) {
     if (data.result) {
       handleSale(data.space, socket.id, data.fbid);
@@ -690,7 +679,7 @@ io.sockets.on('connection', function (socket) {
       }
     });
   });
-  
+
   socket.on('propertyUnmortgage', function(data) {
     queryGame(socket.id, function (game) {
       var owner = game.propertyOwners[data.space];
@@ -700,7 +689,7 @@ io.sockets.on('connection', function (socket) {
       } else {
         var prop = game.players[data.fbid].properties[data.space];
         if (prop.mortgaged === false ||  // isn't mortgaged
-            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) { 
+            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) {
               // not enough money
           console.log("It's either ummortgaged or we don't have enough money");
           propertyUnmortgage(game, prop, socket.id, data.fbid, false);
@@ -722,14 +711,14 @@ io.sockets.on('connection', function (socket) {
       });
     })
   });
-  
+
   socket.on('inspectProperty', function (data) {
     // route request to the boards
     queryGame(socket.id, function (game) {
       sendToBoards(game.id, 'inspectProperty', data);
     });
   });
-  
+
   socket.on('getOutOfJail', function (data) {
     queryGame(socket.id, function (game) {
       if (data.paid) {
@@ -749,58 +738,76 @@ io.sockets.on('connection', function (socket) {
       saveGame(game);
     });
   });
-  
+
   socket.on('serveJailTime', function (data) {
     queryGame(socket.id, function (game) {
       game.players[data.fbid].jailTime++;
       saveGame(game);
     });
   });
-  
-  /*
-  socket.on('disconnect', function() {
-    delete connections[socket.id];
-  });
-  */
-  
+
   socket.on('disconnect', function () {
-    // If the player was in a game, remove them from it
-    console.log("trying to disconnect user");
+    console.log("trying to disconnect socket");
     var fbid = socketToPlayerId[socket.id];
-    if (fbid !== undefined) {
+    var boardid = socketToBoardId[socket.id];
+
+    if (fbid !== undefined || boardid !== undefined) {
       for (var gameID in currentGames) {
         var game = currentGames[gameID];
-        for (var pid in game.players) {
-          if (fbid === pid) {
-            // Remove them from the game if in the lobby
-            if (!game.isStarted && !(game.numPlayers === game.playersWaiting)) {
-              console.log("HERRO");
-              if (game.players[fbid] === game.host) {
-                console.log("going to delete because host left");
-                // If the host disconnected, delete the entire game
-                sendToOthers(gameID, 'hostleft', {}, socket.id);
-                sendToBoards(gameID, 'hostleft', {});
-                deleteGame(game);
-              } else {
-                // Otherwise, the user leaves
-                delete game.players[fbid];
-                game.numPlayers--;
-                sendToPlayers(gameID, 'playerleft', {gameID: game.id});
-                sendToBoards(gameID, 'playerleft', {gameID: game.id});
-                saveGame(game);
+        if (fbid !== undefined) {
+          for (var pid in game.players) {
+            if (fbid === pid) {
+              // Remove them from the game if in the lobby
+              if (!game.isStarted &&
+                  !(game.numPlayers === game.playersWaiting)) {
+                console.log("HERRO");
+                if (game.players[fbid] === game.host) {
+                  console.log("going to delete because host left");
+                  // If the host disconnected, delete the entire game
+                  sendToOthers(gameID, 'hostleft', {}, socket.id);
+                  sendToBoards(gameID, 'hostleft', {});
+                  deleteGame(game);
+                } else {
+                  // Otherwise, the user leaves
+                  delete game.players[fbid];
+                  game.numPlayers--;
+                  saveGame(game, function() {
+                    updateCurrentGame(fbid, undefined, function() {
+                      sendToPlayers(gameID, 'playerleft',  { gameID: gameID });
+                      sendToBoards(gameID, 'playerleft', { gameID: gameID });
+                    });
+                  });
+                }
               }
-            } 
+            }
+          }
+        } else if (boardid !== undefined) {
+          for (var bid in game.boards) {
+            if (boardid === bid) {
+              // Remove the board from the lobby
+              delete game.boards[boardid];
+              game.numBoards--;
+              saveGame(game, function() {
+                updateCurrentGameBoard(boardid, undefined, function () {
+                  sendToPlayers(gameID, 'boardleft', { gameID: gameID });
+                  sendToBoards(gameID, 'boardleft', { gameID: gameID });
+                })
+              });
+            }
           }
         }
       }
     }
     delete socketToPlayerId[socket.id];
+    delete socketToBoardId[socket.id];
     delete connections[socket.id];
   });
 });
 
 
-// MORE FUNCTIONS
+//------------------------
+// GAME FUNCTIONALITY
+//------------------------
 function endTurn(game) {
   var previd;
   for (var index in game.players) {
@@ -808,18 +815,18 @@ function endTurn(game) {
       previd = game.players[index].fbid;
     }
   }
-  
+
   if (!game.doubles) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
   }
-  
+
   var fbid;
   for (var index in game.players) {
     if (game.players[index].playerNumber === game.currentTurn) {
       fbid = game.players[index].fbid;
     }
   }
-  
+
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
   saveGame(game, function(){
     sendToBoards(game.id, 'nextTurn', {
@@ -862,7 +869,7 @@ function handleSale(space, socketid, fbid) {
     prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
     game.players[fbid].properties[space] = prop;
     game.propertyOwners[space] = fbid;
-    
+
     checkMonopoly(game, fbid, space);
     sendToBoards(game.id, 'propertySold', {
       property : space,
@@ -892,11 +899,11 @@ function handleRoll(delta, dbls, socketid, fbid) {
     var initial = game.players[fbid].space;
     game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
     sendToBoards(game.id, 'movePlayer', {
-      fbid: fbid, 
+      fbid: fbid,
       player: game.players[fbid].playerNumber,
-      initial: initial,  
-      delta : delta, 
-      end: game.players[fbid].space 
+      initial: initial,
+      delta : delta,
+      end: game.players[fbid].space
     });
     // saveGame(game);
     if (game.players[fbid].space < delta) passGo(game, socketid,fbid);
@@ -906,18 +913,18 @@ function handleRoll(delta, dbls, socketid, fbid) {
 
 function ensureBuildingParity(game, space, fbid, buildFlag) { //buildFlag is true when adding a house, false when selling a house
   var delta = 1;
-  if (!buildFlag) delta = -1;  
-  var prop = game.players[fbid].properties[space]; 
+  if (!buildFlag) delta = -1;
+  var prop = game.players[fbid].properties[space];
   if ((prop === null) || (prop === undefined)) return false; //wat.
-  
+
   var target = (game.players[fbid].properties[space].numHouses + delta)
   if (prop.hotel) {
     target = target+5;
-  } 
-  
+  }
+
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
-  var group = _.reduce(colors, function(l, r) { 
-    if (_.contains (l, space)) return l; 
+  var group = _.reduce(colors, function(l, r) {
+    if (_.contains (l, space)) return l;
     if (_.contains (r, space)) return r;
     return [];
   }, []);
@@ -936,27 +943,27 @@ function handleConstruction(space, socketid, fbid){
   queryGame(socketid, function(game) {
     console.log('handling construction case');
     var prop = game.players[fbid].properties[space];
-    if ((prop === undefined) || (prop === null)) { 
+    if ((prop === undefined) || (prop === null)) {
       connections[socketid].emit('houseBuy', {
-        space: space, 
-        fbid: fbid, 
-        success: false, 
+        space: space,
+        fbid: fbid,
+        success: false,
         reason: 'no ownership'
       });
       return;
     }
-    if ((prop.monopoly) && (!prop.hotel)) { //able 
+    if ((prop.monopoly) && (!prop.hotel)) { //able
       if (!ensureBuildingParity(game, space, fbid, true)) {
         connections[socketid].emit('houseBuy', {
-          space: space, 
-          fbid: fbid, 
-          success: false, 
+          space: space,
+          fbid: fbid,
+          success: false,
           reason: 'not building evenly'
         });
         return;
       }
       if (prop.numHouses === 4) { //buying a hotel
-        if (game.availableHotels > 0) {   
+        if (game.availableHotels > 0) {
           var cost = prop.card.hotelcost;
           var suc = debit(game, socketid, cost, fbid);
           if (suc) {
@@ -964,79 +971,79 @@ function handleConstruction(space, socketid, fbid){
             game.availableHouses = (game.availableHouses + 4);
             prop.numHouses = 0;
             prop.hotel = true;
-            saveGame(game, function () { 
+            saveGame(game, function () {
               connections[socketid].emit('houseBuy', {
-                space: space, 
-                fbid: fbid, 
+                space: space,
+                fbid: fbid,
                 success: true
               });
               sendToBoards(game.id, 'hotelBuy', {
                 space: space,
                 propName: prop.card.title,
                 money: game.players[fbid].money,
-                fbid: fbid, 
+                fbid: fbid,
                 success: true
               });
             });
           } else {
             connections[socketid].emit('houseBuy', {
-              space: space, 
-              fbid: fbid, 
-              success: false, 
+              space: space,
+              fbid: fbid,
+              success: false,
               reason: 'no money'
             });
           }
         } else {
           connections[socketid].emit('houseBuy', {
-            space:space, 
-            fbid: fbid, 
-            success: false, 
+            space:space,
+            fbid: fbid,
+            success: false,
             reason: 'no hotels left'
           });
         }
       } else {
         if (game.availableHouses > 0) {
           var cost = prop.card.housecost;
-          var suc = debit(game, socketid, cost, fbid);  
+          var suc = debit(game, socketid, cost, fbid);
           if (suc) {
             game.availableHouses = (game.availableHouses - 4);
             prop.numHouses = (prop.numHouses + 1);
-            saveGame(game, function () { 
+            saveGame(game, function () {
               connections[socketid].emit('houseBuy', {
-                space: space, 
-                fbid: fbid, 
+                space: space,
+                fbid: fbid,
                 success: true
               });
               sendToBoards(game.id, 'houseBuy', {
                 space: space,
                 propName: prop.card.title,
                 money: game.players[fbid].money,
-                fbid: fbid, 
+                fbid: fbid,
                 success: true
               });
             });
           } else {
             connections[socketid].emit('houseBuy', {
-              space:space, 
-              fbid: fbid, 
-              success: false, 
+              space:space,
+              fbid: fbid,
+              success: false,
               reason: 'no money'
             });
           }
-        } else { 
+        } else {
           connections[socketid].emit('houseBuy', {
-            space: space, 
-            fbid: fbid, 
-            success: false, 
+            space: space,
+            fbid: fbid,
+            success: false,
             reason: 'no houses left'
           });
-        }   
-      } 
+        }
+      }
     } else {
       connections[socketid].emit('houseBuy', {
-        space: space, 
-        fbid: fbid, 
-        success: false, 
+        space: space,
+        fbid: fbid,
+        success: false,
         reason: 'already hotel or no monopoly'
       });
     }
@@ -1047,21 +1054,21 @@ function handleDemolition(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     console.log('handling demolition case');
     var prop = game.players[fbid].properties[space];
-    if ((prop === undefined) || (prop === null)) { 
+    if ((prop === undefined) || (prop === null)) {
       connections[socketid].emit('houseSell', {
-        space: space, 
-        fbid: fbid, 
-        success: false, 
+        space: space,
+        fbid: fbid,
+        success: false,
         reason: 'no ownership'
       });
       return;
     }
-    if ((prop.monopoly) && ((prop.numHouses > 0)||(prop.hotel))) { //able     
+    if ((prop.monopoly) && ((prop.numHouses > 0)||(prop.hotel))) { //able
       if (!ensureBuildingParity(game, space, fbid, false)) {
         connections[socketid].emit('houseSell', {
-          space: space, 
-          fbid: fbid, 
-          success: false, 
+          space: space,
+          fbid: fbid,
+          success: false,
           reason: 'not demolishing evenly'
         });
         return;
@@ -1074,53 +1081,53 @@ function handleDemolition(space, socketid, fbid) {
             game.availableHouses = (game.availableHouses - 4);
             prop.numHouses = 4;
             prop.hotel = false;
-            saveGame(game, function () { 
+            saveGame(game, function () {
               connections[socketid].emit('houseSell', {
-                space: space, 
-                fbid: fbid, 
+                space: space,
+                fbid: fbid,
                 success: true
               });
               sendToBoards(game.id, 'hotelSell', {
                 space: space,
                 propName: prop.card.title,
                 money: game.players[fbid].money,
-                fbid: fbid, 
+                fbid: fbid,
                 success: true
               });
-            });            
+            });
           } else {
             connections[socketid].emit('houseSell', {
-              space: space, 
-              fbid: fbid, 
-              success: false, 
+              space: space,
+              fbid: fbid,
+              success: false,
               reason: 'not enough houses to sell a hotel'
             });
           }
       } else {
         var amt = (prop.card.housecost/2);
-        credit(game, socketid, amt, fbid);  
+        credit(game, socketid, amt, fbid);
         game.availableHouses = (game.availableHouses + 1);
         prop.numHouses = (prop.numHouses - 1);
-        saveGame(game, function () { 
+        saveGame(game, function () {
           connections[socketid].emit('houseSell', {
-            space: space, 
-            fbid: fbid, 
+            space: space,
+            fbid: fbid,
             success: true
           });
           sendToBoards(game.id, 'houseSell', {
             space: space,
             propName: prop.card.title,
             money: game.players[fbid].money,
-            fbid: fbid, 
+            fbid: fbid,
             success: true
           });
-        });    
-      }   
+        });
+      }
     } else {
       connections[socketid].emit('houseSell', {
-        space: space, 
-        fbid: fbid, 
-        success: false, 
+        space: space,
+        fbid: fbid,
+        success: false,
         reason: 'no monopoly or no building'
       });
     }
@@ -1128,18 +1135,18 @@ function handleDemolition(space, socketid, fbid) {
 }
 
 
-//tyler's not going to like this function... 
+//tyler's not going to like this function...
 function checkMonopoly(game, fbid, space) {
   var propertyOwners = game.propertyOwners;
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
-  var group = _.reduce(colors, function(l, r) { 
-    if (_.contains (l, space)) return l; 
+  var group = _.reduce(colors, function(l, r) {
+    if (_.contains (l, space)) return l;
     if (_.contains (r, space)) return r;
     return [];
   }, []);
   if (group.length === 0) {return false;} //catch the case where we're checking for monopoly of railroads or somesuch.
-  var first = propertyOwners[group[0]];       
-  var result = _.every(group, function(z) { 
+  var first = propertyOwners[group[0]];
+  var result = _.every(group, function(z) {
     return (propertyOwners[z] === first);
   });
   if (result) {
@@ -1170,7 +1177,7 @@ function isCommChest(space) {
 function isTax(space) {
   return (space === 4 || space === 38);
 }
-function isCorner(space) { 
+function isCorner(space) {
   return (space % 10 === 0);
 }
 
@@ -1207,7 +1214,7 @@ function isOwned(game, space) {
   console.log("inside is owned with space " + space);
   var avails = game.availableProperties;
   for (var idx in avails) {
-    if (avails[idx] && avails[idx].id === space) { 
+    if (avails[idx] && avails[idx].id === space) {
       return false;
     }
   }
@@ -1215,30 +1222,30 @@ function isOwned(game, space) {
 }
 
 function isOwnedByOther(game, space, fbid) {
-  return (isOwned(game, space)) && 
+  return (isOwned(game, space)) &&
     (game.propertyOwners[space] !== game.players[fbid]);
 }
 
-function collectRent(game, space, socketid, tenant, roll) { 
+function collectRent(game, space, socketid, tenant, roll) {
   var owner = game.propertyOwners[space];
   var property;
   var amt, atom;
-  
+
   // Get property at the space landed on
   for (var ind in game.players[owner].properties) {
     if (game.players[owner].properties[ind]) {
-      if (game.players[owner].properties[ind].id === space) 
+      if (game.players[owner].properties[ind].id === space)
         property = game.players[owner].properties[ind];
     }
-  } 
-  
+  }
+
   // Error checking
   if (property === undefined) throw "property undefined";
   if (owner.fbid === tenant.fbid) {
     endTurn(game);
     return;
   }
-  
+
   // Figure out amount to pay based on the space.
   if (isUtility(space)) {
     if (isUtilityMonopoly(game, owner, space)) {
@@ -1279,35 +1286,35 @@ function collectRent(game, space, socketid, tenant, roll) {
         if (property.hotel) {
           amt = property.card.hotel;
         }
-        break;   
-      case 1: 
+        break;
+      case 1:
         amt = property.card.onehouse;
-        break; 
-      case 2: 
+        break;
+      case 2:
         amt = property.card.twohouse;
         break;
-      case 3: 
+      case 3:
         amt = property.card.threehouse;
         break;
-      case 4: 
+      case 4:
         amt = property.card.fourhouse;
         break;
       default:
         throw "err...more than 4 houses? wut";
     }
   }
-  
+
   // Proceed with transaction
   // TODO: handle extraordinary conditions
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   atom = debit(game, socketid, amt, tenant);
   if (atom) credit(game, socketid, amt, owner);
   else throw exn;
-  
+
   connections[socketid].emit('payingRent', {
     owner: owner,
     tenant: tenant,
-    space: space, 
+    space: space,
     amount: amt,
     tenantMoney: game.players[tenant].money,
     ownerMoney: game.players[owner].money
@@ -1315,12 +1322,12 @@ function collectRent(game, space, socketid, tenant, roll) {
   sendToBoards(game.id, 'payingRent', {
     owner: owner,
     tenant: tenant,
-    space: space, 
+    space: space,
     amount: amt,
     tenantMoney: game.players[tenant].money,
     ownerMoney: game.players[owner].money
   });
-  
+
   endTurn(game);
 }
 
@@ -1352,7 +1359,7 @@ function propertyBuy(game, property, socketid, fbid) {
   var sock = connections[socketid];
   saveGame(game, function() {
     sock.emit('propertyBuy', {
-    'property' : property, 
+    'property' : property,
     fbid: fbid
     }); //naming convention?
   });
@@ -1376,7 +1383,7 @@ function handleTax(game, space, socketid, fbid){
   var amt;
   if (space === 38) {
     amt = 75;
-    debit(game, socketid, amt, fbid); 
+    debit(game, socketid, amt, fbid);
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
@@ -1387,7 +1394,7 @@ function handleTax(game, space, socketid, fbid){
     // always take away 200
     // TODO: don't always take away 200
     amt = 200;
-    debit(game, socketid, amt, fbid); 
+    debit(game, socketid, amt, fbid);
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
@@ -1459,24 +1466,24 @@ function handleChance(game, socketid, fbid) {
     if (id < 5) { //advance type cards
       var initial = game.players[fbid].space;
       var end = card.space;
-      game.players[fbid].space = card.space; 
+      game.players[fbid].space = card.space;
       var delta = ((end-initial) % 40)
       if (end < initial) {
         passGo(game, socketid, fbid);
       }
       sendToBoards(game.id, 'movePlayer', {
-        fbid: fbid, 
+        fbid: fbid,
         player: game.players[fbid].playerNumber,
-        initial: initial,  
-        delta : delta, 
-        end: end 
+        initial: initial,
+        delta : delta,
+        end: end
       });
     } else if (id === 5) { //send to jail card
       sendToJail(game, socketid, fbid);
     } else if (id < 9) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
-        fbid: fbid, 
+        fbid: fbid,
         amount: card.amt,
         money: game.players[fbid].money,
         reason: "Chance."
@@ -1499,19 +1506,19 @@ function handleChance(game, socketid, fbid) {
       var newspace = ((game.players[fbid].space - 3) % 40);
       game.players[fbid].space = newspace;
       sendToBoards(game.id, 'movePlayer', {
-        fbid: fbid, 
+        fbid: fbid,
         player: game.players[fbid].playerNumber,
-        initial: initial,  
-        delta : -3, 
-        end: newspace 
-      });    
+        initial: initial,
+        delta : -3,
+        end: newspace
+      });
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');
       connections[socketid].emit('jailCard', {
         fbid: fbid,
-        type: 'Chance'      
+        type: 'Chance'
       });
-    } else console.log('chance card out of bounds'); 
+    } else console.log('chance card out of bounds');
   });
 }
 
@@ -1524,7 +1531,7 @@ function handleCommChest(game, socketid, fbid) {
         fbid: fbid,
         text: card.text
     });
-    if (id === 0) { //advance type cards  
+    if (id === 0) { //advance type cards
       var initial = game.players[fbid].space;
       game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
       var end = card.space;
@@ -1534,16 +1541,16 @@ function handleCommChest(game, socketid, fbid) {
         passGo(game, socketid, fbid);
       }
       sendToBoards(game.id, 'movePlayer', {
-        fbid: fbid, 
+        fbid: fbid,
         player: game.players[fbid].playerNumber,
-        initial: initial,  
-        delta : delta, 
-        end: end 
+        initial: initial,
+        delta : delta,
+        end: end
       });
     } else if (id < 10) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
-        fbid: fbid, 
+        fbid: fbid,
         amount: card.amt,
         money: game.players[fbid].money,
         reason: "Community chest."
@@ -1563,7 +1570,7 @@ function handleCommChest(game, socketid, fbid) {
       game.players[fbid].jailCards.push('commChest');
       connections[socketid].emit('jailCard', {
         fbid: fbid,
-        type: 'Community Chest'      
+        type: 'Community Chest'
       });
     } else console.log('commChest card out of bounds');
   });
@@ -1571,7 +1578,7 @@ function handleCommChest(game, socketid, fbid) {
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
-  //need to ensure atomicity later on probably...  
+  //need to ensure atomicity later on probably...
   connections[socketid].emit('credit', {fbid : fbid, amt: amt});
 }
 
@@ -1592,7 +1599,7 @@ function userMaintain(socket, data, cback) {
   user.first_name = data.first_name;
   user.last_name = data.last_name;
   user.full_name = data.name;
-  user.fbid = data.id; 
+  user.fbid = data.id;
   user.id = data.id;
   user.gender = data.gender;
   user.socketid = socket.id;
@@ -1622,7 +1629,7 @@ function sendToPlayers(gameID, emitString, emitArgs) {
         connections[sockets[i].socketid].emit(emitString, emitArgs);
     }
   });
-} 
+}
 
 // TODO This needs to actually send stuff to the baord and like we should
 // have the right sockets for boards and stuff. - thedrick
