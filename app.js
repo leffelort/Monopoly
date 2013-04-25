@@ -90,15 +90,25 @@ app.get("/properties", function(req, resp) {
 // ======= Database =======
 // ========================
 
-var mongo = require('mongodb');
+var MongoClient = require('mongodb').MongoClient;
 
-var mongoUri = process.env.CUSTOMCONNSTR_MONGOLAB_URI ||
-  "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?auto_reconnect=true"
+var mongoUri = "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?";
 var dbIsOpen = false;
 var client = undefined;
 var chanceCommChestDeck = undefined;
 
-mongo.Db.connect(mongoUri, function(err, db) {
+MongoClient.connect(mongoUri, {
+    db: {},
+    server: {
+      auto_reconnect: true,
+      socketOptions: {
+        keepAlive: 60,
+        socketTimeoutMS: 200000
+      }
+    },
+    replSet: {},
+    mongos: {}
+  }, function (err, db) {
   if (err)
     throw err;
   console.log("successfully connected to the database.")
@@ -121,6 +131,34 @@ mongo.Db.connect(mongoUri, function(err, db) {
    chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
 });
 
+/*
+mongo.Db.connect(mongoUri, function(err, db) {
+  if (err)
+    throw err;
+  console.log("successfully connected to the database.")
+  client = db;
+
+  dbIsOpen = true;
+  client.collection("users", function (e, u) {
+    if (e) throw e;
+    //u.drop();
+   });
+   client.collection("games", function (e,g) {
+    if (e) throw e;
+    //g.drop();
+   });
+   client.collection("boards", function (e,b) {
+    if (e) throw e;
+    //b.drop();
+   });
+
+   chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
+
+   client.on('close', function (error) {
+      console.log("DB closed D:");
+   });
+});
+*/
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
@@ -228,7 +266,6 @@ function queryPlayer(sockid, callback) {
           var game = arr[i];
           for (var pid in game.players) {
             var player = game.players[pid];
-            console.log("looking for player with pid " + user.fbid + " currently looking at ", player);
             if (player.fbid === user.fbid) {
               p = player;
               p.fbid = user.id;
@@ -1241,7 +1278,8 @@ function collectRent(game, space, socketid, tenant, roll) {
 
   // Error checking
   if (property === undefined) throw "property undefined";
-  if (owner.fbid === tenant.fbid) {
+  if (owner === tenant) {
+    console.log("You don't pay rent for landing on your own property, stupid.");
     endTurn(game);
     return;
   }
