@@ -7,7 +7,7 @@ $(document).ready(function() {
         $(".facebookLogin").hide();
         $(".buttons").show();
       } else {
-        login();
+        // FB SDK handles login and all the stuffz.
       }
     });
   });

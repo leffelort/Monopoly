@@ -328,7 +328,9 @@ function displayProperties(properties) {
     
     propDiv.append(cell);
   }
-  $("#propList").css("height", document.documentElement.clientHeight + 60);
+  if (document.documentElement.clientHeight > 268) {
+    $("#propList").css("height", document.documentElement.clientHeight);
+  }
 }
 
 function disablePropertyOptions() {
@@ -345,7 +347,7 @@ window.addEventListener('load', function() {
 
 var setupPage = function() {
   $("#propDetails").css({
-    "height" : document.documentElement.clientHeight + 60,
+    "max-height" : document.documentElement.clientHeight,
     "width" : document.documentElement.clientWidth - $("#propList").width()
   });
   $("#backbtn").click(function(){

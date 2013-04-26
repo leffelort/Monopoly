@@ -111,28 +111,30 @@ function loadFBData() {
   //        new get out of jail free cards.
   // 
   if (me.jailCards !== undefined && me.jailCards.length !== 0) {
-    var getoutcards = $("<div>").attr("id", "getoutcards");
-    var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
-    if ($.inArray("chance", me.jailCards)) {
-      var getoutchance = $("<div>").attr({
-        "class" : "getout",
-        "id" : "getoutchance"
-      });
-      getoutchance.html(getouttext);
-      getoutcards.append(getoutchance);
-    }
-    
-    if ($.inArray("commChest", me.jailCards)) {
-      var getoutcommunity = $("<div>").attr({
-        "class" : "getout",
-        "id" : "getoutcommunity"
-      });
-      getoutcommunity.html(getouttext);
-      getoutcards.append(getoutcommunity);
+    for (var i = 0; i < me.jailCards.length; i++) {
+      var jailcard = me.jailCards[i];
+      var getoutcards = $("<li>").attr("id", "getoutcards");
+      var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
+      if (jailcard === "chance") {
+        var getoutchance = $("<div>").attr({
+          "class" : "getout",
+          "id" : "getoutchance"
+        });
+        getoutchance.html(getouttext);
+        getoutcards.append(getoutchance);
+      } else {
+        var getoutcommunity = $("<div>").attr({
+          "class" : "getout",
+          "id" : "getoutcommunity"
+        });
+        getoutcommunity.html(getouttext);
+        getoutcards.append(getoutcommunity);
+      }
     }
     info.append(getoutcards);
-    socketSetup();
+    console.log(info);
   }
+  socketSetup();
   
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
@@ -285,6 +287,11 @@ function displayPrompt(msg, callback) {
   var height = $(window).height() * 0.8;
   var confirmWrapper = $("<div>").addClass("confirmWrapper");
   var blackness = $("<div>").addClass("blackness");
+  if (document.documentElement.clientHeight > 268) {
+    blackness.css("height", document.documentElement.height);
+  } else if ($(document).height() > 268) {
+    blackness.css("height", $(document).height());
+  }
   confirmWrapper.append(blackness);
   var confirmbox = $("<div>").addClass("confirmbox")
                              .html($("<div>")

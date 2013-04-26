@@ -228,7 +228,9 @@ function displayProperties(properties) {
     
     propDiv.append(cell);
   }
-  $("#propList").css("height", document.documentElement.clientHeight + 60);
+  if (document.documentElement.clientHeight > 268) {
+    $("#propList").css("height", document.documentElement.clientHeight);
+  }
   loadDetailedView(properties[0].card);
 }
 
@@ -237,7 +239,7 @@ var setupPage = function() {
       new FastClick(document.body);
   }, false);
   $("#propDetails").css({
-    "height" : document.documentElement.clientHeight + 60,
+    "max-height" : document.documentElement.clientHeight,
     "width" : document.documentElement.clientWidth - $("#propList").width()
   });
   $("#backbtn").click(function(){

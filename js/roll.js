@@ -17,19 +17,23 @@ function socketSetup() {
     var property = prop.property;
     var promptText = "Would you like to purchase " + property.card.title;
     promptText += " for $" + property.card.price;
-    displayPrompt(promptText, function(res) {
-      socket.emit('propertyBuy', {
-        result: res,
-        fbid: fbobj.id,
-        space: property.card.space
+    setTimeout(function() {
+      displayPrompt(promptText, function(res) {
+        socket.emit('propertyBuy', {
+          result: res,
+          fbid: fbobj.id,
+          space: property.card.space
+        });
       });
-    });
+    }, 1000);
   });
 
   socket.on('nextTurn', function(player) {
     if (player.fbid === fbobj.id) {
       allowRolls();
-      console.log("I GOTSA DA DOUBLESSSSS. ROLZ AGAIN LOLZ");
+      setTimeout(function() {
+        $("#rollvalue").html("Doubles! Roll again!");
+      }, 1000);
     } else {
       setTimeout(function(){
         window.location.replace("mobileHome.html");
@@ -89,7 +93,6 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
 
 $(document).ready(function(){
   // resize to fit phone screen
-  $('body').height($(window).height() + 60);
 });
 
 function forceRoll(val) {
@@ -110,6 +113,11 @@ function displayPrompt(msg, callback) {
   var height = $(window).height() * 0.8;
   var confirmWrapper = $("<div>").addClass("confirmWrapper");
   var blackness = $("<div>").addClass("blackness");
+  if (document.documentElement.clientHeight > 268) {
+    blackness.css("height", document.documentElement.height);
+  } else if ($(document).height() > 268) {
+    blackness.css("height", $(document).height());
+  }
   confirmWrapper.append(blackness);
   var confirmbox = $("<div>").addClass("confirmbox")
                              .html($("<div>")
