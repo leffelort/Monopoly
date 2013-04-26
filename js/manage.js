@@ -138,6 +138,8 @@ function setupMortgageBtn() {
 }
 
 function setupHouseButtons() {
+  $("#houseminusbtn").unbind();
+  $("#houseplusbtn").unbind();
   if (current_prop.monopoly === true) {
     $("#houseminusbtn").removeClass("unavailable");
     $("#houseplusbtn").removeClass("unavailable");
@@ -154,10 +156,8 @@ function setupHouseButtons() {
       });
     }); 
   } else {
-    $("#houseminusbtn").addClass("unavailable")
-                      .unbind();
-    $("#houseplusbtn").addClass("unavailable")
-                     .unbind();
+    $("#houseminusbtn").addClass("unavailable");
+    $("#houseplusbtn").addClass("unavailable");
   }
 }
 
