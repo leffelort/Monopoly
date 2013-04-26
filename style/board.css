@@ -86,16 +86,6 @@ h2 {
   position: relative;
 }
 
-.playercolor {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: 20px;
-  height: 20px;
-  border-radius: 15px;
-  border: 1px solid black;
-}
-
 .log {
   box-sizing: border-box;
   height: 50%;
@@ -493,22 +483,30 @@ h2 {
   background-size: 75px 75px;
   -webkit-transition: all 300ms ease-in-out;
   opacity: 0;
+  box-sizing: border-box;
+  border: 5px solid black;
+  border-radius: 45px;
+  box-shadow: 0px 0px 20px black;
 }
 
 .playerpiece1 {
-  background-image: url("../images/car.png");
+  /* background-image: url("../images/car2.png"); */
+  background-color: #EF3A24;
 }
 
 .playerpiece2 {
-  background-image: url("../images/dog.png");
+  /* background-image: url("../images/dog2.png"); */
+  background-color: #FDE703;
 }
 
 .playerpiece3 {
-  background-image: url("../images/battleship.png");
+  /* background-image: url("../images/battleship2.png"); */
+  background-color: #274EA1;
 }
 
 .playerpiece4 {
-  background-image: url("../images/hat.png");
+  /* background-image: url("../images/hat2.png"); */
+  background-color: #590C38;
 }
 
 .pieces1 {
@@ -580,7 +578,8 @@ h2 {
   width: 360px;
   height: 240px;
   -webkit-transform: rotate(-45deg);
-  background-color: orange;
+  background-color: #F57F23;
+  border: 3px solid black;
 }
 
 #communitychestdeck {
@@ -590,7 +589,8 @@ h2 {
   width: 360px;
   height: 240px;
   -webkit-transform: rotate(-45deg);
-  background-color: yellow;
+  background-color: #FDE703;
+  border: 3px solid black;
 }
 
 .propertyown1 {
@@ -626,19 +626,23 @@ h2 {
 }
 
 .player1 {
-  background-color: red;
+  background-color: #EF3A24;
+  border: 3px solid black;
 }
 
 .player2 {
-  background-color: orange;
+  background-color: #FDE703;
+  border: 3px solid black;
 }
 
 .player3 {
-  background-color: blue;
+  background-color: #274EA1;
+  border: 3px solid black;
 }
 
 .player4 {
-  background-color: purple;
+  background-color: #590C38;
+  border: 3px solid black;
 }
 
 .houses {
@@ -744,7 +748,7 @@ h2 {
   background-color: rgba(0,0,0,0.75);
   border-radius: 10px;
   opacity: 0;
-  
+
   -webkit-transition: all 500ms ease-in-out;
 }
 
@@ -752,8 +756,36 @@ h2 {
   opacity: 1;
 }
 
-.currentTurn {
-  -webkit-transform: scale(2);
+.currentTurn1 {
+  -webkit-transform: scale(1.5);
+  position: relative;
+  left: 40px;
+  top: 40px;
+  z-index: 42;
+}
+
+.currentTurn2 {
+  -webkit-transform: scale(1.5);
+  position: relative;
+  left: -40px;
+  top: 40px;
+  z-index: 42;
+}
+
+.currentTurn3 {
+  -webkit-transform: scale(1.5);
+  position: relative;
+  left: 40px;
+  top: -40px;
+  z-index: 42;
+}
+
+.currentTurn4 {
+  -webkit-transform: scale(1.5);
+  position: relative;
+  left: -40px;
+  top: -40px;
+  z-index: 42;
 }
 
 .playerinspect {
@@ -789,4 +821,14 @@ h2 {
   height: 100%;
   z-index: 42;
   opacity: 0.5;
+}
+
+.playercolor {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 15px;
+  border: 2px solid black;
 }
