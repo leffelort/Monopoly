@@ -1546,7 +1546,7 @@ function handleChance(game, socketid, fbid) {
         if (half < 5) {
           end =  ((quad * 10) + 5);
         } else {
-          end = (((quad * 10) + 15) % 40));
+          end = (((quad * 10) + 15) % 40);
         }
       } else {
         end = card.space;
