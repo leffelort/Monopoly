@@ -46,7 +46,6 @@ app.post("/hostGame", function (req, resp) {
       var card = arr[i];
       if (card) {
         var prop = monopoly.newProperty(card);
-        console.log("at index " + i + " and card " + card.title + " with space " + card.space);
         currentGames[gameID].availableProperties[card.space] = prop;
       } else {
         // currentGames[gameID].availableProperties[i] = null;
@@ -318,7 +317,7 @@ function getPropertiesFromDatabase(onOpen) {
 // if one is provided, adds to the database if objs is not already
 // there, and does nothing otherwise
 function saveObjectToDB(collection, obj, cback) {
-  console.log("saving object ", obj);
+  console.log("saving object");
   client.collection(collection, function(error, collec) {
     if (error)
       throw error;
@@ -421,6 +420,9 @@ var http = require('http');
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 
+// reduce unnecessary logging
+//io.set('log level', 1);
+
 server.listen(process.env.PORT || 11611);
 
 var connections = {};
@@ -448,7 +450,6 @@ io.sockets.on('connection', function (socket) {
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
       game.host = monopoly.newPlayer(data.username, data.fbid);
-      console.log(game.host);
       game.numPlayers++;
       game.host.playerNumber = (game.numPlayers - 1); //ie 0 indexed.
       game.host.gameInProgress = game.id;
@@ -679,7 +680,6 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('diceroll', function(data) {
-    console.log('diceroll??');
     handleRoll(data.result, data.doubles, socket.id, data.fbid);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
@@ -797,7 +797,6 @@ io.sockets.on('connection', function (socket) {
               // Remove them from the game if in the lobby
               if (!game.isStarted &&
                   !(game.numPlayers === game.playersWaiting)) {
-                console.log("HERRO");
                 if (game.players[fbid] === game.host) {
                   console.log("going to delete because host left");
                   // If the host disconnected, delete the entire game
@@ -1496,7 +1495,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
 function handleChance(game, socketid, fbid) {
   chanceCommChestDeck.drawChance(game, function(card) {
     var id = card.id;
-    console.log(card.text);
     sendToBoards(game.id, 'chance', {
         fbid: fbid,
         text: card.text
@@ -1561,7 +1559,6 @@ function handleChance(game, socketid, fbid) {
 function handleCommChest(game, socketid, fbid) {
   chanceCommChestDeck.drawCommChest(game, function(card) {
     var id = card.id;
-    console.log(card.text);
 
     sendToBoards(game.id, 'commChest', {
         fbid: fbid,

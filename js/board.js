@@ -61,8 +61,14 @@ function refreshBoardState(game) {
         .addClass("visible");
     }
     if (player.playerNumber === game.currentTurn) {
-      $("#space" + player.space + " .playerpiece" + playerNum)
-        .addClass("currentTurn" + players[fbid]);
+      if (player.space === 10 && !player.jailed) {
+        // special case just-visiting
+        $("#space" + player.space + " .playerpiece" + playerNum)
+          .addClass("currentTurn");
+      } else {
+        $("#space" + player.space + " .playerpiece" + playerNum)
+          .addClass("currentTurn" + players[fbid]);
+      }
     }
 
     player.properties.forEach(function (property) {
@@ -141,13 +147,16 @@ function movePlayer(fbid, initial, end) {
   console.log("movePlayer: ", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
     .removeClass("visible").removeClass("currentTurn" + players[fbid]);
-  $("#space" + end + " .playerpiece" + players[fbid])
-    .addClass("visible").addClass("currentTurn" + players[fbid]);
   if (end === 10) {
+    $("#space" + end + " .playerpiece" + players[fbid])
+      .addClass("visible").addClass("currentTurn");
     // Special case just visiting the jail
     // see jailPlayer() for the special case of going to jail
     $("#jail .playerpiece" + players[fbid])
       .removeClass("visible").removeClass("currentTurn" + players[fbid]);
+  } else {
+    $("#space" + end + " .playerpiece" + players[fbid])
+      .addClass("visible").addClass("currentTurn" + players[fbid]);
   }
 }
 
