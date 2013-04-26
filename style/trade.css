@@ -1,3 +1,8 @@
+@font-face {
+  font-family: 'Entypo';
+  src: url('../fonts/entypo.eot?') format('eot'), url('../fonts/entypo.woff') format('woff'), url('../fonts/entypo.ttf') format('truetype');
+}
+
 body {
   background: rgb(0,130,39); /* Old browsers */
   background: -moz-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%, rgba(0,76,16,1) 100%); /* FF3.6+ */
@@ -84,17 +89,91 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dddddd', end
   box-shadow: 0 1px 3px 0 #333;
 }
 
+.errormsg {
+  color: white;
+  width: 100%;
+  text-align: center;
+  font: 16px 'Lato', Helvetica, Arial, sans-serif;
+}
+
 #tradeleft {
-  width: 50%;
+  width: 48%;
   height: 100%;
   position: absolute;
   top: 0;
   left: 0;
+  text-align: left;
 }
 
 #traderight {
-  width: 50%;
+  width: 48%;
+  height: 100%;
   position: absolute;
   top: 0;
   right: 0;
+  text-align: right;
+}
+
+.playerName, .playerMoney {
+  color: white;
+  font: 18px 'Lato', Helvetica, Arial, sans-serif;
+  display: inline-block;
+}
+
+.playerName {
+  margin: 10px 5px 10px 10px;
+}
+
+.playerMoney {
+  margin-right: 10px;
+}
+
+.playerProperties {
+  -webkit-overflow-scrolling: touch;
+  -moz-overflow-scrolling: touch;
+  -o-overflow-scrolling: touch;
+  -ms-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  border-right: 1px solid black;
+  border-top: 1px solid black;
+  overflow: auto;
+  height: 55%;
+  text-align: left;
+}
+
+.decisionButtons {
+  text-align: center;
+  width: 95%;
+  margin-top: 10px;
+}
+
+.btn {
+  width: 40px;
+  height: 40px;
+  color: white;
+  font: 60px 'Entypo';
+  display: inline-block;
+  margin: 0 10px;
+  position: relative;
+  border: 1px solid #333;
+  border-radius: 2px;
+
+}
+
+.btn p {
+  position: relative;
+  top: -10px;
+}
+
+.cancelbtn p {
+  top: -22px;
+}
+
+.acceptbtn {
+  background-color: #007A30;
+}
+
+.cancelbtn {
+  background-color: #EF3A24;
+  font-size: 84px;
 }

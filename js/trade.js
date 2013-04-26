@@ -2,6 +2,9 @@ var fbobj;
 var socket;
 var players = {};
 var game;
+var trader;
+var leftplayer;
+var rightplayer;
 
 // Taken from MDN. Used for browers without bind support.
 if (!Function.prototype.bind) {
@@ -28,25 +31,40 @@ if (!Function.prototype.bind) {
   };
 }
 
+function cancelClicked() {
+  window.location.replace("mobileHome.html");
+}
+
 
 function displayPlayers() {
   playerSelect = $("#playerSelect");
   playerSelect.html(" ");
   for (fbid in players) {
+    if (fbobj.id === fbid) continue;
+
     player = players[fbid];
     var playerCell = $("<div>").addClass("playerCell");
     var img = $("<img>").attr({
-      "src" : "https://graph.facebook.com/" + fbid + "picture?width=54&height=54"
+      "src" : "https://graph.facebook.com/" + fbid + "/picture?width=54&height=54"
     });
     var name = $("<h1>").html(player.username);
     var check = $("<div>").addClass("checkmark");
+    var innerfbid = $("<div>").addClass("traderfbid")
+                              .html(fbid)
+                              .css("display", "none");
     playerCell.append(img, name, check);
 
-    var select = (function() {
-      $(".selected").removeClass("selected");
-      $(this).addClass("selected");
-    }).bind(this);
-    playerCell.click(select);
+    (function() {
+      var curCell = playerCell;
+      var fid = fbid;
+      var p = player;
+      curCell.click(function(){
+        $(".selected").removeClass("selected");
+        curCell.addClass("selected");
+        traderfbid = fid;
+        rightplayer = p;
+      });
+    })();
 
     playerSelect.append(playerCell);
   }
@@ -58,11 +76,13 @@ function socketSetup() {
   
   socket.on('reopen', function() {
     window.scrollTo(0,1);
-    socket.on('getGame', function (game) {
-      game = game;
-      players = game.players;
-      displayPlayers();
-    });
+    socket.emit('getGame', {});
+  });
+  socket.on('getGame', function (game) {
+    game = game.game;
+    players = game.players;
+    leftplayer = game.players[fbobj.id];
+    displayPlayers();
   });
 }
 
@@ -100,7 +120,49 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   };
 }
 
-var setupPage = function() {
+function displayProperties(properties, propDiv) {
+  for (var i = 0; i < properties.length; i++) {
+    var prop = properties[i];
+    if (!prop) continue;
+
+    var card = prop.card;
+    var cell = $("<div>").addClass("propertyCell");
+    cell.append($("<div>").addClass("stripe")
+                .addClass(card.color));
+    cell.append($("<div>").addClass("proptext")
+                .addClass("propname")
+                .html(card.title));
+    var bottom = $("<div>").addClass("cellBottom");
+    if (prop.owner === "Unowned") {
+      bottom.append($("<span>").addClass("proptext")
+                  .addClass("price")
+                  .html("$" + card.price));
+    } else {
+      if (prop.card.color !== "utility") {
+        bottom.append($("<span>").addClass("proptext")
+                      .addClass("rent")
+                      .html("$" + card.rent));
+      }
+    }
+    cell.append(bottom);
+
+    (function() {
+      var cur_prop = prop;
+      var cur_cell = cell;
+      cur_cell.click(function() {
+        if (cur_cell.hasClass("selected")) {
+          cur_cell.removeClass("selected");
+        } else {
+          cur_cell.addClass("selected");
+        }
+      });
+    })();
+    
+    propDiv.append(cell);
+  }
+}
+
+function setupPage () {
   $("#tradeleft, #traderight").hide();
 
   window.addEventListener('load', function() {
@@ -109,9 +171,30 @@ var setupPage = function() {
 
 }
 
+function loadTradePanels() {
+  $("#tradeleft .playerName").html(leftplayer.username.split(" ")[0]);
+  $("#tradeleft .playerMoney").html("$" + leftplayer.money);
+  displayProperties(leftplayer.properties, $("#tradeleft .playerProperties"));
+  $("#tradeleft .cancelbtn").click(function() {
+    window.location.replace("mobileHome.html");
+  });
+
+  $("#traderight .playerName").html(rightplayer.username.split(" ")[0]);
+  $("#traderight .playerMoney").html("$" + rightplayer.money); 
+  displayProperties(rightplayer.properties, $("#traderight .playerProperties"));
+  $("#traderight .cancelbtn").click(function() {
+    window.location.replace("mobileHome.html");
+  });
+}
+
 
 function tradeButtonHandler() {
-  $("#playerSelect").hide();
+  if ($(".selected").length !== 1) {
+    $(".errormsg").html("You must select someone to trade with.");
+    return;
+  }
+  $("#playerSelect, .selectTitle, .buttons, .errormsg").hide();
   $("#tradeleft").show();
   $("#traderight").show();
+  loadTradePanels();
 }

@@ -344,7 +344,6 @@ $(document).ready(function() {
 
   // hacky way to resize the view properly.
   var initialHeight = $("#gameButtons").height();
-  $("#content").height($(window).height() + 60);
   $("#inspectbtn").click(goToInspect);
   $("#chatform").submit(function (event) {
     event.preventDefault();

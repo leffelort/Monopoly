@@ -57,6 +57,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 
 #content {
   position: relative;
+  min-height: 268px;
 }
 
 #playerwrapper {

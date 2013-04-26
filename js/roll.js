@@ -38,9 +38,9 @@ function socketSetup() {
   });
 
   socket.on('reopen', function() {
+    window.scrollTo(0,1);
     allowRolls();
   });
-  window.scrollTo(0,1);
 }
 
 
