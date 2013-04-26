@@ -1552,8 +1552,11 @@ function handleChance(game, socketid, fbid) {
         delta : delta,
         end: end
       });
+      handleSpace(game, socketid, end, fbid, delta)
+      return;
     } else if (id === 5) { //send to jail card
       sendToJail(game, socketid, fbid);
+      return;
     } else if (id < 9) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
@@ -1582,6 +1585,8 @@ function handleChance(game, socketid, fbid) {
         delta : -3,
         end: newspace
       });
+      handleSpace(game, socketid, newSpace, fbid, 3);
+      return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');
       connections[socketid].emit('jailCard', {
@@ -1617,6 +1622,8 @@ function handleCommChest(game, socketid, fbid) {
         delta : delta,
         end: end
       });
+      handleSpace(game, socketid, end, fbid, delta);      
+      return;
     } else if (id < 10) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
