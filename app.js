@@ -92,7 +92,7 @@ app.get("/properties", function(req, resp) {
 
 var MongoClient = require('mongodb').MongoClient;
 
-var mongoUri = "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?";
+var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?";
 var dbIsOpen = false;
 var client = undefined;
 var chanceCommChestDeck = undefined;
@@ -111,7 +111,7 @@ MongoClient.connect(mongoUri, {
   }, function (err, db) {
   if (err)
     throw err;
-  console.log("successfully connected to the database.")
+  console.log("successfully connected to the database at uri " + mongoUri);
   client = db;
 
   dbIsOpen = true;
