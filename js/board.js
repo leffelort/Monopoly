@@ -46,7 +46,7 @@ function refreshBoardState(game) {
     var picurl = "https://graph.facebook.com/" + player.fbid + "/picture?width=" + ppd + "&height=" + ppd;
     $("#playericon" + playerNum).attr("src", picurl);
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + playerNames[player.fbid]);
-    $("#playermoney" + playerNum).html("Money: $" + player.money);
+    $("#playermoney" + playerNum).html("$" + player.money);
     $(".playerpiece" + playerNum).removeClass("visible");
     if (player.space === 10) {
       if (player.jailed) {
@@ -174,18 +174,38 @@ function updatePlayerMoney(fbid, money) {
   $("#playermoney" + players[fbid]).html("Money: $" + money);
 }
 
-function propertySold(fbid, propid, propname, money) {
+function debit(fbid, amt) {
+  var old = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
+  $("#playermoney" + players[fbid]).html("$" + (old - amt));
+}
+
+function credit(fbid, amt) {
+  var old = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
+  $("#playermoney" + players[fbid]).html("$" + (old + amt));
+}
+
+function propertySold(fbid, propid, propname, cost) {
   console.log("propertySold: " + fbid);
   $("#space" + propid + " .propertyown").addClass("player" + players[fbid]);
-  updatePlayerMoney(fbid, money);
+  debit(fbid, cost);
   displayEvent(playerNames[fbid] + " bought " + propname);
 }
 
 function nextTurn(previd, fbid) {
-  $(".playerpiece" + players[previd] + ".visible")
-    .removeClass("currentTurn"  + players[previd]);
-  $(".playerpiece" + players[fbid] + ".visible")
-    .addClass("currentTurn" + players[fbid]);
+  if ($("#space10 .playerpiece" + players[previd]).hasClass("visible")) {
+    $(".playerpiece" + players[previd] + ".visible")
+      .removeClass("currentTurn");
+  } else {
+    $(".playerpiece" + players[previd] + ".visible")
+      .removeClass("currentTurn" + players[previd]);
+  }
+  if ($("#space10 .playerpiece" + players[fbid]).hasClass("visible")) {
+    $(".playerpiece" + players[fbid] + ".visible")
+      .addClass("currentTurn");
+  } else {
+    $(".playerpiece" + players[fbid] + ".visible")
+      .addClass("currentTurn" + players[fbid]);
+  }
   displayEvent(playerNames[fbid] + "'s turn!");
 }
 
@@ -284,6 +304,7 @@ function attachSocketHandlers() {
 
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent(playerNames[socketdata.fbid] + " got out of jail!");
+    debit(socketdata.fbid, socketdata.debit);
   });
 
   socket.on('stayInJail', function (socketdata) {
@@ -291,7 +312,7 @@ function attachSocketHandlers() {
   });
 
   socket.on('propertySold', function (socketdata) {
-    propertySold(socketdata.fbid, socketdata.property, socketdata.propName, socketdata.money)
+    propertySold(socketdata.fbid, socketdata.property, socketdata.propName, socketdata.cost)
   });
 
   socket.on('nextTurn', function (socketdata) {
@@ -299,18 +320,18 @@ function attachSocketHandlers() {
   });
 
   socket.on('payingRent', function (socketdata) {
-    updatePlayerMoney(socketdata.tenant, socketdata.tenantMoney);
-    updatePlayerMoney(socketdata.owner, socketdata.ownerMoney);
+    debit(socketdata.tenant, socketdata.amount);
+    credit(socketdata.owner, socketdata.amount);
     displayEvent(playerNames[socketdata.tenant] + " paid " + playerNames[socketdata.owner] + " $" + socketdata.amount + " in rent.");
   });
 
   socket.on('debit', function (socketdata) {
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    debit(socketdata.fbid, socketdata.amount);
     displayEvent(playerNames[socketdata.fbid] + " paid $" + socketdata.amount + " for " + socketdata.reason);
   });
 
   socket.on('credit', function (socketdata) {
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    credit(socketdata.fbid, socketdata.amount);
     displayEvent(playerNames[socketdata.fbid] + " received $" + socketdata.amount + " for " + socketdata.reason);
   });
 
@@ -320,25 +341,25 @@ function attachSocketHandlers() {
 
   socket.on('houseBuy', function (socketdata) {
     houseBuy(socketdata.space);
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    debit(socketdata.fbid, socketdata.cost);
     displayEvent(playerNames[socketdata.fbid] + " bought a house on " + propName);
   });
 
   socket.on('houseSell', function (socketdata) {
     houseSell(socketdata.space);
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    credit(socketdata.fbid, socketdata.cost);
     displayEvent(playerNames[socketdata.fbid] + " sold a house on " + propName);
   });
 
   socket.on('hotelBuy', function (socketdata) {
     hotelBuy(socketdata.space);
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    debit(socketdata.fbid, socketdata.cost);
     displayEvent(playerNames[socketdata.fbid] + " bought a hotel on " + propName);
   });
 
   socket.on('hotelSell', function (socketdata) {
     hotelSell(socketdata.space);
-    updatePlayerMoney(socketdata.fbid, socketdata.money);
+    credit(socketdata.fbid, socketdata.cost);
     displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + propName);
   });
 

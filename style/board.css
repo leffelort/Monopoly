@@ -759,6 +759,7 @@ h2 {
 .currentTurn {
   -webkit-transform: scale(1.5);
   z-index: 42;
+  position: relative;
 }
 
 .currentTurn1 {

@@ -761,6 +761,11 @@ io.sockets.on('connection', function (socket) {
       if (data.paid) {
         debit(game, socket.id, 50, data.fbid);
         game.players[data.fbid].jailed = false;
+        sendToBoards(game.id, 'getOutOfJail', { 
+          fbid: data.fbid,
+          debit: 50
+        });
+        socket.emit('getOutOfJail', { debit: 50 });
       } else {
         var card = game.players[data.fbid].jailCards.shift();
         game.players[data.fbid].jailed = false;
@@ -769,9 +774,12 @@ io.sockets.on('connection', function (socket) {
         } else {
           chanceCommChestDeck.returnCommChestJailCard(game);
         }
+        sendToBoards(game.id, 'getOutOfJail', { 
+          fbid: data.fbid,
+          debit: 0
+        });
+        socket.emit('getOutOfJail', { debit: 0 });
       }
-      sendToBoards(game.id, 'getOutOfJail', { fbid: data.fbid });
-      socket.emit('getOutOfJail', {});
       saveGame(game);
     });
   });
@@ -911,7 +919,7 @@ function handleSale(space, socketid, fbid) {
       property : space,
       propName: prop.card.title,
       fbid: fbid,
-      money: game.players[fbid].money
+      cost: prop.card.price
     });
     endTurn(game);
   });
@@ -924,7 +932,7 @@ function handleRoll(delta, dbls, socketid, fbid) {
     game.doubles = dbls;
     if (game.players[fbid].jailed) {
       if (dbls) {
-        sendToBoards(game.id, 'getOutOfJail', { fbid: fbid });
+        sendToBoards(game.id, 'getOutOfJail', { fbid: fbid, debit: 0 });
         game.players[fbid].jailed = false;
       } else {
         sendToBoards(game.id, 'stayInJail', { fbid: fbid });
@@ -1016,7 +1024,7 @@ function handleConstruction(space, socketid, fbid){
               sendToBoards(game.id, 'hotelBuy', {
                 space: space,
                 propName: prop.card.title,
-                money: game.players[fbid].money,
+                cost: cost,
                 fbid: fbid,
                 success: true
               });
@@ -1053,7 +1061,7 @@ function handleConstruction(space, socketid, fbid){
               sendToBoards(game.id, 'houseBuy', {
                 space: space,
                 propName: prop.card.title,
-                money: game.players[fbid].money,
+                cost: cost,
                 fbid: fbid,
                 success: true
               });
@@ -1111,34 +1119,34 @@ function handleDemolition(space, socketid, fbid) {
       }
       if (prop.hotel) { //selling a hotel
         var amt = (prop.card.hotelcost / 2);
-          if (game.availableHouses > 3) {
-            credit(game, socketid, amt, fbid);
-            game.availableHotels = (game.availableHotels + 1);
-            game.availableHouses = (game.availableHouses - 4);
-            prop.numHouses = 4;
-            prop.hotel = false;
-            saveGame(game, function () {
-              connections[socketid].emit('houseSell', {
-                space: space,
-                fbid: fbid,
-                success: true
-              });
-              sendToBoards(game.id, 'hotelSell', {
-                space: space,
-                propName: prop.card.title,
-                money: game.players[fbid].money,
-                fbid: fbid,
-                success: true
-              });
-            });
-          } else {
+        if (game.availableHouses > 3) {
+          credit(game, socketid, amt, fbid);
+          game.availableHotels = (game.availableHotels + 1);
+          game.availableHouses = (game.availableHouses - 4);
+          prop.numHouses = 4;
+          prop.hotel = false;
+          saveGame(game, function () {
             connections[socketid].emit('houseSell', {
               space: space,
               fbid: fbid,
-              success: false,
-              reason: 'not enough houses to sell a hotel'
+              success: true
             });
-          }
+            sendToBoards(game.id, 'hotelSell', {
+              space: space,
+              propName: prop.card.title,
+              cost: amt,
+              fbid: fbid,
+              success: true
+            });
+          });
+        } else {
+          connections[socketid].emit('houseSell', {
+            space: space,
+            fbid: fbid,
+            success: false,
+            reason: 'not enough houses to sell a hotel'
+          });
+        }
       } else {
         var amt = (prop.card.housecost/2);
         credit(game, socketid, amt, fbid);
@@ -1153,7 +1161,7 @@ function handleDemolition(space, socketid, fbid) {
           sendToBoards(game.id, 'houseSell', {
             space: space,
             propName: prop.card.title,
-            money: game.players[fbid].money,
+            cost: amt,
             fbid: fbid,
             success: true
           });
@@ -1360,9 +1368,7 @@ function collectRent(game, space, socketid, tenant, roll) {
     owner: owner,
     tenant: tenant,
     space: space,
-    amount: amt,
-    tenantMoney: game.players[tenant].money,
-    ownerMoney: game.players[owner].money
+    amount: amt
   });
 
   endTurn(game);
@@ -1424,7 +1430,6 @@ function handleTax(game, space, socketid, fbid){
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
-      money: game.players[fbid].money,
       reason: "Luxury Tax"
     });
   } else if (space === 4) {
@@ -1435,7 +1440,6 @@ function handleTax(game, space, socketid, fbid){
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
-      money: game.players[fbid].money,
       reason: "Income Tax"
     });
   } else {
@@ -1458,7 +1462,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
       sendToBoards(game.id, 'credit', {
         fbid: fbid,
         amount: 200,
-        money: game.players[fbid].money,
         reason: "landing on Go"
       });
       // do we want double money for landing on go???
@@ -1468,7 +1471,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
       sendToBoards(game.id, 'credit', {
         fbid: fbid,
         amount: 500,
-        money: game.players[fbid].money,
         reason: "landing on Free Parking"
       });
       // do we want free parking to be a straight $500??
@@ -1521,7 +1523,6 @@ function handleChance(game, socketid, fbid) {
       sendToBoards(game.id, 'credit', {
         fbid: fbid,
         amount: card.amt,
-        money: game.players[fbid].money,
         reason: "Chance."
       });
     } else if (id < 11) { //debit type cards
@@ -1531,7 +1532,6 @@ function handleChance(game, socketid, fbid) {
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
           amount: amt,
-          money: game.players[fbid].money,
           reason: "Chance."
         });
       }
@@ -1585,7 +1585,6 @@ function handleCommChest(game, socketid, fbid) {
       sendToBoards(game.id, 'credit', {
         fbid: fbid,
         amount: card.amt,
-        money: game.players[fbid].money,
         reason: "Community chest."
       });
     } else if (id < 12) { //debit type cards
@@ -1595,7 +1594,6 @@ function handleCommChest(game, socketid, fbid) {
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
           amount: amt,
-          money: game.players[fbid].money,
           reason: "Community chest."
         });
       }
