@@ -10,6 +10,7 @@ var username = undefined;
 var fbid = undefined;
 
 var gameCode; //need this to be a global for now :/ ~pjm
+var isWaiting = false;
 
 // GAME HOSTING
 function openHostScreen() {
@@ -126,6 +127,8 @@ function createGameLobby() {
   $("#boardLobby").html("Number of boards connected: " + currentGame.numBoards);
   $("#phoneCode").html(currentGame.code);
   if (currentGame.numPlayers < 2 || currentGame.numBoards < 1) {
+    $("#waitingBtn").hide();
+    $("#startGameBtn").show();
     $("#startGameBtn")[0].setAttribute("disabled", true);
   } else {
     $("#startGameBtn")[0].removeAttribute("disabled");
@@ -156,8 +159,10 @@ function startWaiting() {
 	$("#waitingBtn").show();
 	socket.emit('playerWaiting', {
     code: gameCode,
-    username: window.username
+    username: window.username,
+    fbid: window.fbid
   });
+  isWaiting = true;
 }
 
 function attachButtonEvents() {
@@ -242,7 +247,8 @@ function attachSocketHandlers() {
     }
     else if (socketdata.type === "message") {
       message.addClass("chatMessage");
-      var sender = $("<span>").addClass("chatSender").html(socketdata.sender);
+      var first = socketdata.sender.split(" ")[0];
+      var sender = $("<span>").addClass("chatSender").html(first);
       var messageText = $("<span>").html(": " + socketdata.message);
       message.append(sender).append(messageText);
     }

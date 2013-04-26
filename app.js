@@ -566,6 +566,10 @@ io.sockets.on('connection', function (socket) {
     if (game !== undefined) {
       delete game.boards[data.boardID];
       game.numBoards--;
+      // If leaving board causes game to be un-startable, reset
+      if (game.numBoards < 1) {
+        game.playersWaiting = 0;
+      }
       saveGame(game, function() {
         updateCurrentGameBoard(data.boardID, undefined, function () {
           sendToPlayers(data.gameID, 'boardleft', { gameID: game.id });
@@ -585,8 +589,15 @@ io.sockets.on('connection', function (socket) {
         deleteGame(currentGames[data.gameID])
       }
       else {
-        delete game.players[data.fbid];
+        if (game.players[data.fbid].isWaiting) {
+          game.playersWaiting--;
+        }
         game.numPlayers--;
+        delete game.players[data.fbid];
+        // If leaving player causes game to be un-startable, reset
+        if (game.numPlayers < 2) {
+          game.playersWaiting = 0;
+        }
         saveGame(game, function() {
           updateCurrentGame(data.fbid, undefined, function() {
             sendToPlayers(data.gameID, 'playerleft',  { gameID: game.id });
@@ -603,6 +614,7 @@ io.sockets.on('connection', function (socket) {
     for (var gameID in currentGames) {
       var game = currentGames[gameID];
       if (game.code === data.code) {
+        game.players[data.fbid].isWaiting = true;
         game.playersWaiting++;
         if ((game.playersWaiting === game.numPlayers) && (game.numPlayers > 1) && (!game.isStarted) && (game.numBoards > 0)) {
           //set playersWaiting = 0 not necessary because of start
@@ -813,6 +825,9 @@ io.sockets.on('connection', function (socket) {
                   deleteGame(game);
                 } else {
                   // Otherwise, the user leaves
+                  if (game.players[fbid].isWaiting) {
+                    game.playersWaiting--;
+                  }
                   delete game.players[fbid];
                   game.numPlayers--;
                   saveGame(game, function() {

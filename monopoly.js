@@ -34,6 +34,7 @@ var Player = function(username, fbid) {
   this.playerNumber = 0;
   this.bankrupt = false;
   this.inDefault = false;
+  this.isWaiting = false;
 }
 
 var Property = function(card) {

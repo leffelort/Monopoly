@@ -72,8 +72,8 @@ h3 {
 
 .buttons {
   width: inherit;
-  margin: 1em auto 0 auto;
   text-align: center;
+  margin: 1em auto;
 }
 
 .btn {
