@@ -1654,6 +1654,7 @@ function bankrupt(game, socketid, fbid, target) {
   player.properties = {};
   player.money = 0;
   player.bankrupt = true;
+  game.doubles = false;
    
   var temp = 0;
   for (var i in game.players) {
@@ -1663,7 +1664,7 @@ function bankrupt(game, socketid, fbid, target) {
   if (temp < 2) endGame(game);
   //check to make sure there are players left.
     
-  //endTurn(game);  //???
+  endTurn(game);  //???
 }
 
 function netWorth(game, socketid, amt, fbid) {
