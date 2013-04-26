@@ -32,6 +32,8 @@ var Player = function(username, fbid) {
   this.jailCards = [];
   this.space = 0;
   this.playerNumber = 0;
+  this.bankrupt = false;
+  this.inDefault = false;
 }
 
 var Property = function(card) {
