@@ -86,6 +86,8 @@ function socketSetup() {
 
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent("You got out of Jail!");
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old - socketdata.debit));
   });
   
   setInterval(updateGameEvents, eventUpdateFreq);
