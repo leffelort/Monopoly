@@ -1,12 +1,25 @@
+body {
+  background: rgb(0,130,39); /* Old browsers */
+  background: -moz-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%, rgba(0,76,16,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,rgba(0,130,39,1)), color-stop(100%,rgba(0,76,16,1))); /* Chrome,Safari4+ */
+  background: -webkit-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* Opera 12+ */
+  background: -ms-radial-gradient(center, ellipse cover, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* IE10+ */
+  background: radial-gradient(ellipse at center, rgba(0,130,39,1) 0%,rgba(0,76,16,1) 100%); /* W3C */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', endColorstr='#004c10',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+}
+
 #content {
   width: 100%;
-  height: 320px;
+  min-height: 268px;
+  position: relative;
+  text-align: center;
 }
 
 /* START OF PLAYER SELECT */
 
 #playerSelect .playerCell {
-  height: 64px;
+  height: 54px;
   background: rgb(255,255,255); /* Old browsers */
   background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(229,229,229,1) 100%); /* FF3.6+ */
   background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(100%,rgba(229,229,229,1))); /* Chrome,Safari4+ */
@@ -16,18 +29,22 @@
   background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(229,229,229,1) 100%); /* W3C */
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e5e5e5',GradientType=0 ); /* IE6-9 */
   border-bottom: 1px solid #333;
+  width: 100%;
+  text-align: left;
+  position: relative;
 }
 
 #playerSelect .playerCell:first-child {
   border-top: 1px solid #333;
 }
 
-#playerSelect h1 {
+#playerSelect .playerCell h1 {
   display: inline-block;
   vertical-align: top;
-  margin-top: 18px;
+  margin-top: 14px;
+  margin-left: 10px;
   font-family: 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 28px;
+  font-size: 24px;
 }
 
 #playerSelect .playerCell.selected {
@@ -42,6 +59,30 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dddddd', end
 }
 
 /* START OF TRADE SECTION */
+
+.selectTitle {
+  color: #eee;
+  width: 100%;
+  text-align: center;
+  font: 18px 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 15px auto;
+}
+
+.tradebtn {
+  width: 120px;
+  height: 32px;
+  font: 18px 'Lato', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background-color: #eee;
+  color: #333;
+  margin: 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #333;
+  border-radius: 4px;
+  -moz-box-shadow: 0 1px 3px 0 #333;
+  -webkit-box-shadow: 0 1px 3px 0 #333;
+  box-shadow: 0 1px 3px 0 #333;
+}
 
 #tradeleft {
   width: 50%;

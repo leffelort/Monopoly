@@ -761,6 +761,16 @@ io.sockets.on('connection', function (socket) {
     })
   });
 
+// used for the client to get the current game
+  socket.on('getGame', function (data){
+    queryGame(socket.id, function (game) {
+      socket.emit('getGame', {
+        game: game,
+        success: true
+      });
+    });
+  });
+
   socket.on('inspectProperty', function (data) {
     // route request to the boards
     queryGame(socket.id, function (game) {

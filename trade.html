@@ -12,22 +12,11 @@
 <div id="content">
 
   <!-- PLAYER SELECT START -->
-  <div id="playerSelect">
-    <div class="playerCell">
-      <img src="https://graph.facebook.com/andrew.mittereder/picture?width=64&height=64" />
-      <h1>Andrew Mittereder</h1>
-      <div class="checkmark"></div>
-    </div>
-    <div class="playerCell">
-      <img src="https://graph.facebook.com/pmarino29/picture?width=64&height=64" />
-      <h1>Peter Marino</h1>
-      <div class="checkmark"></div>
-    </div>
-    <div class="playerCell">
-      <img src="https://graph.facebook.com/amalbi/picture?width=64&height=64" />
-      <h1>Anna Albi</h1>
-      <div class="checkmark"></div>
-    </div>
+  <div class="selectTitle">Select a player and click Trade!</div>
+  <div id="playerSelect"></div>
+  <div class="buttons">
+    <input type="button" class="tradebtn" value="Cancel" onclick="cancelClicked()" />
+    <input type="button" class="tradebtn" value="Trade!" onclick="tradeButtonHandler()" />
   </div>
 
   <!-- TRADE LEFT START -->
@@ -44,7 +33,7 @@
     <div class="playerProperties"></div>
   </div>
 </div>
-<!-- <script type="text/javascript" src="/socket.io/socket.io.js"></script> -->
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="js/fastclick/lib/fastclick.js"></script>
 <script type="text/javascript" src="js/trade.js"></script>

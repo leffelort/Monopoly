@@ -317,11 +317,13 @@ function displayPrompt(msg, callback) {
 function enableButtons() {
   $("#rollbtn").click(goToRoll);
   $("#managebtn").click(goToManage);
+  $("#tradebtn").click(goToTrade);
 }
 
 function disableButtons(){
   $("#rollbtn").unbind(goToRoll);
   $("#managebtn").unbind(goToManage);
+  $("#tradebtn").unbind(goToTrade);
 }
 
 function sendMessage() {
