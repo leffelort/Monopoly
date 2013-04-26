@@ -200,7 +200,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 .getout {
   width: 40px;
   height: 20px;
-  display: block;
+  display: inline-block;
   border: 1px solid #333;
   position: relative;
   -moz-box-shadow: 0 1px 3px 0 #333;
@@ -208,6 +208,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   box-shadow: 0 1px 3px 0 #333;
   margin-bottom: 12px;
   margin-top: 5px;
+  margin-right: 20px;
 }
 
 .getout p {

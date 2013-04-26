@@ -86,10 +86,9 @@ function socketSetup() {
 
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent("You got out of Jail!");
-    if (socketdata.debit) {
-      var old = Number($(".moneydisp").html().replace("$", ""));
-      $(".moneydisp").html("$" + (old - socketdata.debit));
-    }
+    // Money should be updated in debit, so this is unnecessary.
+    // var old = Number($(".moneydisp").html().replace("$", ""));
+    // $(".moneydisp").html("$" + (old - socketdata.debit));
   });
   
   setInterval(updateGameEvents, eventUpdateFreq);
@@ -117,7 +116,7 @@ function loadFBData() {
     for (var i = 0; i < me.jailCards.length; i++) {
       var jailcard = me.jailCards[i];
       var getoutcards = $("<li>").attr("id", "getoutcards");
-      var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>"
+      var getouttext = "<p>OUT OF<p><p>JAIL FREE</p>";
       if (jailcard === "chance") {
         var getoutchance = $("<div>").attr({
           "class" : "getout",
