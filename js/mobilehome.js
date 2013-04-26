@@ -86,8 +86,10 @@ function socketSetup() {
 
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent("You got out of Jail!");
-    var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old - socketdata.debit));
+    if (socketdata.debit) {
+      var old = Number($(".moneydisp").html().replace("$", ""));
+      $(".moneydisp").html("$" + (old - socketdata.debit));
+    }
   });
   
   setInterval(updateGameEvents, eventUpdateFreq);
@@ -99,8 +101,9 @@ function loadFBData() {
   var infodiv = $("#playerinfo");
   infodiv.empty();
   var picurl;
-  var name = me.username;
-  picurl = "https://graph.facebook.com/" + me.fbid + "/picture?width=" + ppd + "&height=" + ppd
+  var nameSplit = me.username.split(" ")
+  var name = nameSplit[0];
+  picurl = "https://graph.facebook.com/" + me.fbid + "/picture?width=" + ppd + "&height=" + ppd;
   var info = $("<div>").addClass("infoList");
   info.append($("<li>").addClass("infoitem").html("<span class='playerdisp'>Player " + (me.playerNumber + 1) + ":</span> " + name));
   var moneydisp = $("<li>").addClass("infoitem").addClass("moneydisp").html("$" + me.money);
@@ -165,6 +168,7 @@ function loadFBData() {
               paid: false,
               fbid: me.fbid
             });
+            hideJailCard(me.jailCards[0]);
           });
         } else {
           displayPrompt("Do you want to use your Get out of Jail Free card?", 
@@ -174,6 +178,7 @@ function loadFBData() {
                 paid: false,
                 fbid: me.fbid
               });
+              hideJailCard(me.jailCards[0]);
             } else {
               socket.emit('serveJailTime', {
                 fbid: me.fbid
@@ -207,10 +212,17 @@ function loadFBData() {
       }
     }
   }
-
-
   window.scrollTo(0, 1);
 }  
+
+
+function hideJailCard(cardtype) {
+  if (cardtype === "chance") {
+    $("#getoutchance").css("display", "none");
+  } else {
+    $("#getoutcommunity").css("display", "none");
+  }
+}
 
 if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   window.fbobj = JSON.parse(sessionStorage.user);
@@ -226,7 +238,7 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
      js.src = "//connect.facebook.net/en_US/all.js";
      ref.parentNode.insertBefore(js, ref);
    }(document));
-  
+
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '448108371933308', // App ID
