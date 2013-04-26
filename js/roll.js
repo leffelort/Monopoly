@@ -40,6 +40,7 @@ function socketSetup() {
   socket.on('reopen', function() {
     allowRolls();
   });
+  window.scrollTo(0,1);
 }
 
 
