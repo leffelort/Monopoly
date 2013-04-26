@@ -1539,7 +1539,18 @@ function handleChance(game, socketid, fbid) {
     });
     if (id < 5) { //advance type cards
       var initial = game.players[fbid].space;
-      var end = card.space;
+      var end;
+      if (id === 1) { //railroad case
+        var quad = (Math.floor(initial/10));
+        var half = (initial % 10);
+        if (half < 5) {
+          end =  ((quad * 10) + 5);
+        } else {
+          end = (((quad * 10) + 15) % 40));
+        }
+      } else {
+        end = card.space;
+      }
       game.players[fbid].space = card.space;
       var delta = ((end-initial) % 40)
       if (end < initial) {
@@ -1663,23 +1674,27 @@ function bankrupt(game, socketid, fbid, target) {
   if (target === undefined) {
     for (var pid in player.properties) {
       var prop = player.properties[pid];
-      prop.owner = "Unowned";
-      game.availableHouses = (game.availableHouses + prop.numHouses)
-      prop.numHouses = 0;
-      if (prop.hotel) {
-        prop.hotel = false;
-        game.availableHotels = (game.availableHotels + 1);
+      if (prop) {
+        prop.owner = "Unowned";
+        game.availableHouses = (game.availableHouses + prop.numHouses)
+        prop.numHouses = 0;
+        if (prop.hotel) {
+          prop.hotel = false;
+          game.availableHotels = (game.availableHotels + 1);
+        }
+        delete game.propertyOwners[pid];
+        game.availableProperties[pid] = prop;
       }
-      delete game.propertyOwners[pid];
-      game.availableProperties[pid] = prop;
     }
   } else {
     var newOwner = game.players[target].username.split(" ")[0];
     for (var pid in player.properties) {
       var prop = player.properties[pid];
-      prop.owner = newOwner;
-      game.propertyOwners[pid] = target;
-      player.properties[pid] = prop;
+      if (prop) {
+        prop.owner = newOwner;
+        game.propertyOwners[pid] = target;
+        player.properties[pid] = prop;
+      }
     }
     credit(game,socketid,player.money,target); //socketid?
   }
@@ -1703,15 +1718,17 @@ function netWorth(game, socketid, amt, fbid) {
   var worth = game.players[fbid].money;
   for (var pid in game.players[fbid].properties) {
     var prop = game.players[fbid].properties[pid];
-    var pCost = (prop.card.price / 2); 
-    var gCost = (prop.card.housecost / 2);
-    var rCost = (prop.card.hotelcost / 2);
-    var hNum = prop.numHotels;
-    var hot = prop.hotel;
-    if (hot) {
-      worth = (worth + (4 * gCost) + rCost + pCost);
-    } else {
-      worth = (worth + (hNum * gCost)) + pCost;
+    if (prop) {
+      var pCost = (prop.card.price / 2); 
+      var gCost = (prop.card.housecost / 2);
+      var rCost = (prop.card.hotelcost / 2);
+      var hNum = prop.numHotels;
+      var hot = prop.hotel;
+      if (hot) {
+        worth = (worth + (4 * gCost) + rCost + pCost);
+      } else {
+        worth = (worth + (hNum * gCost)) + pCost;
+      }
     }
   }
   return worth;
