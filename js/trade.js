@@ -92,6 +92,15 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   socketSetup();
   socket.emit('reopen', fbobj);
 } else {
+   // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '448108371933308', // App ID
@@ -121,6 +130,27 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
 }
 
 function displayProperties(properties, propDiv) {
+  var moneyCell = $("<div>").addClass("propertyCell")
+                            .addClass("moneyCell");
+  moneyCell.append($("<div>").addClass("proptext")
+                             .addClass("propname")
+                             .html("Money"));
+  moneyCell.click(function() {
+    if (moneyCell.hasClass("selected")) {
+      moneyCell.removeClass("selected");
+    } else {
+      moneyCell.addClass("selected");
+    }
+  });
+  var moneyInput = $("<input>").attr({
+    "type": "text",
+    "placeholder": "$0",
+    "cols": "4",
+    "rows": 2,
+    "class": "moneyInput"
+  });
+  moneyCell.append(moneyInput);
+  propDiv.append(moneyCell);
   for (var i = 0; i < properties.length; i++) {
     var prop = properties[i];
     if (!prop) continue;
@@ -162,11 +192,15 @@ function displayProperties(properties, propDiv) {
   }
 }
 
-function setupPage () {
+$(document).ready(function() {
   $("#tradeleft, #traderight").hide();
+});
+
+function setupPage () {
 
   window.addEventListener('load', function() {
     new FastClick(document.body);
+    new FastClick(document.getElementById("tradeleft"));
   }, false);
 
 }

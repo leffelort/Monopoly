@@ -218,6 +218,15 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   setupSockets();
   socket.emit('reopen', window.fbobj); // tell the server who we are.
 } else {
+    // Load the SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+  
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '448108371933308', // App ID
@@ -244,15 +253,6 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
     });
   }
 }
-
-  // Load the SDK Asynchronously
-  (function(d){
-     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement('script'); js.id = id; js.async = true;
-     js.src = "//connect.facebook.net/en_US/all.js";
-     ref.parentNode.insertBefore(js, ref);
-   }(document));
 
 
 function setupSockets() {
