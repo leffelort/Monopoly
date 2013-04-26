@@ -193,15 +193,25 @@ function propertySold(fbid, propid, propname, cost) {
 
 function nextTurn(previd, fbid) {
   if ($("#space10 .playerpiece" + players[previd]).hasClass("visible")) {
-    $(".playerpiece" + players[previd] + ".visible")
-      .removeClass("currentTurn");
+    if ($("#jail .playerpiece" + players[previd]).hasClass("visible")) {
+      $("#jail .playerpiece" + players[previd] + ".visible")
+        .removeClass("currentTurn" + players[previd]);
+    } else {
+      $("#space10 .playerpiece" + players[previd] + ".visible")
+        .removeClass("currentTurn");
+    }
   } else {
     $(".playerpiece" + players[previd] + ".visible")
       .removeClass("currentTurn" + players[previd]);
   }
   if ($("#space10 .playerpiece" + players[fbid]).hasClass("visible")) {
-    $(".playerpiece" + players[fbid] + ".visible")
-      .addClass("currentTurn");
+    if ($("#jail .playerpiece" + players[fbid]).hasClass("visible")) {
+      $("#jail .playerpiece" + players[fbid] + ".visible")
+        .addClass("currentTurn" + players[fbid]);
+    } else {
+      $("#space10 .playerpiece" + players[fbid] + ".visible")
+        .addClass("currentTurn");
+    }
   } else {
     $(".playerpiece" + players[fbid] + ".visible")
       .addClass("currentTurn" + players[fbid]);

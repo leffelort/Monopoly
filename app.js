@@ -860,7 +860,7 @@ function endTurn(game) {
     }
   }
 
-  if (!game.doubles) {
+  if (!game.doubles || game.players[previd].jailed) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
   }
 
