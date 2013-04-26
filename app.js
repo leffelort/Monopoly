@@ -734,8 +734,8 @@ io.sockets.on('connection', function (socket) {
         }
         console.log("Unmortgaging the property");
         prop.mortgaged = false;
-        debit(game, socket.id, (prop.card.price / 2) * 1.10, data.fbid);
-        propertyUnmortgage(game, prop, socket.id, data.fbid, true);
+        var suc = debit(game, socket.id, (prop.card.price / 2) * 1.10, data.fbid);
+        if (suc) propertyUnmortgage(game, prop, socket.id, data.fbid, true);
       }
     });
   });
@@ -864,13 +864,16 @@ function endTurn(game) {
   }
 
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
-  saveGame(game, function(){
-    sendToBoards(game.id, 'nextTurn', {
-      previd: previd,
-      fbid: fbid
+  
+  if (!game.players[fbid].bankrupt) {
+    saveGame(game, function(){
+      sendToBoards(game.id, 'nextTurn', {
+        previd: previd,
+        fbid: fbid
+      });
+      sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
     });
-    sendToPlayers(game.id, 'nextTurn', {fbid: fbid});
-  });
+  } else endTurn(game);
 }
 
 function passGo(game, socketid,fbid) {
@@ -900,19 +903,21 @@ function handleSale(space, socketid, fbid) {
       }
     }
     console.log("I a gonna changa die monezzzz? " + game.players[fbid].money);
-    debit(game, socketid, prop.card.price, fbid);
+    var suc = debit(game, socketid, prop.card.price, fbid);
     console.log("Did da moniez change? " + game.players[fbid].money);
-    prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
-    game.players[fbid].properties[space] = prop;
-    game.propertyOwners[space] = fbid;
-
-    checkMonopoly(game, fbid, space);
-    sendToBoards(game.id, 'propertySold', {
-      property : space,
-      propName: prop.card.title,
-      fbid: fbid,
-      money: game.players[fbid].money
-    });
+    if (suc) {
+      prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
+      game.players[fbid].properties[space] = prop;
+      game.propertyOwners[space] = fbid;
+    
+      checkMonopoly(game, fbid, space);
+      sendToBoards(game.id, 'propertySold', {
+        property : space,
+        propName: prop.card.title,
+        fbid: fbid,
+        money: game.players[fbid].money
+      });
+    }
     endTurn(game);
   });
 }
@@ -1344,10 +1349,12 @@ function collectRent(game, space, socketid, tenant, roll) {
   // Proceed with transaction
   // TODO: handle extraordinary conditions
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
-  atom = debit(game, socketid, amt, tenant);
-  if (atom) credit(game, socketid, amt, owner);
-  else throw exn;
-
+  var suc = forceDebit(game, socketid, amt, tenant, owner);
+  if (suc) credit(game, socketid, amt, owner); //socketid??
+  else {
+    console.log('debiting failed, is that right?');
+    return;
+  }
   connections[socketid].emit('payingRent', {
     owner: owner,
     tenant: tenant,
@@ -1420,7 +1427,11 @@ function handleTax(game, space, socketid, fbid){
   var amt;
   if (space === 38) {
     amt = 75;
-    debit(game, socketid, amt, fbid);
+    var suc = forceDebit(game, socketid, amt, fbid); 
+    if (!suc) {
+      console.log('could not pay tax');
+      return;
+    }
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
@@ -1428,10 +1439,12 @@ function handleTax(game, space, socketid, fbid){
       reason: "Luxury Tax"
     });
   } else if (space === 4) {
-    // always take away 200
-    // TODO: don't always take away 200
     amt = 200;
-    debit(game, socketid, amt, fbid);
+    var suc = forceDebit(game, socketid, amt, fbid); 
+    if (!suc) {
+      console.log('could not pay tax');
+      return;
+    }
     sendToBoards(game.id, 'debit', {
       fbid: fbid,
       amount: amt,
@@ -1480,11 +1493,9 @@ function handleSpace(game, socketid, space, fbid, roll) {
   }
   if (isChance(space)) {
     handleChance(game, socketid, fbid);
-    endTurn(game);
   }
   if (isCommChest(space)) {
     handleCommChest(game, socketid, fbid);
-    endTurn(game);
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
@@ -1526,7 +1537,7 @@ function handleChance(game, socketid, fbid) {
       });
     } else if (id < 11) { //debit type cards
      var amt = Math.abs(card.amt);
-     var success = debit(game, socketid, amt, fbid);
+     var success = forceDebit(game, socketid, amt, fbid);
       if (success){
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
@@ -1534,7 +1545,7 @@ function handleChance(game, socketid, fbid) {
           money: game.players[fbid].money,
           reason: "Chance."
         });
-      }
+      } else return;
     } else if (id === 11) { //go back 3 spaces
       var initial = game.players[fbid].space;
       var newspace = ((game.players[fbid].space - 3) % 40);
@@ -1552,7 +1563,8 @@ function handleChance(game, socketid, fbid) {
         fbid: fbid,
         type: 'Chance'
       });
-    } else console.log('chance card out of bounds');
+    } else console.log('chance card out of bounds'); 
+    endTurn(game);
   });
 }
 
@@ -1590,7 +1602,7 @@ function handleCommChest(game, socketid, fbid) {
       });
     } else if (id < 12) { //debit type cards
       var amt = Math.abs(card.amt);
-      var success = debit(game, socketid, amt, fbid);
+      var success = forceDebit(game, socketid, amt, fbid);
       if (success){
         sendToBoards(game.id, 'debit', {
           fbid: fbid,
@@ -1598,7 +1610,7 @@ function handleCommChest(game, socketid, fbid) {
           money: game.players[fbid].money,
           reason: "Community chest."
         });
-      }
+      } else return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('commChest');
       connections[socketid].emit('jailCard', {
@@ -1606,18 +1618,106 @@ function handleCommChest(game, socketid, fbid) {
         type: 'Community Chest'
       });
     } else console.log('commChest card out of bounds');
+    endTurn(game);
   });
+}
+
+function endGame(game) {
+  sendToPlayers('gameOver', {});
+  sendToBoards('gameOver', {});
+  console.log('Game over. Do something. Todo.');
+}
+
+function bankrupt(game, socketid, fbid, target) {
+  var player = game.players[fbid];
+  if (target === undefined) {
+    for (var pid in player.properties) {
+      var prop = player.properties[pid];
+      prop.owner = "Unowned";
+      game.availableHouses = (game.availableHouses + prop.numHouses)
+      prop.numHouses = 0;
+      if (prop.hotel) {
+        prop.hotel = false;
+        game.availableHotels = (game.availableHotels + 1);
+      }
+      delete game.propertyOwners[pid];
+      game.availableProperties[pid] = prop;
+    }
+  } else {
+    var newOwner = game.players[target].username.split(" ")[0];
+    for (var pid in player.properties) {
+      var prop = player.properties[pid];
+      prop.owner = newOwner;
+      game.propertyOwners[pid] = target;
+      player.properties[pid] = prop;
+    }
+    credit(game,socketid,player.money,target); //socketid?
+  }
+  player.properties = {};
+  player.money = 0;
+  player.bankrupt = true;
+   
+  var temp = 0;
+  for (var i in game.players) {
+    if (!game.players[i].bankrupt) temp++;
+  }
+  
+  if (temp < 2) endGame(game);
+  //check to make sure there are players left.
+    
+  //endTurn(game);  //???
+}
+
+function netWorth(game, socketid, amt, fbid) {
+  var worth = game.players[fbid].money;
+  for (var pid in game.players[fbid].properties) {
+    var prop = game.players[fbid].properties[pid];
+    var pCost = (prop.card.price / 2); 
+    var gCost = (prop.card.housecost / 2);
+    var rCost = (prop.card.hotelcost / 2);
+    var hNum = prop.numHotels;
+    var hot = prop.hotel;
+    if (hot) {
+      worth = (worth + (4 * gCost) + rCost + pCost);
+    } else {
+      worth = (worth + (hNum * gCost)) + pCost;
+    }
+  }
+  return worth;
+}
+
+function inDefault(game, socketid, amt, fbid) {
+  game.players[fbid].inDefault = true;
+  connections[socketid].emit('inDefault', {
+    amt: amt,
+    fbid: fbid
+  });
+  //need to talk with tyler.
+}
+
+function canPayDebt(game, socketid, amt, fbid){
+  //check if amt is less than money and if so let the client know it's fine and debit the account. 
 }
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
-  //need to ensure atomicity later on probably...
   connections[socketid].emit('credit', {fbid : fbid, amt: amt});
 }
 
+function forceDebit(game, socketid, amt, fbid, target) {
+  console.log("forcedebit!");
+  var suc = debit(game,socketid,amt,fbid);
+  if (!suc) {
+      if ((netWorth(game, socketid, amt, fbid) - amt < 0)) {
+        bankrupt(game, socketid, fbid, target);
+      }
+      else inDefault(game, socketid, amt, fbid);
+  }
+  return suc;
+}
+
 function debit(game, socketid, amt, fbid) {
-  if (game.players[fbid].money - amt < 0) {
-    //handle mortgage conditions, loss conditions, etc;
+  if ((game.players[fbid].money - amt) < 0) {
     return false; // not enough money;
   } else {
     game.players[fbid].money = Number(Number(game.players[fbid].money) - Number(amt));
