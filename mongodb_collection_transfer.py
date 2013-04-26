@@ -9,7 +9,7 @@ source_commchest = source_db.communitychest
 
 dest = pymongo.MongoClient('localhost', 27017)
 dest_db = dest["cmuopoly"]
-dest_db.authenticate("amittere", "amittere")
+#dest_db.authenticate("amittere", "amittere")
 dest_props = dest_db.properties
 dest_chance = dest_db.chance
 dest_commchest = dest_db.communitychest
