@@ -1526,8 +1526,6 @@ function handleChance(game, socketid, fbid) {
         money: game.players[fbid].money,
         reason: "Chance."
       });
-    } else if (id === 9) { //has since been removed.
-      console.log("this isn't a thing.");
     } else if (id < 11) { //debit type cards
      var amt = Math.abs(card.amt);
      var success = debit(game, socketid, amt, fbid);
