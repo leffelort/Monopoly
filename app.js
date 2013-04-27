@@ -835,6 +835,7 @@ io.sockets.on('connection', function (socket) {
     
   /*
     if (data.originsockid && data.destsockid) {
+      console.log("both are non-null");
       updateTrade(data.originsockid, data.destsockid, data.tradeobj, data.agent);
     } else {
       if (data.agent === 'origin') {

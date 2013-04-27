@@ -58,6 +58,9 @@ function socketSetup() {
     game = game.game;
     players = game.players;
     leftplayer = game.players[fbobj.id];
+    if (localStorage["agent"] === "destination") {
+      rightplayer = players[localStorage["originfbid"]];
+    }
     displayPlayers();
   });
   socket.on('tradeResponse', function (obj) {
@@ -65,6 +68,7 @@ function socketSetup() {
     // TODO handle trading starting stuffz
   });
   socket.on('tradeUpdate', function (obj) {
+    console.log("got update", obj);
     localStorage['originsockid'] = obj.originsockid;
     localStorage['destsockid'] = obj.destsockid;
     updateTradeValues(obj.tradeobj);
