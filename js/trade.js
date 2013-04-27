@@ -44,6 +44,9 @@ function displayPlayers() {
 
     playerSelect.append(playerCell);
   }
+  if (localStorage["agent"] === "destination") {
+    loadTradePanels();
+  }
 }
 
 
@@ -149,7 +152,7 @@ function displayProperties(properties, propDiv, clickable) {
       destfbid: localStorage['destfbid'],
       originfbid: localStorage['originfbid'],
       tradeobj: {
-        type: "money",
+        kind: "money",
         value: this.value,
         agent: localStorage['agent']
       }
@@ -189,7 +192,7 @@ function displayProperties(properties, propDiv, clickable) {
         var space = i;
         cur_cell.click(function() {
           if (cur_cell.hasClass("selected")) {
-            console.log("sending selected");
+            console.log("sending deselected");
             cur_cell.removeClass("selected");
             socket.emit('tradeUpdate', {
               destsockid: localStorage['destsockid'],
@@ -198,13 +201,13 @@ function displayProperties(properties, propDiv, clickable) {
               destfbid: localStorage['destfbid'],
               originfbid: localStorage['originfbid'],
               tradeobj: {
-                type: 'property',
-                value: i,
+                kind: 'property',
+                value: cur_prop,
                 selected: false
               }
             });
           } else {
-            console.log("sending deselected");
+            console.log("sending selected");
             cur_cell.addClass("selected");
             socket.emit('tradeUpdate', {
               destsockid: localStorage['destsockid'],
@@ -213,8 +216,8 @@ function displayProperties(properties, propDiv, clickable) {
               destfbid: localStorage['destfbid'],
               originfbid: localStorage['originfbid'],
               tradeobj: {
-                type: 'property',
-                value: i,
+                kind: 'property',
+                value: cur_prop,
                 selected: true
               }
             });
@@ -228,29 +231,24 @@ function displayProperties(properties, propDiv, clickable) {
 }
 
 function updateTradeValues(tradeobj) {
-  console.log('I know I should be updating but I choose not to.');
-  if (tradeobj.type === "money") {
-    if (tradeobj.agent === "origin") {
-      $("#tradeleft .moneyInput").val(tradeobj.val);
-    } else {
-      $("#traderight .moneyInput").val(tradeobj.val);
-    }
+  console.log('I know I should be updating but I choose not to.', tradeobj);
+  if (tradeobj.kind === "money") {
+    $("#tradeleft .moneyInput").val(tradeobj.value);
   } else {
-    var propspace = tradeobj.value;
-    var name = propDatabase[propspace];
+    var prop = tradeobj.value;
     var cells = $(".propertyCell");
     if (tradeobj.selected) {
       for (var i = 0; i < cells.length; i++) {
         var cur_cell = cells[i];
-        if (name === $(cur_cell).children().html()) {
-          cur_cell.addClass("selected");
+        if (prop.card.title === $(cur_cell).children(".propname").html()) {
+          $(cur_cell).addClass("selected");
         }
       }
     } else {
       for (var i = 0; i < cells.length; i++) {
         var cur_cell = cells[i];
-        if (name === $(cur_cell).children().html()) {
-          cur_cell.removeClass("selected");
+        if (prop.card.title === $(cur_cell).children(".propname").html()) {
+          $(cur_cell).removeClass("selected");
         }
       }
     }
@@ -264,7 +262,6 @@ $(document).ready(function() {
 function setupPage () {
   window.addEventListener('load', function() {
     new FastClick(document.body);
-    new FastClick(document.getElementById("tradeleft"));
   }, false);
 
 }
