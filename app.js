@@ -810,6 +810,24 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('tradeUpdate', function(data) {
+    queryGame(socket.id, function(game) {
+      socketsInGame(game.id, function (arr) {
+        var destsockid;
+        var originsockid;
+        for (var i in arr) {
+          if (arr[i].fbid === data.destfbid) {
+            destsockid = arr[i].socketid;
+          }
+          if (arr[i].fbid === data.originfbid) {
+            originsockid = arr[i].sockid;
+          }
+        }
+        console.log("HELLO: ", (destsockid && originsockid));
+        updateTrade(originsockid, destsockid, data.tradeobj, data.agent);
+      });
+    });
+    
+  /*
     if (data.originsockid && data.destsockid) {
       updateTrade(data.originsockid, data.destsockid, data.tradeobj, data.agent);
     } else {
@@ -842,7 +860,7 @@ io.sockets.on('connection', function (socket) {
           });
         }
       }
-    }
+    } */
   });
   
   socket.on('tradeCancel', function(data){
