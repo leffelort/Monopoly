@@ -899,16 +899,19 @@ io.sockets.on('connection', function (socket) {
   socket.on('tradeAccept', function(data) {
       queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
-        for (var i in arr) {
-          if (arr[i].fbid === data.tofbid) {
-            connections[arr[i].socketid].emit('tradeAccept', {});
-          }
-        }
-        sendToBoards(game.id, 'tradeAccept', {
-          originfbid: originfbid,
-          destfbid: destfbid
-          });
         handleTrade(game, data.tradeobj, data.originfbid, data.destfbid, socket.id);
+        saveGame(game, function () {
+          for (var i in arr) {
+            if (arr[i].fbid === data.tofbid) {
+              connections[arr[i].socketid].emit('tradeAccept', {});
+            }
+          }
+          sendToBoards(game.id, 'tradeAccept', {
+            originfbid: originfbid,
+            destfbid: destfbid,
+            tradeobj: tradeobj
+            });
+        });
       });
     });
   });
@@ -2009,11 +2012,8 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
       }
     }
   }
-  sendToBoards(game.id, 'tradeAccept', {
-    originfbid: origfbid,
-    destfbid: destfbid
-  });
 }
+
       
 
 function userMaintain(socket, data, cback) {
