@@ -811,7 +811,7 @@ io.sockets.on('connection', function (socket) {
   
   socket.on('tradeUpdate', function(data) {
     queryGame(socket.id, function(game) {
-      socketsInGame(game.id, function (arr) {
+      socketsInGame(game.id, 'users', function (arr) {
         var destsockid;
         var originsockid;
         for (var i in arr) {
@@ -819,10 +819,11 @@ io.sockets.on('connection', function (socket) {
             destsockid = arr[i].socketid;
           }
           if (arr[i].fbid === data.originfbid) {
-            originsockid = arr[i].sockid;
+            originsockid = arr[i].socketid; 
           }
         }
-        console.log("HELLO: ", (destsockid && originsockid));
+        console.log((!!connections[originsockid]));
+        console.log((!!connections[destsockid]));
         updateTrade(originsockid, destsockid, data.tradeobj, data.agent);
       });
     });
