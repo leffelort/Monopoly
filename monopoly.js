@@ -20,6 +20,8 @@ var Game = function(id, code, name, maxPlayers) {
   this.commChestDeck = [];
   this.chanceJailCardUsed = false;
   this.commChestJailCardUsed = false;
+  this.eventLog = [];
+  this.chatLog = [];
 }
 
 var Player = function(username, fbid) {

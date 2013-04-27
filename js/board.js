@@ -36,6 +36,7 @@ function scaleBoard() {
 }
 
 function refreshBoardState(game) {
+  console.log("refreshBoardState");
   // update players
   for (var fbid in game.players) {
     var player = game.players[fbid];
@@ -90,6 +91,25 @@ function refreshBoardState(game) {
       }
     });
   }
+  
+  // Populate chat/event logs
+  if (localStorage["cmuopoly_eventLog"] !== "") {
+    var eventLog = JSON.parse(localStorage["cmuopoly_eventLog"]);
+    console.log(localStorage["cmuopoly_eventLog"]);
+    console.log(eventLog);
+    eventLog.forEach(function (msg) {
+      addToEventLog(msg);
+    });
+  } 
+  
+  if (localStorage["cmuopoly_chatLog"] !== "") {
+    var chatLog = JSON.parse(localStorage["cmuopoly_chatLog"]);
+    console.log(localStorage["cmuopoly_chatLog"]);
+    console.log(chatLog);
+    chatLog.forEach(function (msg) {
+      addChatMessage(msg.fbid, msg.message);
+    });
+  }
 }
 
 function updateGameEvents() {
@@ -107,7 +127,7 @@ function updateGameEvents() {
     // If the current event has been there for the duration, remove it
     eventTimer += eventUpdateFreq;
     if (eventTimer >= eventDuration) {
-      console.log("removing event: ", currentEvent)
+      console.log("removing event: ", currentEvent);
       currentEvent = undefined;
       $(".gameEvent").removeClass("visible");
     }
@@ -117,6 +137,7 @@ function updateGameEvents() {
 function displayEvent(eventStr) {
   eventQueue.push(eventStr);
   addToEventLog(eventStr);
+  saveEvent(eventStr);
 }
 
 function addToEventLog(eventStr) {
@@ -130,6 +151,16 @@ function addToEventLog(eventStr) {
   $('#eventLog').scrollTop($('#eventLog')[0].scrollHeight);
 }
 
+function saveEvent(eventStr) {
+  if (localStorage["cmuopoly_eventLog"] !== "") {
+    var eventLog = JSON.parse(localStorage["cmuopoly_eventLog"]);
+    eventLog.push(eventStr);
+    localStorage["cmuopoly_eventLog"] = JSON.stringify(eventLog);
+  } else {
+    localStorage["cmuopoly_eventLog"] = JSON.stringify([eventStr]);
+  }
+}
+
 function addChatMessage(fbid, message) {
   var log = $("#chatLog .logMessage").toArray();
   var li = $("<li>").addClass("logMessage");
@@ -141,6 +172,18 @@ function addChatMessage(fbid, message) {
   li.append(sender).append(messageText);
   $("#chatLog").append(li);
   $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
+  
+}
+
+function saveChatMessage(fbid, message) {
+  var msg = { fbid: fbid, message: message };
+  if (localStorage["cmuopoly_chatLog"] !== "") {
+    var chatLog = JSON.parse(localStorage["cmuopoly_chatLog"]);
+    chatLog.push(msg);
+    localStorage["cmuopoly_chatLog"] = JSON.stringify(chatLog);
+  } else {
+    localStorage["cmuopoly_chatLog"] = JSON.stringify([msg])
+  }
 }
 
 function movePlayer(fbid, initial, end) {
@@ -383,6 +426,7 @@ function attachSocketHandlers() {
 
   socket.on('chatmessage', function (socketdata) {
     addChatMessage(socketdata.fbid, socketdata.message);
+    saveChatMessage(socketdata.fbid, socketdata.message);
   });
 }
 

@@ -138,6 +138,8 @@ function attachSocketHandlers() {
 
 	socket.on('gameReady', function () {
 		console.log("READY.");
+    localStorage["cmuopoly_chatLog"] = "";
+    localStorage["cmuopoly_eventLog"] = "";
 		window.location = "/board/monopoly.html";
 	});
 }
