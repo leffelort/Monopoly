@@ -1586,6 +1586,7 @@ function handleTax(game, space, socketid, fbid){
       amount: amt,
       reason: "Luxury Tax"
     });
+    endTurn(game);
   } else if (space === 4) {
     amt = 200;
     var suc = forceDebit(game, socketid, amt, fbid); 
@@ -1598,6 +1599,7 @@ function handleTax(game, space, socketid, fbid){
       amount: amt,
       reason: "Income Tax"
     });
+    endTurn(game);
   } else {
     throw "should not have called this";
   }
@@ -1644,7 +1646,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
-    endTurn(game);
   }
 }
 
@@ -1713,7 +1714,7 @@ function handleChance(game, socketid, fbid) {
         delta : -3,
         end: newspace
       });
-      handleSpace(game, socketid, newSpace, fbid, 3);
+      handleSpace(game, socketid, newspace, fbid, 3);
       return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');
