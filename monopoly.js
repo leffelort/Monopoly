@@ -30,6 +30,7 @@ var Player = function(username, fbid) {
   this.money = 1500;
   this.properties = [];
   this.jailed = false;
+  this.wasJailed = false;
   this.jailTime = 0;
   this.jailCards = [];
   this.space = 0;
@@ -37,6 +38,7 @@ var Player = function(username, fbid) {
   this.bankrupt = false;
   this.inDefault = false;
   this.isWaiting = false;
+  this.numDbls = 0;
 }
 
 var Property = function(card) {

@@ -885,8 +885,11 @@ function endTurn(game) {
     }
   }
 
-  if (!game.doubles || game.players[previd].jailed) {
+  if (!game.doubles || game.players[previd].jailed || 
+      game.players[previd].wasJailed) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
+    game.players[previd].numDbls = 0;
+    game.players[previd].wasJailed = false;
   }
 
   var fbid;
@@ -960,10 +963,20 @@ function handleRoll(delta, dbls, socketid, fbid) {
     console.log("Handling roll for player ", game.players[fbid]);
     console.log("Found a game??", game.id);
     game.doubles = dbls;
+    if (dbls) {
+      var numDbls = ++game.players[fbid].numDbls;
+      console.log("rolled doubles " + numDbls);
+      if (numDbls === 3) {
+        sendToJail(game, socketid, fbid);
+        endTurn(game);
+        return;
+      }
+    }
     if (game.players[fbid].jailed) {
       if (dbls) {
         sendToBoards(game.id, 'getOutOfJail', { fbid: fbid, debit: 0 });
         game.players[fbid].jailed = false;
+        game.players[fbid].wasJailed = true;
       } else {
         sendToBoards(game.id, 'stayInJail', { fbid: fbid });
         endTurn(game);
@@ -1596,7 +1609,7 @@ function handleChance(game, socketid, fbid) {
         delta : -3,
         end: newspace
       });
-      handleSpace(game, socketid, newSpace, fbid, 3);
+      handleSpace(game, socketid, newspace, fbid, 3);
       return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');

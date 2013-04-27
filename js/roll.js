@@ -96,11 +96,12 @@ $(document).ready(function(){
   // resize to fit phone screen
 });
 
-function forceRoll(val) {
+function forceRoll(val, dbls) {
+  if (dbls === undefined) dbls = false;
   rollresult = val;
   socket.emit('diceroll', {
     result: val,
-    doubles: false,
+    doubles: dbls,
     fbid: fbobj.id
   });
 }
