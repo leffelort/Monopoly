@@ -908,7 +908,7 @@ io.sockets.on('connection', function (socket) {
           originfbid: originfbid,
           destfbid: destfbid
           });
-        handleTrade(game, data.tradeobj, data.originfbid, data.destfbid);
+        handleTrade(game, data.tradeobj, data.originfbid, data.destfbid, socket.id);
       });
     });
   });
@@ -1384,11 +1384,11 @@ function checkMonopoly(game, fbid, space) {
   var result = _.every(group, function(z) {
     return (propertyOwners[z] === first);
   });
-  if (result) {
-    for (var index in group) {
-      game.players[fbid].properties[group[index]].monopoly = true;
-    }
+  //if (result) {
+  for (var index in group) {
+    game.players[fbid].properties[group[index]].monopoly = result;
   }
+  //}
 }
 
 function isOwnable(space) {
@@ -1849,7 +1849,8 @@ function bankrupt(game, socketid, fbid, target) {
       if (prop) {
         prop.owner = newOwner;
         game.propertyOwners[pid] = target;
-        player.properties[pid] = prop;
+        game.players[target].properties[pid] = prop;
+        checkMonopoly(game, target, pid);
       }
     }
     credit(game,socketid,player.money,target); //socketid?
@@ -1961,9 +1962,57 @@ function updateTrade(originsocket, destsocket, obj, agent){
   });
 }
 
-function handleTrade(game, tradeobj, originfbid, destfbid){
-  //todo..... trades obviously.
-
+function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
+  var dop = tradeobj.destofferprops;
+  var dom = tradeobj.destoffermoney;
+  var oop = tradeobj.originofferprops;
+  var oom = tradeobj.originoffermoney;
+  
+  
+  var suc = debit(game, socketid, oom, originfbid, destfbid);
+  if (!suc) throw "should never not have money for trade";
+  credit(game,socketid, oom, destfbid);
+  
+  suc = debit(game, socketid, dom, destfbid, originfbid);
+  if (!suc) throw "should never not have money for trade";
+  credit(game, socketid, dom, originfbid);
+  
+  var origPlay = game.players[originfbid];
+  var destPlay = game.players[destfbid];
+  
+  for (var i in oop) {
+    if (oop[i]) {
+      var newOwner = destPlay.username.split(" ")[0];
+      var prop = origPlay.properties[oop[i]]; //i or oop[i]? depends how dop
+      var pid = prop.id;
+      if (prop) {
+        prop.owner = newOwner;
+        game.propertyOwners[pid] = destfbid;
+        destPlay.properties[pid] = prop;
+        delete origPlay.properties[pid];
+        checkMonopoly(game, destfbid, pid);
+      }
+    }
+  }
+  
+  for (var i in dop) {
+    if (dop[i]) {
+      var newOwner = origPlay.username.split(" ")[0];
+      var prop = destPlay.properties[dop[i]]; //i or dop[i]? depends how dop
+      if (prop) {
+        var pid = prop.id;
+        prop.owner = newOwner;
+        game.propertyOwners[pid] = origfbid;
+        origPlay.properties[pid] = prop;
+        delete destPlay.properties[pid];
+        checkMonopoly(game, origfbid, pid);
+      }
+    }
+  }
+  sendToBoards(game.id, 'tradeAccept', {
+    originfbid: origfbid,
+    destfbid: destfbid
+  });
 }
       
 
