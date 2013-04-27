@@ -197,6 +197,9 @@ function movePlayer(fbid, initial, end) {
     // see jailPlayer() for the special case of going to jail
     $("#jail .playerpiece" + players[fbid])
       .removeClass("visible").removeClass("currentTurn" + players[fbid]);
+  } else if (end === 30) {
+    // If player lands on jail space, don't show anything since they're just
+    // going to go to jail anyway.
   } else {
     $("#space" + end + " .playerpiece" + players[fbid])
       .addClass("visible").addClass("currentTurn" + players[fbid]);

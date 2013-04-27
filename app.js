@@ -781,7 +781,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('getOutOfJail', function (data) {
     queryGame(socket.id, function (game) {
       if (data.paid) {
-        debit(game, socket.id, 50, data.fbid);
+        debit(game, socket.id, 50, data.fbid, "getting out of jail.");
         game.players[data.fbid].jailed = false;
         sendToBoards(game.id, 'getOutOfJail', { 
           fbid: data.fbid,
@@ -1764,12 +1764,16 @@ function forceDebit(game, socketid, amt, fbid, target) {
   return suc;
 }
 
-function debit(game, socketid, amt, fbid) {
+function debit(game, socketid, amt, fbid, reason) {
   if ((game.players[fbid].money - amt) < 0) {
     return false; // not enough money;
   } else {
     game.players[fbid].money = Number(Number(game.players[fbid].money) - Number(amt));
-    connections[socketid].emit('debit', {fbid : fbid, amt: amt});
+    connections[socketid].emit('debit', {
+      fbid : fbid, 
+      amt: amt, 
+      reason: reason
+    });
     return true;
   }
 }

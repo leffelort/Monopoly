@@ -67,15 +67,23 @@ function socketSetup() {
   });
   
   socket.on('debit', function (socketdata) {
-    displayEvent("You paid $" + socketdata.amount + " for " + socketdata.reason);
+    if (socketdata.reason !== undefined) {
+      displayEvent("You paid $" + socketdata.amt + " for " + socketdata.reason);
+    } else {
+      displayEvent("You paid $" + socketdata.amt);
+    }
     var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old - socketdata.amount));
+    $(".moneydisp").html("$" + (old - socketdata.amt));
   });
   
   socket.on('credit', function (socketdata) {
-    displayEvent("You received $" + socketdata.amount + " for " + socketdata.reason);
+    if (socketdata.reason !== undefined) {
+      displayEvent("You received $" + socketdata.amt + " for " + socketdata.reason);
+    } else {
+      displayEvent("You received $" + socketdata.amt);
+    }
     var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old + socketdata.amount));
+    $(".moneydisp").html("$" + (old + socketdata.amt));
   });
 
   socket.on('passGo!', function (socketdata) {
