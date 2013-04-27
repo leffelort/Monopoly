@@ -295,6 +295,31 @@ function setupSockets() {
     window.me = resp;
     loadFBData();
   });
+  socket.on('tradeStart', function (obj) {
+    localStorage["destfbid"] = obj.destfbid;
+    localStorage["originfbid"] = obj.originfbid;
+    if (fbobj.id === obj.destfbid) {
+      localStorage["agent"] = "destination";
+      localStorage["tofbid"] = obj.originfbid;
+    } else {
+      console.log("WAT DUCK.")
+      localStorage["agent"] = "origin";
+      localStorage["tofbid"] = obj.destfbid;
+    }
+    displayPrompt("Wants to trade with you", function(resp) {
+      if (resp) {
+        socket.emit('tradeResponse', {
+          destfbid: obj.destfbid,
+          originfbid: obj.originfbid
+        });
+        window.location.replace("trade.html");
+      } else {
+        socket.emit('tradeCancel', {
+          tofbid: obj.originfbid
+        });
+      }
+    });
+  });
 }
 
 function displayPrompt(msg, callback) {

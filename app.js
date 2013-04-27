@@ -91,10 +91,11 @@ app.get("/properties", function(req, resp) {
 
 var MongoClient = require('mongodb').MongoClient;
 
-var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?";
+var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly";
 var dbIsOpen = false;
 var client = undefined;
 var chanceCommChestDeck = undefined;
+console.log("Your MONGOURI is ", mongoUri);
 
 MongoClient.connect(mongoUri, {
     db: {},
@@ -778,16 +779,138 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  socket.on('tradeStart', function(data) {
+    queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function (arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.destfbid) { 
+            connections[arr[i].socketid].emit('tradeStart', {
+              originfbid: data.originfbid,
+              destfbid: data.destfbid
+            });
+          }
+        }
+      });
+    });
+  });
+  
+  socket.on('tradeResponse', function(data) {
+    queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function (arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.originfbid) { 
+            connections[arr[i].socketid].emit('tradeResponse', {
+            destfbid: data.destfbid,
+            originfbid: data.originfbid
+            });
+          }
+        }
+      });
+    });
+  });
+  
+  socket.on('tradeUpdate', function(data) {
+    if (data.originsockid && data.destsockid) {
+      updateTrade(data.originsockid, data.destsockid, data.tradeobj, data.agent);
+    } else {
+      if (data.agent === 'origin') {
+        if (data.destsockid) {
+          updateTrade(socket.id, data.destsockid, data.tradeobj, data.agent);
+        } else {
+          queryGame(socket.id, function(game) {
+            socketsInGame(game.id, 'users', function (arr) {
+              for (var i in arr) {
+                if (arr[i].fbid === data.destfbid) {
+                  updateTrade(socket.id, arr[i].socketid, data.tradeobj, data.agent);
+                }
+              }
+            });        
+          });
+        }
+      } else {
+        if (data.originsockid) {
+          updateTrade(data.originsockid, socket.id, data.tradeobj, data.agent);
+        } else {
+          queryGame(socket.id, function(game) {
+            socketsInGame(game.id, 'users', function (arr) {
+              for (var i in arr) {
+                if (arr[i].fbid === data.originfbid) {
+                  updateTrade(arr[i].socketid, socket.id, data.tradeobj, data.agent);
+                }
+              }
+            });        
+          });
+        }
+      }
+    }
+  });
+  
+  socket.on('tradeCancel', function(data){
+    queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function(arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.tofbid) {
+            connections[arr[i].socketid].emit('tradeCancel', {});
+          }
+        }
+      });
+    });
+  });
+  
+  socket.on('tradeFinalize', function(data) {
+    queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function(arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.tofbid) {
+            connections[arr[i].socketid].emit('tradeFinalize', {
+              tradeobj: data.tradeobj
+            });
+          }
+        }
+      });
+    });
+  });
+
+  socket.on('tradeAccept', function(data) {
+      queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function(arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.tofbid) {
+            connections[arr[i].socketid].emit('tradeAccept', {});
+          }
+        }
+        sendToBoards(game.id, 'tradeAccept', {
+          originfbid: originfbid,
+          destfbid: destfbid
+          });
+        handleTrade(game, data.tradeobj, data.originfbid, data.destfbid);
+      });
+    });
+  });
+  socket.on('tradeReject', function(data) {
+      queryGame(socket.id, function(game) {
+      socketsInGame(game.id, 'users', function(arr) {
+        for (var i in arr) {
+          if (arr[i].fbid === data.tofbid) {
+            connections[arr[i].socketid].emit('tradeReject', {});
+          }
+        }
+      });
+    });
+  });
+  
   socket.on('getOutOfJail', function (data) {
     queryGame(socket.id, function (game) {
       if (data.paid) {
-        debit(game, socket.id, 50, data.fbid, "getting out of jail.");
-        game.players[data.fbid].jailed = false;
-        sendToBoards(game.id, 'getOutOfJail', { 
-          fbid: data.fbid,
-          debit: 50
-        });
-        socket.emit('getOutOfJail', { debit: 50 });
+        var suc = debit(game, socket.id, 50, data.fbid);
+        if (suc) {
+          game.players[data.fbid].jailed = false;
+          sendToBoards(game.id, 'getOutOfJail', { 
+            fbid: data.fbid,
+            debit: 50
+          });
+          socket.emit('getOutOfJail', { debit: 50 });
+        } else console.log("can't pay for jail?");
       } else {
         var card = game.players[data.fbid].jailCards.shift();
         game.players[data.fbid].jailed = false;
@@ -1243,11 +1366,8 @@ function checkMonopoly(game, fbid, space) {
   }
 }
 
-// thedrick - this is kind of ugly, but apparently map is relatively new?
-// I was going to port this to a map reduce, but this is fine.
 function isOwnable(space) {
   console.log("inside is ownable with space " + space);
-//todo actually port this to map/reduce -pmarino
   var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
   var railroads = [5,15,25,35]
   var utilities = [12,28]
@@ -1392,8 +1512,6 @@ function collectRent(game, space, socketid, tenant, roll) {
     }
   }
 
-  // Proceed with transaction
-  // TODO: handle extraordinary conditions
   var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   var suc = forceDebit(game, socketid, amt, tenant, owner);
   if (suc) credit(game, socketid, amt, owner); //socketid??
@@ -1481,6 +1599,7 @@ function handleTax(game, space, socketid, fbid){
       amount: amt,
       reason: "Luxury Tax"
     });
+    endTurn(game);
   } else if (space === 4) {
     amt = 200;
     var suc = forceDebit(game, socketid, amt, fbid); 
@@ -1493,6 +1612,7 @@ function handleTax(game, space, socketid, fbid){
       amount: amt,
       reason: "Income Tax"
     });
+    endTurn(game);
   } else {
     throw "should not have called this";
   }
@@ -1539,7 +1659,6 @@ function handleSpace(game, socketid, space, fbid, roll) {
   }
   if (isTax(space)) {
     handleTax(game, space, socketid, fbid);
-    endTurn(game);
   }
 }
 
@@ -1580,7 +1699,6 @@ function handleChance(game, socketid, fbid) {
       return;
     } else if (id === 5) { //send to jail card
       sendToJail(game, socketid, fbid);
-      return;
     } else if (id < 9) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
@@ -1724,7 +1842,7 @@ function bankrupt(game, socketid, fbid, target) {
   if (temp < 2) endGame(game);
   //check to make sure there are players left.
     
-  endTurn(game);  //???
+  endTurn(game); 
 }
 
 function netWorth(game, socketid, amt, fbid) {
@@ -1747,22 +1865,35 @@ function netWorth(game, socketid, amt, fbid) {
   return worth;
 }
 
-function inDefault(game, socketid, amt, fbid) {
+function inDefault(game, socketid, amt, fbid, target) {
   game.players[fbid].inDefault = true;
+  game.players[fbid].debt = amt;
+  game.players[fbid].debtor = target;
   connections[socketid].emit('inDefault', {
     amt: amt,
     fbid: fbid
   });
-  //need to talk with tyler.
 }
 
-function canPayDebt(game, socketid, amt, fbid){
-  //check if amt is less than money and if so let the client know it's fine and debit the account. 
-}
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
   connections[socketid].emit('credit', {fbid : fbid, amt: amt});
+  if (game.players[fbid].inDefault) {
+    if ((game.players[fbid].money) > (game.players[fbid].debt)) {
+      var suc = forceDebit(game,socketid,game.players[fbid].debt, fbid, game.players[fbid].debtor);
+      if (suc) {
+        connections[socketid].emit('outOfDebt', {
+          fbid: fbid,
+          debt: amt,
+        });
+      game.players[fbid].debt = 0;
+      game.players[fbid].debtor = "";
+      game.players[fbid].inDefault = false;
+      endTurn(game); //may be an issue in the future, be wary.
+      } else console.log('serious credit problems');
+    } 
+  }
 }
 
 function forceDebit(game, socketid, amt, fbid, target) {
@@ -1772,7 +1903,7 @@ function forceDebit(game, socketid, amt, fbid, target) {
       if ((netWorth(game, socketid, amt, fbid) - amt < 0)) {
         bankrupt(game, socketid, fbid, target);
       }
-      else inDefault(game, socketid, amt, fbid);
+      else inDefault(game, socketid, amt, fbid, target);
   }
   return suc;
 }
@@ -1790,6 +1921,25 @@ function debit(game, socketid, amt, fbid, reason) {
     return true;
   }
 }
+
+function updateTrade(originsocket, destsocket, obj, agent){
+  var socket;
+  if (agent === 'origin') {
+    socket = connections[destsocket];
+  } else {
+    socket = connections[originsocket];
+  }
+  socket.emit('tradeUpdate', {
+    originsockid: originsocket,
+    destsockid: destsocket,
+    tradeobj: obj
+  });
+}
+
+function handleTrade(game, tradeobj, originfbid, destfbid){
+  //todo..... trades obviously.
+}
+      
 
 function userMaintain(socket, data, cback) {
   console.log("userMaintain " + socket.id);
@@ -1829,8 +1979,6 @@ function sendToPlayers(gameID, emitString, emitArgs) {
   });
 }
 
-// TODO This needs to actually send stuff to the baord and like we should
-// have the right sockets for boards and stuff. - thedrick
 function sendToBoards(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'boards', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
