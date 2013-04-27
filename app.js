@@ -1685,7 +1685,6 @@ function handleChance(game, socketid, fbid) {
       return;
     } else if (id === 5) { //send to jail card
       sendToJail(game, socketid, fbid);
-      return;
     } else if (id < 9) { // credit type cards
       credit(game, socketid, card.amt, fbid);
       sendToBoards(game.id, 'credit', {
