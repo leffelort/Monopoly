@@ -224,6 +224,7 @@ function displayProperties(properties, propDiv, clickable) {
 }
 
 function updateTradeValues(tradeobj) {
+  console.log('I know I should be updating but I choose not to.');
   if (tradeobj.type === "money") {
     if (tradeobj.agent === "origin") {
       $("#tradeleft .moneyInput").val(tradeobj.val);

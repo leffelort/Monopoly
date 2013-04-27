@@ -1,3 +1,8 @@
+//pmarino todo: check inDefault to make sure it works after frontend created
+//              handleTrade();
+//              gameOver(game) should determine who has one
+//              quit(game,socketid, fbid);
+
 // ========================
 // ==== Express server ====
 // ========================
@@ -1957,6 +1962,7 @@ function updateTrade(originsocket, destsocket, obj, agent){
 
 function handleTrade(game, tradeobj, originfbid, destfbid){
   //todo..... trades obviously.
+
 }
       
 
