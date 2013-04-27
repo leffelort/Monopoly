@@ -8,6 +8,15 @@ var rightplayer;
 var propDatabase = {};
 
 function cancelClicked() {
+  socket.emit('tradeCancel', {
+    tofbid: localStorage['tofbid']
+  });
+  delete localStorage["agent"];
+  delete localStorage["tofbid"];
+  delete localStorage["destfbid"];
+  delete localStorage["originfbid"];
+  delete localStorage["destsockid"];
+  delete localStorage["originsockid"];
   window.location.replace("mobileHome.html");
 }
 
@@ -79,8 +88,17 @@ function socketSetup() {
   socket.on('tradeFinalize', function (obj) {
     var tradeobj = obj.tradeobj;
     // display prompt with info.
-
+    displayTradeOffer(tradeobj);
     // tradeAccept or tradeReject, both go to mobileHome.
+  });
+  socket.on('tradeCancel', function (obj) {
+    delete localStorage["agent"];
+    delete localStorage["tofbid"];
+    delete localStorage["destfbid"];
+    delete localStorage["originfbid"];
+    delete localStorage["destsockid"];
+    delete localStorage["originsockid"];
+    window.location.replace("mobileHome.html");
   });
 }
 
@@ -127,6 +145,14 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   };
 }
 
+function displayTradeOffer(tradeobj) {
+  var destoffermoney = tradeobj.destoffermoney;
+  var destofferprops = tradeobj.destofferprops;
+  var originoffermoney = tradeobj.originoffermoney;
+  var originofferprops = tradeobj.originofferprops;
+  // display shit
+}
+
 function displayProperties(properties, propDiv, clickable) {
   var moneyCell = $("<div>").addClass("propertyCell")
                             .addClass("moneyCell");
@@ -145,6 +171,9 @@ function displayProperties(properties, propDiv, clickable) {
   }
   moneyCell.append(moneyInput);
   moneyInput.blur(function() {
+    if (this.value >= Number($("#traderight .playerMoney").html().split("$")[1])) {
+      this.value = 0;
+    }
     socket.emit('tradeUpdate', {
       destsockid: localStorage['destsockid'],
       originsockid: localStorage['originsockid'],
@@ -162,7 +191,7 @@ function displayProperties(properties, propDiv, clickable) {
   for (var i = 0; i < properties.length; i++) {
     var prop = properties[i];
     if (!prop) continue;
-    propDatabase[i] = prop;
+    propDatabase[prop.card.title] = prop;
 
     var card = prop.card;
     var cell = $("<div>").addClass("propertyCell");
@@ -230,6 +259,49 @@ function displayProperties(properties, propDiv, clickable) {
   }
 }
 
+function displayPrompt(msg, callback) {
+  if (callback === undefined) {
+    callback = function(bool) {
+      console.log(bool);
+    };
+  }
+  var height = $(window).height() * 0.8;
+  var confirmWrapper = $("<div>").addClass("confirmWrapper");
+  var blackness = $("<div>").addClass("blackness");
+  if (document.documentElement.clientHeight > 268) {
+    blackness.css("height", document.documentElement.height);
+  } else if ($(document).height() > 268) {
+    blackness.css("height", $(document).height());
+  }
+  confirmWrapper.append(blackness);
+  var confirmbox = $("<div>").addClass("confirmbox")
+                             .html($("<div>")
+                                   .addClass("promptmsg")
+                                   .html("<p>" + msg + "</p>"));
+                             //.height(height)
+                             //.width(height);
+  var boxes = $("<div>").addClass("boxeyboxes");
+  var yesbox = $("<div>").attr("id", "yesbox")
+                         .addClass("promptbox")
+                         .html("<p>&#10003;</p>");
+  var nobox = $("<div>").attr("id", "nobox")
+                        .addClass("promptbox")
+                        .html("<p>&#10060;</p>");
+  boxes.append(yesbox, nobox);
+  confirmbox.append(boxes);
+  confirmWrapper.append(confirmbox);
+  $("#content").append(confirmWrapper);
+
+  $("#yesbox").click(function() {
+    callback(true);
+    $(".confirmWrapper").remove();
+  });
+  $("#nobox").click(function() {
+    callback(false);
+    $(".confirmWrapper").remove();
+  });
+}
+
 function updateTradeValues(tradeobj) {
   console.log('I know I should be updating but I choose not to.', tradeobj);
   if (tradeobj.kind === "money") {
@@ -267,11 +339,31 @@ function setupPage () {
 }
 
 function tradeFinalize() {
-  var props = $(".propertyCell .selected");
-  var leftmoney = $("#tradeleft .moneyInput").val();
-  var rightmoney = $("#traderight .moneyInput").val();
+  if (localStorage['agent'] === "destination") {
+    console.log("opponent cannot send final trade offer");
+    return;
+  }
+  var leftselectedprops = $("#tradeleft .propertyCell.selected");
+  var rightselectedprops = $("#traderight .propertyCell.selected")
+  var originoffermoney = $("#tradeleft .moneyInput").val();
+  var destoffermoney = $("#traderight .moneyInput").val();
+  var destofferprops = [];
+  var originofferprops = [];
+  for (propdiv in leftselectedprops) {
+    var prop = propDatabase[$(propdiv).children(".propname").html()];
+    originofferprops[prop.id] = prop;
+  } 
+  for (propdiv in rightselectedprops) {
+    var prop = propDatabase[$(propdiv).children(".propname").html()];
+    destofferprops[prop.id] = prop;
+  }
   socket.emit('tradeFinalize', {
-    tradeobj: {},
+    tradeobj: {
+      destoffermoney: destoffermoney,
+      originoffermoney: originoffermoney,
+      originofferprops: originofferprops,
+      destofferprops: destofferprops
+    },
     tofbid: localStorage["tofbid"]
   });
 }
@@ -302,13 +394,6 @@ function loadTradePanels() {
     $("#traderight .playerProperties"),
     (fbobj.id !== rightplayer.fbid));
 
-  $(".cancelbtn").click(function() {
-    socket.emit('tradeCancel', {
-      tofbid: localStorage['tofbid']
-    });
-    window.location.replace("mobileHome.html");
-  });
-
   $(".acceptbtn").click(function() {
     tradeFinalize();
   });
@@ -318,6 +403,7 @@ function loadTradePanels() {
     sendMessage();
   });
 
+  $(".cancelbtn").click(cancelClicked);
   
 }
 
