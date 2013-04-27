@@ -78,12 +78,12 @@ function refreshBoardState(game) {
           .addClass("player" + playerNum);
 
         if (property.hotel) {
+          $("#space" + property.id + " .houses").removeClass("visible");
           $("#space" + property.id + " .hotel").addClass("visible");
         } else {
           $("#space" + property.id + " .hotel").removeClass("visible");
 
           var houses = $("#space" + property.id + " .houses");
-          houses.addClass("visible");
           for (var i = 1; i <= property.numHouses; i++) {
             $("#space" + property.id + " .house" + i).addClass("visible");
           }
@@ -398,25 +398,25 @@ function attachSocketHandlers() {
   socket.on('houseBuy', function (socketdata) {
     houseBuy(socketdata.space);
     debit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " bought a house on " + propName);
+    displayEvent(playerNames[socketdata.fbid] + " bought a house on " + socketdata.propName);
   });
 
   socket.on('houseSell', function (socketdata) {
     houseSell(socketdata.space);
     credit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " sold a house on " + propName);
+    displayEvent(playerNames[socketdata.fbid] + " sold a house on " + socketdata.propName);
   });
 
   socket.on('hotelBuy', function (socketdata) {
     hotelBuy(socketdata.space);
     debit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " bought a hotel on " + propName);
+    displayEvent(playerNames[socketdata.fbid] + " bought a hotel on " + socketdata.propName);
   });
 
   socket.on('hotelSell', function (socketdata) {
     hotelSell(socketdata.space);
     credit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + propName);
+    displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + socketdata.propName);
   });
 
   socket.on('chance', function (socketdata) {

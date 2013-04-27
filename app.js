@@ -1080,7 +1080,7 @@ function handleConstruction(space, socketid, fbid){
           var cost = prop.card.housecost;
           var suc = debit(game, socketid, cost, fbid);
           if (suc) {
-            game.availableHouses = (game.availableHouses - 4);
+            game.availableHouses = (game.availableHouses - 1);
             prop.numHouses = (prop.numHouses + 1);
             saveGame(game, function () {
               connections[socketid].emit('houseBuy', {
