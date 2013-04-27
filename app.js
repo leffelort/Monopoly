@@ -91,10 +91,11 @@ app.get("/properties", function(req, resp) {
 
 var MongoClient = require('mongodb').MongoClient;
 
-var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly?";
+var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly";
 var dbIsOpen = false;
 var client = undefined;
 var chanceCommChestDeck = undefined;
+console.log("Your MONGOURI is ", mongoUri);
 
 MongoClient.connect(mongoUri, {
     db: {},

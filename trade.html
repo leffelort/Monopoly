@@ -20,15 +20,13 @@
   </div>
   <div class="errormsg"></div>
 
+  <div class="acceptbtn btn"><p>&#10003;</p></div>
+  <div class="cancelbtn btn"><p>&#10060;</p></div>
   <!-- TRADE LEFT START -->
   <div id="tradeleft">
     <div class="playerName"></div>
     <div class="playerMoney"></div>
     <div class="playerProperties"></div>
-    <div class="decisionButtons">
-      <div class="acceptbtn btn"><p>&#10003;</p></div>
-      <div class="cancelbtn btn"><p>&#10060;</p></div>
-    </div>
   </div>
 
   <!-- TRADE RIGHT START -->
@@ -36,10 +34,12 @@
     <div class="playerName"></div>
     <div class="playerMoney"></div>
     <div class="playerProperties"></div>
-    <div class="decisionButtons">
-      <div class="acceptbtn btn"><p>&#10003;</p></div>
-      <div class="cancelbtn btn"><p>&#10060;</p></div>
-    </div>
+  </div>
+  <div class="chatarea">
+    <form id="chatform">
+      <input id="chatBox" type="text" class="chattext" placeholder="Type to chat..." />
+      <input type="button" class="chatbtn" value="Send" />
+    </form>
   </div>
 </div>
 <script type="text/javascript" src="/socket.io/socket.io.js"></script>

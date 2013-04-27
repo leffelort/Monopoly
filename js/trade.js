@@ -5,31 +5,7 @@ var game;
 var trader;
 var leftplayer;
 var rightplayer;
-
-// Taken from MDN. Used for browers without bind support.
-if (!Function.prototype.bind) {
-  Function.prototype.bind = function (oThis) {
-    if (typeof this !== "function") {
-      // closest thing possible to the ECMAScript 5 internal IsCallable function
-      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-    }
- 
-    var aArgs = Array.prototype.slice.call(arguments, 1), 
-        fToBind = this, 
-        fNOP = function () {},
-        fBound = function () {
-          return fToBind.apply(this instanceof fNOP && oThis
-                                 ? this
-                                 : oThis,
-                               aArgs.concat(Array.prototype.slice.call(arguments)));
-        };
- 
-    fNOP.prototype = this.prototype;
-    fBound.prototype = new fNOP();
- 
-    return fBound;
-  };
-}
+var propDatabase = {};
 
 function cancelClicked() {
   window.location.replace("mobileHome.html");
@@ -84,6 +60,21 @@ function socketSetup() {
     leftplayer = game.players[fbobj.id];
     displayPlayers();
   });
+  socket.on('tradeResponse', function (obj) {
+    loadTradePanels();
+    // TODO handle trading starting stuffz
+  });
+  socket.on('tradeUpdate', function (obj) {
+    localStorage['originsockid'] = obj.originsockid;
+    localStorage['destsockid'] = obj.destsockid;
+    updateTradeValues(obj.tradeobj);
+  });
+  socket.on('tradeFinalize', function (obj) {
+    var tradeobj = obj.tradeobj;
+    // display prompt with info.
+
+    // tradeAccept or tradeReject, both go to mobileHome.
+  });
 }
 
 if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
@@ -129,19 +120,12 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   };
 }
 
-function displayProperties(properties, propDiv) {
+function displayProperties(properties, propDiv, clickable) {
   var moneyCell = $("<div>").addClass("propertyCell")
                             .addClass("moneyCell");
   moneyCell.append($("<div>").addClass("proptext")
                              .addClass("propname")
                              .html("Money"));
-  moneyCell.click(function() {
-    if (moneyCell.hasClass("selected")) {
-      moneyCell.removeClass("selected");
-    } else {
-      moneyCell.addClass("selected");
-    }
-  });
   var moneyInput = $("<input>").attr({
     "type": "text",
     "placeholder": "$0",
@@ -149,11 +133,29 @@ function displayProperties(properties, propDiv) {
     "rows": 2,
     "class": "moneyInput"
   });
+  if (!clickable) {
+    moneyInput.prop("disabled", true);
+  }
   moneyCell.append(moneyInput);
+  moneyInput.blur(function() {
+    socket.emit('tradeUpdate', {
+      destsockid: localStorage['destsockid'],
+      originsockid: localStorage['originsockid'],
+      agent: localStorage['agent'],
+      destfbid: localStorage['destfbid'],
+      originfbid: localStorage['originfbid'],
+      tradeobj: {
+        type: "money",
+        value: this.value,
+        agent: localStorage['agent']
+      }
+    });
+  });
   propDiv.append(moneyCell);
   for (var i = 0; i < properties.length; i++) {
     var prop = properties[i];
     if (!prop) continue;
+    propDatabase[i] = prop;
 
     var card = prop.card;
     var cell = $("<div>").addClass("propertyCell");
@@ -176,28 +178,85 @@ function displayProperties(properties, propDiv) {
     }
     cell.append(bottom);
 
-    (function() {
-      var cur_prop = prop;
-      var cur_cell = cell;
-      cur_cell.click(function() {
-        if (cur_cell.hasClass("selected")) {
-          cur_cell.removeClass("selected");
-        } else {
-          cur_cell.addClass("selected");
-        }
-      });
-    })();
+    if (clickable) {
+      (function() {
+        var cur_prop = prop;
+        var cur_cell = cell;
+        var space = i;
+        cur_cell.click(function() {
+          if (cur_cell.hasClass("selected")) {
+            console.log("sending selected");
+            cur_cell.removeClass("selected");
+            socket.emit('tradeUpdate', {
+              destsockid: localStorage['destsockid'],
+              originsockid: localStorage['originsockid'],
+              agent: localStorage['agent'],
+              destfbid: localStorage['destfbid'],
+              originfbid: localStorage['originfbid'],
+              tradeobj: {
+                type: 'property',
+                value: i,
+                selected: false
+              }
+            });
+          } else {
+            console.log("sending deselected");
+            cur_cell.addClass("selected");
+            socket.emit('tradeUpdate', {
+              destsockid: localStorage['destsockid'],
+              originsockid: localStorage['originsockid'],
+              agent: localStorage['agent'],
+              destfbid: localStorage['destfbid'],
+              originfbid: localStorage['originfbid'],
+              tradeobj: {
+                type: 'property',
+                value: i,
+                selected: true
+              }
+            });
+          }
+        });
+      })();
+    }
     
     propDiv.append(cell);
   }
 }
 
+function updateTradeValues(tradeobj) {
+  if (tradeobj.type === "money") {
+    if (tradeobj.agent === "origin") {
+      $("#tradeleft .moneyInput").val(tradeobj.val);
+    } else {
+      $("#traderight .moneyInput").val(tradeobj.val);
+    }
+  } else {
+    var propspace = tradeobj.value;
+    var name = propDatabase[propspace];
+    var cells = $(".propertyCell");
+    if (tradeobj.selected) {
+      for (var i = 0; i < cells.length; i++) {
+        var cur_cell = cells[i];
+        if (name === $(cur_cell).children().html()) {
+          cur_cell.addClass("selected");
+        }
+      }
+    } else {
+      for (var i = 0; i < cells.length; i++) {
+        var cur_cell = cells[i];
+        if (name === $(cur_cell).children().html()) {
+          cur_cell.removeClass("selected");
+        }
+      }
+    }
+  }
+}
+
 $(document).ready(function() {
-  $("#tradeleft, #traderight").hide();
+  $("#tradeleft, #traderight, .chatarea, .btn").hide();
 });
 
 function setupPage () {
-
   window.addEventListener('load', function() {
     new FastClick(document.body);
     new FastClick(document.getElementById("tradeleft"));
@@ -205,20 +264,59 @@ function setupPage () {
 
 }
 
+function tradeFinalize() {
+  var props = $(".propertyCell .selected");
+  var leftmoney = $("#tradeleft .moneyInput").val();
+  var rightmoney = $("#traderight .moneyInput").val();
+  socket.emit('tradeFinalize', {
+    tradeobj: {},
+    tofbid: localStorage["tofbid"]
+  });
+}
+
+function sendMessage() {
+  var message = $("#chatBox").val().trim();
+  if (message !== "") {
+    socket.emit('gameChat', {
+      fbid: window.fbobj.id,
+      message: message
+    });
+    $("#chatBox").val("");
+  }
+}
+
 function loadTradePanels() {
+  $("#playerSelect, .selectTitle, .buttons, .errormsg").hide();
+  $("#tradeleft, #traderight, .btn, .chatarea").show();
   $("#tradeleft .playerName").html(leftplayer.username.split(" ")[0]);
   $("#tradeleft .playerMoney").html("$" + leftplayer.money);
-  displayProperties(leftplayer.properties, $("#tradeleft .playerProperties"));
-  $("#tradeleft .cancelbtn").click(function() {
-    window.location.replace("mobileHome.html");
-  });
+  displayProperties(leftplayer.properties, 
+    $("#tradeleft .playerProperties"),
+    (fbobj.id !== leftplayer.fbid));
 
   $("#traderight .playerName").html(rightplayer.username.split(" ")[0]);
   $("#traderight .playerMoney").html("$" + rightplayer.money); 
-  displayProperties(rightplayer.properties, $("#traderight .playerProperties"));
-  $("#traderight .cancelbtn").click(function() {
+  displayProperties(rightplayer.properties, 
+    $("#traderight .playerProperties"),
+    (fbobj.id !== rightplayer.fbid));
+
+  $(".cancelbtn").click(function() {
+    socket.emit('tradeCancel', {
+      tofbid: localStorage['tofbid']
+    });
     window.location.replace("mobileHome.html");
   });
+
+  $(".acceptbtn").click(function() {
+    tradeFinalize();
+  });
+
+  $(".chatbtn").click(function() {
+    event.preventDefault();
+    sendMessage();
+  });
+
+  
 }
 
 
@@ -227,8 +325,17 @@ function tradeButtonHandler() {
     $(".errormsg").html("You must select someone to trade with.");
     return;
   }
-  $("#playerSelect, .selectTitle, .buttons, .errormsg").hide();
-  $("#tradeleft").show();
-  $("#traderight").show();
-  loadTradePanels();
+  $(".errormsg").html("Waiting for opponent to accept trade.");
+
+  socket.emit('tradeStart', {
+    originfbid: leftplayer.fbid,
+    destfbid: rightplayer.fbid
+  });
+  localStorage["originfbid"] = leftplayer.fbid;
+  localStorage["destfbid"] = rightplayer.fbid;
+  localStorage["tofbid"] = rightplayer.fbid;
+  localStorage["agent"] = "origin";
+
 }
+
+
