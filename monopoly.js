@@ -36,6 +36,8 @@ var Player = function(username, fbid) {
   this.playerNumber = 0;
   this.bankrupt = false;
   this.inDefault = false;
+  this.debt = 0;
+  this.debtor;
   this.isWaiting = false;
 }
 
