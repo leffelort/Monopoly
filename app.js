@@ -1986,7 +1986,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   for (var i in oop) {
     if (oop[i]) {
       var newOwner = destPlay.username.split(" ")[0];
-      var prop = origPlay.properties[oop[i]]; //i or oop[i]? depends how dop
+      var prop = origPlay.properties[i]; //i or oop[i]? depends how dop
       var pid = prop.id;
       if (prop) {
         prop.owner = newOwner;
@@ -2001,7 +2001,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   for (var i in dop) {
     if (dop[i]) {
       var newOwner = origPlay.username.split(" ")[0];
-      var prop = destPlay.properties[dop[i]]; //i or dop[i]? depends how dop
+      var prop = destPlay.properties[i]; //i or dop[i]? depends how dop
       if (prop) {
         var pid = prop.id;
         prop.owner = newOwner;
