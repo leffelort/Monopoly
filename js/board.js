@@ -91,7 +91,7 @@ function refreshBoardState(game) {
       }
     });
   }
-  
+
   // Populate chat/event logs
   if (localStorage["cmuopoly_eventLog"] !== "") {
     var eventLog = JSON.parse(localStorage["cmuopoly_eventLog"]);
@@ -100,8 +100,8 @@ function refreshBoardState(game) {
     eventLog.forEach(function (msg) {
       addToEventLog(msg);
     });
-  } 
-  
+  }
+
   if (localStorage["cmuopoly_chatLog"] !== "") {
     var chatLog = JSON.parse(localStorage["cmuopoly_chatLog"]);
     console.log(localStorage["cmuopoly_chatLog"]);
@@ -172,7 +172,7 @@ function addChatMessage(fbid, message) {
   li.append(sender).append(messageText);
   $("#chatLog").append(li);
   $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
-  
+
 }
 
 function saveChatMessage(fbid, message) {
@@ -225,16 +225,26 @@ function debit(fbid, amt) {
   $("#playermoney" + players[fbid]).html("$" + (old - amt));
 }
 
-function credit(fbid, amt) {
+function transaction(fbid, amt) {
   var old = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
   $("#playermoney" + players[fbid]).html("$" + (old + amt));
 }
 
-function propertySold(fbid, propid, propname, cost) {
+function sellProperty(fbid, propid) {
   console.log("propertySold: " + fbid);
   $("#space" + propid + " .propertyown").addClass("player" + players[fbid]);
-  debit(fbid, cost);
-  displayEvent(playerNames[fbid] + " bought " + propname);
+}
+
+// transfers ownership of property propid from origin to dest.
+function giveProperty(origin, dest, propid) {
+  $("#space" + propid + " .propertyown").removeClass("player" + players[origin])
+    .addClass("player" + players[dest]);
+}
+
+// Transfers $amt from origin to dest.
+function giveMoney(origin, dest, amt) {
+  transaction(origin, amt * -1);
+  transaction(dest, amt);
 }
 
 function nextTurn(previd, fbid) {
@@ -333,103 +343,180 @@ function hotelSell(propid) {
 }
 
 function attachSocketHandlers() {
-  socket.on("boardReconnect", function (socketdata) {
-    if (!socketdata.success) {
+  socket.on("boardReconnect", function (data) {
+    if (!data.success) {
       alert("Error reconnecting.");
-      window.location.replace("/realdesktop.html");
+      window.location.replace("/desktop.html");
     } else {
       socket.emit('boardstate', {});
     }
   });
 
-  socket.on('boardstate', function (socketdata) {
-    if (socketdata.success) {
-      refreshBoardState(socketdata.game);
+  socket.on('boardstate', function (data) {
+    if (data.success) {
+      refreshBoardState(data.game);
       setInterval(updateGameEvents, eventUpdateFreq);
     }
   });
 
-  socket.on('movePlayer', function (socketdata) {
-    movePlayer(socketdata.fbid, socketdata.initial, socketdata.end);
+  socket.on('movePlayer', function (data) {
+    movePlayer(data.fbid, data.initial, data.end);
   });
 
-  socket.on('goToJail', function (socketdata) {
-    jailPlayer(socketdata.fbid, socketdata.initial);
-    displayEvent(playerNames[socketdata.fbid] + " was sent to jail!");
+  socket.on('goToJail', function (data) {
+    jailPlayer(data.fbid, data.initial);
+    displayEvent(playerNames[data.fbid] + " was sent to jail!");
   });
 
-  socket.on('getOutOfJail', function (socketdata) {
-    displayEvent(playerNames[socketdata.fbid] + " got out of jail!");
-    debit(socketdata.fbid, socketdata.debit);
+  socket.on('getOutOfJail', function (data) {
+    displayEvent(playerNames[data.fbid] + " got out of jail!");
+    transaction(data.fbid, data.debit * -1);
   });
 
-  socket.on('stayInJail', function (socketdata) {
-    displayEvent(playerNames[socketdata.fbid] + " stayed in jail.");
+  socket.on('stayInJail', function (data) {
+    displayEvent(playerNames[data.fbid] + " stayed in jail.");
   });
 
-  socket.on('propertySold', function (socketdata) {
-    propertySold(socketdata.fbid, socketdata.property, socketdata.propName, socketdata.cost)
+  socket.on('propertySold', function (data) {
+    sellProperty(data.fbid, data.property);
+    transaction(data.fbid, data.cost * -1);
+    displayEvent(playerNames[data.fbid] + " bought " + data.propName);
   });
 
-  socket.on('nextTurn', function (socketdata) {
-    nextTurn(socketdata.previd, socketdata.fbid);
+  socket.on('nextTurn', function (data) {
+    nextTurn(data.previd, data.fbid);
   });
 
-  socket.on('payingRent', function (socketdata) {
-    debit(socketdata.tenant, socketdata.amount);
-    credit(socketdata.owner, socketdata.amount);
-    displayEvent(playerNames[socketdata.tenant] + " paid " + playerNames[socketdata.owner] + " $" + socketdata.amount + " in rent.");
+  socket.on('payingRent', function (data) {
+    transaction(data.tenant, data.amount * -1);
+    transaction(data.owner, data.amount);
+    displayEvent(playerNames[data.tenant] + " paid " + playerNames[data.owner] + " $" + data.amount + " in rent.");
   });
 
-  socket.on('debit', function (socketdata) {
-    debit(socketdata.fbid, socketdata.amount);
-    displayEvent(playerNames[socketdata.fbid] + " paid $" + socketdata.amount + " for " + socketdata.reason);
+  socket.on('debit', function (data) {
+    transaction(data.fbid, data.amount * -1);
+    displayEvent(playerNames[data.fbid] + " paid $" + data.amount + " for " + data.reason);
   });
 
-  socket.on('credit', function (socketdata) {
-    credit(socketdata.fbid, socketdata.amount);
-    displayEvent(playerNames[socketdata.fbid] + " received $" + socketdata.amount + " for " + socketdata.reason);
+  socket.on('credit', function (data) {
+    transaction(data.fbid, data.amount);
+    displayEvent(playerNames[data.fbid] + " received $" + data.amount + " for " + data.reason);
   });
 
-  socket.on('inspectProperty', function (socketdata) {
-    inspectProperty(socketdata.fbid, socketdata.property);
+  socket.on('inspectProperty', function (data) {
+    inspectProperty(data.fbid, data.property);
   });
 
-  socket.on('houseBuy', function (socketdata) {
-    houseBuy(socketdata.space);
-    debit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " bought a house on " + socketdata.propName);
+  socket.on('houseBuy', function (data) {
+    houseBuy(data.space);
+    transaction(data.fbid, data.cost * -1);
+    displayEvent(playerNames[data.fbid] + " bought a house on " + data.propName);
   });
 
-  socket.on('houseSell', function (socketdata) {
-    houseSell(socketdata.space);
-    credit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " sold a house on " + socketdata.propName);
+  socket.on('houseSell', function (data) {
+    houseSell(data.space);
+    transaction(data.fbid, data.cost);
+    displayEvent(playerNames[data.fbid] + " sold a house on " + data.propName);
   });
 
-  socket.on('hotelBuy', function (socketdata) {
-    hotelBuy(socketdata.space);
-    debit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " bought a hotel on " + socketdata.propName);
+  socket.on('hotelBuy', function (data) {
+    hotelBuy(data.space);
+    transaction(data.fbid, data.cost * -1);
+    displayEvent(playerNames[data.fbid] + " bought a hotel on " + data.propName);
   });
 
-  socket.on('hotelSell', function (socketdata) {
-    hotelSell(socketdata.space);
-    credit(socketdata.fbid, socketdata.cost);
-    displayEvent(playerNames[socketdata.fbid] + " sold a hotel on " + socketdata.propName);
+  socket.on('hotelSell', function (data) {
+    hotelSell(data.space);
+    transaction(data.fbid, data.cost);
+    displayEvent(playerNames[data.fbid] + " sold a hotel on " + data.propName);
   });
 
-  socket.on('chance', function (socketdata) {
-    displayEvent(playerNames[socketdata.fbid] + ' landed on Chance!\n"' + socketdata.text + '"');
+  socket.on('chance', function (data) {
+    displayEvent(playerNames[data.fbid] + ' landed on Chance!\n"' + data.text + '"');
   });
 
-  socket.on('commChest', function (socketdata) {
-    displayEvent(playerNames[socketdata.fbid] + ' landed on Community Chest!\n"' + socketdata.text + '"');
+  socket.on('commChest', function (data) {
+    displayEvent(playerNames[data.fbid] + ' landed on Community Chest!\n"' + data.text + '"');
   });
 
-  socket.on('chatmessage', function (socketdata) {
-    addChatMessage(socketdata.fbid, socketdata.message);
-    saveChatMessage(socketdata.fbid, socketdata.message);
+  socket.on('chatmessage', function (data) {
+    addChatMessage(data.fbid, data.message);
+    saveChatMessage(data.fbid, data.message);
+  });
+
+  socket.on('tradeAccept', function (data) {
+    var originmoney, originprops, origintrade;
+    var destmoney, destprops, desttrade;
+
+    // Transfer money
+    if (data.tradeobj.originoffermoney > 0) {
+      giveMoney(data.originfbid, data.destfbid, data.tradeobj.originoffermoney);
+      originmoney = "$" + data.tradeobj.originoffermoney;
+    } else {
+      originmoney = "";
+    }
+
+
+    if (data.tradeobj.destoffermoney > 0) {
+      giveMoney(data.destfbid, data.originfbid, data.tradeobj.destoffermoney);
+      destmoney = "$" + data.tradeobj.destoffermoney;
+    } else {
+      destmoney = "";
+    }
+
+    // Transfer properties
+    data.tradeobj.originofferprops.forEach(function (prop, propid) {
+      if (prop !== null) {
+        giveProperty(data.originfbid, data.destfbid, propid);
+        if (originprops === undefined) {
+          originprops = prop.card.title;
+        } else {
+          originprops = originprops + ", " + prop.card.title;
+        }
+      }
+    });
+    data.tradeobj.destofferprops.forEach(function (prop, propid) {
+      if (prop !== null) {
+        giveProperty(data.destfbid, data.originfbid, propid);
+        if (destprops === undefined) {
+          destprops = prop.card.title;
+        } else {
+          destprops = destprops + ", " + prop.card.title;
+        }
+      }
+    });
+
+    // Construct event string
+    if (originmoney !== "") {
+      if (originprops !== "") {
+        origintrade = originmoney + " and " + originprops;
+      } else {
+        origintrade = originmoney;
+      }
+    } else {
+      if (originprops !== "") {
+        origintrade = originprops;
+      } else {
+        origintrade = "nothing";
+      }
+    }
+
+    if (destmoney !== "") {
+      if (destprops !== "") {
+        desttrade = destmoney + " and " + destprops;
+      } else {
+        desttrade = destmoney;
+      }
+    } else {
+      if (destprops !== "") {
+        desttrade = destprops;
+      } else {
+        desttrade = "nothing";
+      }
+    }
+    var eventStr = playerNames[data.originfbid] + " traded " + origintrade +
+      " to " + playerNames[data.destfbid] + " for " + desttrade;
+    displayEvent(eventStr);
   });
 }
 

@@ -788,7 +788,7 @@ io.sockets.on('connection', function (socket) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
         for (var i in arr) {
-          if (arr[i].fbid === data.destfbid) { 
+          if (arr[i].fbid === data.destfbid) {
             connections[arr[i].socketid].emit('tradeStart', {
               originfbid: data.originfbid,
               destfbid: data.destfbid
@@ -798,12 +798,12 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
-  
+
   socket.on('tradeResponse', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
         for (var i in arr) {
-          if (arr[i].fbid === data.originfbid) { 
+          if (arr[i].fbid === data.originfbid) {
             connections[arr[i].socketid].emit('tradeResponse', {
             destfbid: data.destfbid,
             originfbid: data.originfbid
@@ -813,7 +813,7 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
-  
+
   socket.on('tradeUpdate', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
@@ -824,7 +824,7 @@ io.sockets.on('connection', function (socket) {
             destsockid = arr[i].socketid;
           }
           if (arr[i].fbid === data.originfbid) {
-            originsockid = arr[i].socketid; 
+            originsockid = arr[i].socketid;
           }
         }
         console.log((!!connections[originsockid]));
@@ -832,7 +832,7 @@ io.sockets.on('connection', function (socket) {
         updateTrade(originsockid, destsockid, data.tradeobj, data.agent);
       });
     });
-    
+
   /*
     if (data.originsockid && data.destsockid) {
       console.log("both are non-null");
@@ -849,7 +849,7 @@ io.sockets.on('connection', function (socket) {
                   updateTrade(socket.id, arr[i].socketid, data.tradeobj, data.agent);
                 }
               }
-            });        
+            });
           });
         }
       } else {
@@ -863,13 +863,13 @@ io.sockets.on('connection', function (socket) {
                   updateTrade(arr[i].socketid, socket.id, data.tradeobj, data.agent);
                 }
               }
-            });        
+            });
           });
         }
       }
     } */
   });
-  
+
   socket.on('tradeCancel', function(data){
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -881,7 +881,7 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
-  
+
   socket.on('tradeFinalize', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -897,7 +897,7 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('tradeAccept', function(data) {
-      queryGame(socket.id, function(game) {
+    queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
         handleTrade(game, data.tradeobj, data.originfbid, data.destfbid, socket.id);
         saveGame(game, function () {
@@ -910,13 +910,13 @@ io.sockets.on('connection', function (socket) {
             originfbid: originfbid,
             destfbid: destfbid,
             tradeobj: tradeobj
-            });
+          });
         });
       });
     });
   });
   socket.on('tradeReject', function(data) {
-      queryGame(socket.id, function(game) {
+    queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.tofbid) {
@@ -926,14 +926,14 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
-  
+
   socket.on('getOutOfJail', function (data) {
     queryGame(socket.id, function (game) {
       if (data.paid) {
         var suc = debit(game, socket.id, 50, data.fbid);
         if (suc) {
           game.players[data.fbid].jailed = false;
-          sendToBoards(game.id, 'getOutOfJail', { 
+          sendToBoards(game.id, 'getOutOfJail', {
             fbid: data.fbid,
             debit: 50
           });
@@ -947,7 +947,7 @@ io.sockets.on('connection', function (socket) {
         } else {
           chanceCommChestDeck.returnCommChestJailCard(game);
         }
-        sendToBoards(game.id, 'getOutOfJail', { 
+        sendToBoards(game.id, 'getOutOfJail', {
           fbid: data.fbid,
           debit: 0
         });
@@ -1036,7 +1036,7 @@ function endTurn(game) {
     }
   }
 
-  if (!game.doubles || game.players[previd].jailed || 
+  if (!game.doubles || game.players[previd].jailed ||
       game.players[previd].wasJailed) {
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
     game.players[previd].numDbls = 0;
@@ -1051,7 +1051,7 @@ function endTurn(game) {
   }
 
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
-  
+
   if (!game.players[fbid].bankrupt) {
     saveGame(game, function(){
       sendToBoards(game.id, 'nextTurn', {
@@ -1096,7 +1096,7 @@ function handleSale(space, socketid, fbid) {
       prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
       game.players[fbid].properties[space] = prop;
       game.propertyOwners[space] = fbid;
-    
+
       checkMonopoly(game, fbid, space);
       sendToBoards(game.id, 'propertySold', {
         property : space,
@@ -1617,7 +1617,7 @@ function handleTax(game, space, socketid, fbid){
   var amt;
   if (space === 38) {
     amt = 75;
-    var suc = forceDebit(game, socketid, amt, fbid); 
+    var suc = forceDebit(game, socketid, amt, fbid);
     if (!suc) {
       console.log('could not pay tax');
       return;
@@ -1630,7 +1630,7 @@ function handleTax(game, space, socketid, fbid){
     endTurn(game);
   } else if (space === 4) {
     amt = 200;
-    var suc = forceDebit(game, socketid, amt, fbid); 
+    var suc = forceDebit(game, socketid, amt, fbid);
     if (!suc) {
       console.log('could not pay tax');
       return;
@@ -1763,7 +1763,7 @@ function handleChance(game, socketid, fbid) {
         fbid: fbid,
         type: 'Chance'
       });
-    } else console.log('chance card out of bounds'); 
+    } else console.log('chance card out of bounds');
     endTurn(game);
   });
 }
@@ -1792,7 +1792,7 @@ function handleCommChest(game, socketid, fbid) {
         delta : delta,
         end: end
       });
-      handleSpace(game, socketid, end, fbid, delta);      
+      handleSpace(game, socketid, end, fbid, delta);
       return;
     } else if (id < 10) { // credit type cards
       credit(game, socketid, card.amt, fbid);
@@ -1862,16 +1862,16 @@ function bankrupt(game, socketid, fbid, target) {
   player.money = 0;
   player.bankrupt = true;
   game.doubles = false;
-   
+
   var temp = 0;
   for (var i in game.players) {
     if (!game.players[i].bankrupt) temp++;
   }
-  
+
   if (temp < 2) endGame(game);
   //check to make sure there are players left.
-    
-  endTurn(game); 
+
+  endTurn(game);
 }
 
 function netWorth(game, socketid, amt, fbid) {
@@ -1879,7 +1879,7 @@ function netWorth(game, socketid, amt, fbid) {
   for (var pid in game.players[fbid].properties) {
     var prop = game.players[fbid].properties[pid];
     if (prop) {
-      var pCost = (prop.card.price / 2); 
+      var pCost = (prop.card.price / 2);
       var gCost = (prop.card.housecost / 2);
       var rCost = (prop.card.hotelcost / 2);
       var hNum = prop.numHotels;
@@ -1921,7 +1921,7 @@ function credit(game,socketid, amt, fbid) {
       game.players[fbid].inDefault = false;
       endTurn(game); //may be an issue in the future, be wary.
       } else console.log('serious credit problems');
-    } 
+    }
   }
 }
 
@@ -1943,8 +1943,8 @@ function debit(game, socketid, amt, fbid, reason) {
   } else {
     game.players[fbid].money = Number(Number(game.players[fbid].money) - Number(amt));
     connections[socketid].emit('debit', {
-      fbid : fbid, 
-      amt: amt, 
+      fbid : fbid,
+      amt: amt,
       reason: reason
     });
     return true;
@@ -1970,19 +1970,19 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   var dom = tradeobj.destoffermoney;
   var oop = tradeobj.originofferprops;
   var oom = tradeobj.originoffermoney;
-  
-  
+
+
   var suc = debit(game, socketid, oom, originfbid, destfbid);
   if (!suc) throw "should never not have money for trade";
   credit(game,socketid, oom, destfbid);
-  
+
   suc = debit(game, socketid, dom, destfbid, originfbid);
   if (!suc) throw "should never not have money for trade";
   credit(game, socketid, dom, originfbid);
-  
+
   var origPlay = game.players[originfbid];
   var destPlay = game.players[destfbid];
-  
+
   for (var i in oop) {
     if (oop[i]) {
       var newOwner = destPlay.username.split(" ")[0];
@@ -1997,7 +1997,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
       }
     }
   }
-  
+
   for (var i in dop) {
     if (dop[i]) {
       var newOwner = origPlay.username.split(" ")[0];
@@ -2014,7 +2014,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   }
 }
 
-      
+
 
 function userMaintain(socket, data, cback) {
   console.log("userMaintain " + socket.id);
