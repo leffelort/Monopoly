@@ -420,7 +420,7 @@ function loadTradePanels() {
     tradeFinalize();
   });
 
-  $(".chatbtn").click(function() {
+  $("#chatform").submit(function() {
     event.preventDefault();
     sendMessage();
   });
