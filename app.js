@@ -334,6 +334,7 @@ function saveObjectToDB(collection, obj, cback) {
         collec.insert(obj, function(err, res) {
           if (err)
             throw err;
+          cback();
           //console.log(res);
         });
       } else if (obj.socketid !== undefined) {
@@ -342,13 +343,15 @@ function saveObjectToDB(collection, obj, cback) {
           function(err) {
           if (err)
             throw err;
-            console.log("finished.");
+          console.log("finished.");
+          cback();
         });
        // collec.find({}).toArray(function(x,y) { if (x) throw x; console.log("t" + y);});
       } else {
         console.log("object already exists in database");
+        cback();
       }
-      cback();
+      //cback();
     });
   });
 }
@@ -446,7 +449,7 @@ io.sockets.on('connection', function (socket) {
       queryGame(socket.id, function (game) {
         socket.emit('reopen', {
           success: true,
-          inDefault: game.players[data.fbid].inDefault
+          inDefault: game.players[data.id].inDefault
         });
       })
     });
@@ -454,12 +457,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('login', function (data) {
     userMaintain(socket, data, function() {
-      queryGame(socket.id, function (game) {
-        socket.emit('login', {
-          success: true,
-          inDefault: game.players[data.fbid].inDefault
-        });
-      })
+      socket.emit('login', { success: true });
     });
   });
 
@@ -1399,11 +1397,16 @@ function checkMonopoly(game, fbid, space) {
   var result = _.every(group, function(z) {
     return (propertyOwners[z] === first);
   });
-  //if (result) {
+  if (result) {
+    group.forEach(function (space) {
+      game.players[fbid].properties[space].monopoly = result;
+    });
+  }
+  /*
   for (var index in group) {
     game.players[fbid].properties[group[index]].monopoly = result;
   }
-  //}
+  */
 }
 
 function isOwnable(space) {

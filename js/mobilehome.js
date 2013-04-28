@@ -322,7 +322,7 @@ function setupSockets() {
   });
 
   socket.on('inDefault', function (obj) {
-    var promptStr = "You owe $" + obj.amt " and don't have enough money to pay. You must sell assets to pay your debt.";
+    var promptStr = "You owe $" + obj.amt + " and don't have enough money to pay. You must sell assets to pay your debt.";
     displayPrompt(promptStr, function () {
       goToManage();
     }, false);

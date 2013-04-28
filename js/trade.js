@@ -61,7 +61,7 @@ function displayPlayers() {
 
 function socketSetup() {
   setupPage();
-  
+
   socket.on('reopen', function() {
     window.scrollTo(0,1);
     socket.emit('getGame', {});
@@ -125,7 +125,7 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
       cookie     : true, // enable cookies to allow the server to access the session
       xfbml      : true  // parse XFBML
     });
-  
+
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected') {
         // connected
@@ -151,7 +151,7 @@ function displayTradeOffer(tradeobj) {
   var originoffermoney = tradeobj.originoffermoney;
   var originofferprops = tradeobj.originofferprops;
   // TODO : actually display the trade being made.
-  displayPrompt("Do you accept this trade?", fucntion(resp) {
+  displayPrompt("Do you accept this trade?", function(resp) {
     if (resp) {
       socket.emit('tradeAccept', {
         tradeobj: tradeobj,
@@ -267,7 +267,7 @@ function displayProperties(properties, propDiv, clickable) {
         });
       })();
     }
-    
+
     propDiv.append(cell);
   }
 }
@@ -356,8 +356,8 @@ function tradeFinalize() {
     console.log("opponent cannot send final trade offer");
     return;
   }
-  var leftselectedprops = $("#tradeleft .propertyCell.selected");
-  var rightselectedprops = $("#traderight .propertyCell.selected")
+  var leftselectedprops = $("#tradeleft .propertyCell.selected").toArray();
+  var rightselectedprops = $("#traderight .propertyCell.selected").toArray();
   var originoffermoney = $("#tradeleft .moneyInput").val();
   var destoffermoney = $("#traderight .moneyInput").val();
   var destofferprops = [];
@@ -365,7 +365,7 @@ function tradeFinalize() {
   for (propdiv in leftselectedprops) {
     var prop = propDatabase[$(propdiv).children(".propname").html()];
     originofferprops[prop.id] = prop;
-  } 
+  }
   for (propdiv in rightselectedprops) {
     var prop = propDatabase[$(propdiv).children(".propname").html()];
     destofferprops[prop.id] = prop;
@@ -397,13 +397,13 @@ function loadTradePanels() {
   $("#tradeleft, #traderight, .btn, .chatarea").show();
   $("#tradeleft .playerName").html(leftplayer.username.split(" ")[0]);
   $("#tradeleft .playerMoney").html("$" + leftplayer.money);
-  displayProperties(leftplayer.properties, 
+  displayProperties(leftplayer.properties,
     $("#tradeleft .playerProperties"),
     (fbobj.id !== leftplayer.fbid));
 
   $("#traderight .playerName").html(rightplayer.username.split(" ")[0]);
-  $("#traderight .playerMoney").html("$" + rightplayer.money); 
-  displayProperties(rightplayer.properties, 
+  $("#traderight .playerMoney").html("$" + rightplayer.money);
+  displayProperties(rightplayer.properties,
     $("#traderight .playerProperties"),
     (fbobj.id !== rightplayer.fbid));
 
@@ -417,7 +417,7 @@ function loadTradePanels() {
   });
 
   $(".cancelbtn").click(cancelClicked);
-  
+
 }
 
 
