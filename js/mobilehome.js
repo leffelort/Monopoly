@@ -59,13 +59,13 @@ function socketSetup() {
       socket.emit('propertyBuy', {result: res});
     });
   });
-  
+
   socket.on('payingRent', function (socketdata) {
     displayEvent("You paid $" + socketdata.amount + " in rent.");
     var old = Number($(".moneydisp").html().replace("$", ""));
     $(".moneydisp").html("$" + (old - socketdata.amount));
   });
-  
+
   socket.on('debit', function (socketdata) {
     if (socketdata.reason !== undefined) {
       displayEvent("You paid $" + socketdata.amt + " for " + socketdata.reason);
@@ -75,7 +75,7 @@ function socketSetup() {
     var old = Number($(".moneydisp").html().replace("$", ""));
     $(".moneydisp").html("$" + (old - socketdata.amt));
   });
-  
+
   socket.on('credit', function (socketdata) {
     if (socketdata.reason !== undefined) {
       displayEvent("You received $" + socketdata.amt + " for " + socketdata.reason);
@@ -98,7 +98,7 @@ function socketSetup() {
     // var old = Number($(".moneydisp").html().replace("$", ""));
     // $(".moneydisp").html("$" + (old - socketdata.debit));
   });
-  
+
   setInterval(updateGameEvents, eventUpdateFreq);
 }
 
@@ -119,7 +119,7 @@ function loadFBData() {
 
   // @TODO This is really messy, but it's how I was adding
   //        new get out of jail free cards.
-  // 
+  //
   if (me.jailCards !== undefined && me.jailCards.length !== 0) {
     for (var i = 0; i < me.jailCards.length; i++) {
       var jailcard = me.jailCards[i];
@@ -145,7 +145,7 @@ function loadFBData() {
     console.log(info);
   }
   socketSetup();
-  
+
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
   var profilepic = $("<img>").attr("src", picurl).css("left", $("#rollbtn").offset().left + 2);
@@ -166,7 +166,7 @@ function loadFBData() {
     $("#managebtn").removeClass("disabled");
     $("#tradebtn").removeClass("disabled");
     enableButtons();
-    
+
     if (me.jailed) {
       if (me.jailCards.length > 0) {
         if (me.jailTime === 3) {
@@ -176,9 +176,9 @@ function loadFBData() {
               fbid: me.fbid
             });
             hideJailCard(me.jailCards[0]);
-          });
+          }, false);
         } else {
-          displayPrompt("Do you want to use your Get out of Jail Free card?", 
+          displayPrompt("Do you want to use your Get out of Jail Free card?",
           function (res) {
             if (res) {
               socket.emit('getOutOfJail', {
@@ -200,9 +200,9 @@ function loadFBData() {
               paid: true,
               fbid: me.fbid
             });
-          });
+          }, false);
         } else {
-          displayPrompt("Do you want to pay $50 to get out of jail?", 
+          displayPrompt("Do you want to pay $50 to get out of jail?",
           function (res) {
             if (res) {
               socket.emit('getOutOfJail', {
@@ -220,7 +220,7 @@ function loadFBData() {
     }
   }
   window.scrollTo(0, 1);
-}  
+}
 
 
 function hideJailCard(cardtype) {
@@ -254,7 +254,7 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
       cookie     : true, // enable cookies to allow the server to access the session
       xfbml      : true  // parse XFBML
     });
-  
+
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected') {
         // connected
@@ -320,9 +320,16 @@ function setupSockets() {
       }
     });
   });
+
+  socket.on('inDefault', function (obj) {
+    var promptStr = "You owe $" + obj.amt " and don't have enough money to pay. You must sell assets to pay your debt.";
+    displayPrompt(promptStr, function () {
+      goToManage();
+    }, false);
+  });
 }
 
-function displayPrompt(msg, callback) {
+function displayPrompt(msg, callback, choice) {
   if (callback === undefined) {
     callback = function(bool) {
       console.log(bool);
@@ -347,10 +354,13 @@ function displayPrompt(msg, callback) {
   var yesbox = $("<div>").attr("id", "yesbox")
                          .addClass("promptbox")
                          .html("<p>&#10003;</p>");
-  var nobox = $("<div>").attr("id", "nobox")
+  boxes.append(yesbox);
+  if (choice !== undefined && !choice) {
+    var nobox = $("<div>").attr("id", "nobox")
                         .addClass("promptbox")
                         .html("<p>&#10060;</p>");
-  boxes.append(yesbox, nobox);
+    boxes.append(nobox);
+  }
   confirmbox.append(boxes);
   confirmWrapper.append(confirmbox);
   $("#content").append(confirmWrapper);

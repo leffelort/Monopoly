@@ -3,6 +3,7 @@ var setupPage;
 var socket;
 var fbobj;
 var current_prop;
+var inDefault;
 
 
 function socketSetup() {
@@ -15,7 +16,8 @@ function socketSetup() {
     displayProperties(props);
   });
 
-  socket.on('reopen', function(){
+  socket.on('reopen', function (data){
+    inDefault = data.inDefault;
     setupPage();
   });
 
@@ -54,6 +56,10 @@ function socketSetup() {
       console.log("LOL SUCKS you didn't sell a house cause, ", res.reason);
     }
   });
+
+  socket.on('outOfDebt', function (data) {
+    window.location.replace("mobileHome.html");
+  });
 }
 
 if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
@@ -70,7 +76,7 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
       cookie     : true, // enable cookies to allow the server to access the session
       xfbml      : true  // parse XFBML
     });
-  
+
     FB.getLoginStatus(function(response) {
       if (response.status === 'connected') {
         // connected
@@ -154,11 +160,14 @@ function setupHouseButtons() {
         space: current_prop.id,
         fbid: fbobj.id
       });
-    }); 
+    });
   } else {
     $("#houseminusbtn").addClass("unavailable");
     $("#houseplusbtn").addClass("unavailable");
   }
+
+  // If in default, you can't buy houses ever
+  $("#houseplusbtn").addClass("unavailable");
 }
 
 function loadDetailedView(prop) {
@@ -186,7 +195,7 @@ function loadDetailedView(prop) {
     details.append($("<div>").addClass("rentDisplay")
                  .html(property.rent + "."));
     var houseCosts = $("<div>").addClass("houseCosts");
-  
+
     costTable = $("<table>").addClass("railroad");
     costTable.append($("<tr>").append($("<td>").html("If 2 R.R.'s are owned"),
                       $("<td>").html("$ " + property.tworr + ".")));
@@ -195,7 +204,7 @@ function loadDetailedView(prop) {
     costTable.append($("<tr>").append($("<td>").html("If 4  &nbsp; &nbsp; \" &nbsp; &nbsp; \" &nbsp; &nbsp; \""),
                       $("<td>").html(property.fourrr + ".")));
     houseCosts.append(costTable);
-    
+
     details.append(houseCosts);
     details.addClass("railroad");
     details.append($("<div>").addClass("mortgage")
@@ -206,7 +215,7 @@ function loadDetailedView(prop) {
   } else if (property.color === "utility") {
     if (property.title.indexOf("Light") != -1) {
       titleDeed.append($("<div>").addClass("electricImg"));
-    } else { 
+    } else {
       titleDeed.append($("<div>").addClass("waterImg"));
     }
 
@@ -217,14 +226,14 @@ function loadDetailedView(prop) {
     details = $("<div>").addClass("details")
                         .addClass("utility");
     var houseCosts = $("<div>").addClass("houseCosts");
-  
+
     costTable = $("<div>").addClass("utilityCostTable");
     costTable.append($("<span>").addClass("utilityText")
                                 .html("If one \"Utility\" is owned rent is 4 times amount shown on dice."));
     costTable.append($("<span>").addClass("utilityText")
                                 .html("If both \"Utilities\" are owned rent is 10 times amount shown on dice."));
     houseCosts.append(costTable);
-    
+
     details.append(houseCosts);
     details.append($("<div>").addClass("mortgage")
                            .html(property.mortgage + "."));
@@ -240,7 +249,7 @@ function loadDetailedView(prop) {
     details.append($("<div>").addClass("rentDisplay")
                  .html(property.rent + "."));
     var houseCosts = $("<div>").addClass("houseCosts");
-  
+
     var costTable = $("<table>");
     costTable.append($("<tr>").append($("<td>").html("With 1 House"),
                       $("<td>").html("$ " + property.onehouse + ".")));
@@ -252,7 +261,7 @@ function loadDetailedView(prop) {
                       $("<td>").html(property.fourhouse + ".")));
     houseCosts.append(costTable);
     details.append(houseCosts);
-  
+
     details.append($("<div>").addClass("hotel")
                            .html(property.hotel + "."));
     details.append($("<div>").addClass("mortgage")
@@ -266,7 +275,7 @@ function loadDetailedView(prop) {
     details.append($("<div>").addClass("copyright")
                 .html("&copy;1935 Hasbro, Inc."));
   }
-  
+
 
   titleDeed.append(details);
   detailedView.append(titleDeed);
@@ -277,7 +286,7 @@ function loadDetailedView(prop) {
   detailedView.show();
   setupMortgageBtn(prop);
   setupHouseButtons();
-  
+
   // Send currently viewed property to the server so the board can update
   socket.emit('inspectProperty', {
     fbid: window.fbid,
@@ -325,7 +334,7 @@ function displayProperties(properties) {
         loadDetailedView(propertyDatabase[cur_prop.card.title]);
       });
     })();
-    
+
     propDiv.append(cell);
   }
   if (document.documentElement.clientHeight > 268) {

@@ -442,13 +442,25 @@ io.sockets.on('connection', function (socket) {
   // update the server on player's logged in and which socket
   // that player corresponds to.
   socket.on('reopen', function (data) {
-    userMaintain(socket, data, function() { socket.emit('reopen', {success: true}); });
-   // socket.emit('reopen', {success: true});
+    userMaintain(socket, data, function() {
+      queryGame(socket.id, function (game) {
+        socket.emit('reopen', {
+          success: true,
+          inDefault: game.players[data.fbid].inDefault
+        });
+      })
+    });
   });
 
   socket.on('login', function (data) {
-    userMaintain(socket, data, function() { socket.emit('login', {success: true}); });
-  //  console.log("DOC BROWN.");
+    userMaintain(socket, data, function() {
+      queryGame(socket.id, function (game) {
+        socket.emit('login', {
+          success: true,
+          inDefault: game.players[data.fbid].inDefault
+        });
+      })
+    });
   });
 
   socket.on('hostgame', function (data) {
