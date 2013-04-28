@@ -92,7 +92,7 @@ function socketSetup() {
   });
   
   socket.on('tradeAccept', function (obj) {
-    //window.location.replace("mobileHome.html");
+    window.location.replace("mobileHome.html");
   });
   
   socket.on('tradeCancel', function (obj) {
@@ -120,7 +120,6 @@ function displayTradeOffer(tradeobj) {
         originfbid: localStorage['originfbid'],
         tofbid: localStorage['tofbid']
       });
-      //window.location.replace("mobileHome.html");
     } else {
       socket.emit('tradeReject', {
         tofbid: localStorage['tofbid']

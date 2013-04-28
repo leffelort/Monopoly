@@ -912,7 +912,8 @@ io.sockets.on('connection', function (socket) {
         handleTrade(game, data.tradeobj, data.originfbid, data.destfbid, socket.id);
         saveGame(game, function () {
           for (var i in arr) {
-            if (arr[i].fbid === data.tofbid) {
+            if (arr[i].fbid === data.originfbid || 
+                arr[i].fbid === data.destfbid) {
               safeSocketEmit(arr[i].socketid, 'tradeAccept', {});
             }
           }
@@ -2067,7 +2068,7 @@ function startGame(gameID) {
 
 function safeSocketEmit(socketid, emitStr, emitArgs) {
   if (socketid !== undefined && connections[socketid] !== undefined) {
-    safeSocketEmit(socketid, emitStr, emitArgs);
+    connections[socketid].emit(emitStr, emitArgs);
     return true;
   } else {
     return false;
