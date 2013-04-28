@@ -1913,9 +1913,11 @@ function inDefault(game, socketid, amt, fbid, target) {
   game.players[fbid].inDefault = true;
   game.players[fbid].debt = amt;
   game.players[fbid].debtor = target;
-  connections[socketid].emit('inDefault', {
-    amt: amt,
-    fbid: fbid
+  saveGame(game, function() {
+    connections[socketid].emit('inDefault', {
+      amt: amt,
+      fbid: fbid
+    });
   });
 }
 
@@ -1944,6 +1946,7 @@ function forceDebit(game, socketid, amt, fbid, target) {
   console.log("forcedebit!");
   var suc = debit(game,socketid,amt,fbid);
   if (!suc) {
+      console.log("netWorth: ", (netWorth(game, socketid, amt, fbid)));
       if ((netWorth(game, socketid, amt, fbid) - amt < 0)) {
         bankrupt(game, socketid, fbid, target);
       }
