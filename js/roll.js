@@ -45,6 +45,13 @@ function socketSetup() {
     window.scrollTo(0,1);
     allowRolls();
   });
+  
+  socket.on('inDefault', function (obj) {
+    var promptStr = "You owe $" + obj.amt + " and don't have enough money to pay. You must sell assets to pay your debt.";
+    displayPrompt(promptStr, function () {
+      window.location.replace("manage.html");
+    }, false);
+  });
 }
 
 
@@ -106,7 +113,7 @@ function forceRoll(val, dbls) {
   });
 }
 
-function displayPrompt(msg, callback) {
+function displayPrompt(msg, callback, choice) {
   if (callback === undefined) {
     callback = function(bool) {
       console.log(bool);
@@ -131,10 +138,13 @@ function displayPrompt(msg, callback) {
   var yesbox = $("<div>").attr("id", "yesbox")
                          .addClass("promptbox")
                          .html("<p>&#10003;</p>");
-  var nobox = $("<div>").attr("id", "nobox")
-                        .addClass("promptbox")
-                        .html("<p>&#10060;</p>");
-  boxes.append(yesbox, nobox);
+  boxes.append(yesbox);
+  if (choice === undefined || choice) {
+    var nobox = $("<div>").attr("id", "nobox")
+                          .addClass("promptbox")
+                          .html("<p>&#10060;</p>");
+    boxes.append(nobox);
+  }
   confirmbox.append(boxes);
   confirmWrapper.append(confirmbox);
   $("#content").append(confirmWrapper);

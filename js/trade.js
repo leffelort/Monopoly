@@ -20,7 +20,6 @@ function cancelClicked() {
   window.location.replace("mobileHome.html");
 }
 
-
 function displayPlayers() {
   playerSelect = $("#playerSelect");
   playerSelect.html(" ");
@@ -58,7 +57,6 @@ function displayPlayers() {
   }
 }
 
-
 function socketSetup() {
   setupPage();
 
@@ -90,7 +88,6 @@ function socketSetup() {
     var tradeobj = obj.tradeobj;
     // display prompt with info.
     displayTradeOffer(tradeobj);
-    // tradeAccept or tradeReject, both go to mobileHome.
   });
   socket.on('tradeCancel', function (obj) {
     delete localStorage["agent"];
@@ -159,6 +156,7 @@ function displayTradeOffer(tradeobj) {
         destfbid: localStorage['destfbid'],
         originfbid: localStorage['originfbid']
       });
+      window.location.replace("mobileHome.html");
     } else {
       socket.emit('tradeReject', {
         tofbid: localStorage['tofbid']
@@ -447,5 +445,3 @@ function tradeButtonHandler() {
   localStorage["agent"] = "origin";
 
 }
-
-

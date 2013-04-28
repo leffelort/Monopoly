@@ -51,57 +51,6 @@ function displayEvent(eventStr) {
   eventQueue.push(eventStr);
 }
 
-function socketSetup() {
-  socket.on('propertyBuy', function(prop) {
-    var promptText = "Would you like to purchase " + prop.card.title;
-    promptText += " for $" + prop.card.price;
-    displayPrompt(promptText, function(res) {
-      socket.emit('propertyBuy', {result: res});
-    });
-  });
-
-  socket.on('payingRent', function (socketdata) {
-    displayEvent("You paid $" + socketdata.amount + " in rent.");
-    var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old - socketdata.amount));
-  });
-
-  socket.on('debit', function (socketdata) {
-    if (socketdata.reason !== undefined) {
-      displayEvent("You paid $" + socketdata.amt + " for " + socketdata.reason);
-    } else {
-      displayEvent("You paid $" + socketdata.amt);
-    }
-    var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old - socketdata.amt));
-  });
-
-  socket.on('credit', function (socketdata) {
-    if (socketdata.reason !== undefined) {
-      displayEvent("You received $" + socketdata.amt + " for " + socketdata.reason);
-    } else {
-      displayEvent("You received $" + socketdata.amt);
-    }
-    var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old + socketdata.amt));
-  });
-
-  socket.on('passGo!', function (socketdata) {
-    displayEvent("You collect $" + socketdata.amount + " for " + socketdata.reason);
-    var old = Number($(".moneydisp").html().replace("$", ""));
-    $(".moneydisp").html("$" + (old + socketdata.amount));
-  });
-
-  socket.on('getOutOfJail', function (socketdata) {
-    displayEvent("You got out of Jail!");
-    // Money should be updated in debit, so this is unnecessary.
-    // var old = Number($(".moneydisp").html().replace("$", ""));
-    // $(".moneydisp").html("$" + (old - socketdata.debit));
-  });
-
-  setInterval(updateGameEvents, eventUpdateFreq);
-}
-
 // @TODO: Need to update this with actual information about the current state
 // of the player in the game once the database supports it.
 function loadFBData() {
@@ -144,7 +93,6 @@ function loadFBData() {
     info.append(getoutcards);
     console.log(info);
   }
-  socketSetup();
 
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
@@ -222,7 +170,6 @@ function loadFBData() {
   window.scrollTo(0, 1);
 }
 
-
 function hideJailCard(cardtype) {
   if (cardtype === "chance") {
     $("#getoutchance").css("display", "none");
@@ -231,61 +178,20 @@ function hideJailCard(cardtype) {
   }
 }
 
-if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
-  window.fbobj = JSON.parse(sessionStorage.user);
-  socket = io.connect(window.location.hostname);
-  setupSockets();
-  socket.emit('reopen', window.fbobj); // tell the server who we are.
-} else {
-    // Load the SDK Asynchronously
-  (function(d){
-     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement('script'); js.id = id; js.async = true;
-     js.src = "//connect.facebook.net/en_US/all.js";
-     ref.parentNode.insertBefore(js, ref);
-   }(document));
-
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '448108371933308', // App ID
-      channelUrl : '//localhost:11611/channel.html', // Channel File
-      status     : true, // check login status
-      cookie     : true, // enable cookies to allow the server to access the session
-      xfbml      : true  // parse XFBML
-    });
-
-    FB.getLoginStatus(function(response) {
-      if (response.status === 'connected') {
-        // connected
-        FB.api('/me', function(response){
-          window.fbobj = response;
-          socket = io.connect(window.location.hostname);
-          setupSockets();
-          socket.emit('reopen', response); // tell the server who we are.
-        });
-      } else {
-        // not_authorized
-        alert("You are not logged in");
-        window.location.replace("mobile.html");
-      }
-    });
-  }
-}
-
-
 function setupSockets() {
   socket.on('reopen', function(resp) {
     if (resp.success) {
       socket.emit('getme', {});
     }
   });
+  
   socket.on('nextTurn', function(obj) {
     socket.emit('getme', {});
     if (obj.fbid === fbobj.id) {
       displayEvent("Your turn!");
     }
   });
+  
   socket.on('getme', function(resp) {
     if (resp === undefined) {
       alert("YOU CAN'T SIT WITH US!");
@@ -295,6 +201,7 @@ function setupSockets() {
     window.me = resp;
     loadFBData();
   });
+  
   socket.on('tradeStart', function (obj) {
     localStorage["destfbid"] = obj.destfbid;
     localStorage["originfbid"] = obj.originfbid;
@@ -326,6 +233,50 @@ function setupSockets() {
     displayPrompt(promptStr, function () {
       goToManage();
     }, false);
+  });
+  
+  socket.on('propertyBuy', function(prop) {
+    var promptText = "Would you like to purchase " + prop.card.title;
+    promptText += " for $" + prop.card.price;
+    displayPrompt(promptText, function(res) {
+      socket.emit('propertyBuy', {result: res});
+    });
+  });
+
+  socket.on('payingRent', function (socketdata) {
+    displayEvent("You paid $" + socketdata.amount + " in rent.");
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old - socketdata.amount));
+  });
+
+  socket.on('debit', function (socketdata) {
+    if (socketdata.reason !== undefined) {
+      displayEvent("You paid $" + socketdata.amt + " for " + socketdata.reason);
+    } else {
+      displayEvent("You paid $" + socketdata.amt);
+    }
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old - socketdata.amt));
+  });
+
+  socket.on('credit', function (socketdata) {
+    if (socketdata.reason !== undefined) {
+      displayEvent("You received $" + socketdata.amt + " for " + socketdata.reason);
+    } else {
+      displayEvent("You received $" + socketdata.amt);
+    }
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old + socketdata.amt));
+  });
+
+  socket.on('passGo!', function (socketdata) {
+    displayEvent("You collect $" + socketdata.amount + " for " + socketdata.reason);
+    var old = Number($(".moneydisp").html().replace("$", ""));
+    $(".moneydisp").html("$" + (old + socketdata.amount));
+  });
+
+  socket.on('getOutOfJail', function (socketdata) {
+    displayEvent("You got out of Jail!");
   });
 }
 
@@ -411,6 +362,51 @@ $(document).ready(function() {
     event.preventDefault();
     sendMessage();
   });
+  
+  // Set up event update loop
   setInterval(updateGameEvents, eventUpdateFreq);
+  
+  // Initialize things
+  if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
+    window.fbobj = JSON.parse(sessionStorage.user);
+    socket = io.connect(window.location.hostname);
+    setupSockets();
+    socket.emit('reopen', window.fbobj); // tell the server who we are.
+  } else {
+      // Load the SDK Asynchronously
+    (function(d){
+       var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement('script'); js.id = id; js.async = true;
+       js.src = "//connect.facebook.net/en_US/all.js";
+       ref.parentNode.insertBefore(js, ref);
+     }(document));
+
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '448108371933308', // App ID
+        channelUrl : '//localhost:11611/channel.html', // Channel File
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true  // parse XFBML
+      });
+
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          // connected
+          FB.api('/me', function(response){
+            window.fbobj = response;
+            socket = io.connect(window.location.hostname);
+            setupSockets();
+            socket.emit('reopen', response); // tell the server who we are.
+          });
+        } else {
+          // not_authorized
+          alert("You are not logged in");
+          window.location.replace("mobile.html");
+        }
+      });
+    }
+  }
 });
 

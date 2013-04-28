@@ -917,9 +917,9 @@ io.sockets.on('connection', function (socket) {
             }
           }
           sendToBoards(game.id, 'tradeAccept', {
-            originfbid: originfbid,
-            destfbid: destfbid,
-            tradeobj: tradeobj
+            originfbid: data.originfbid,
+            destfbid: data.destfbid,
+            tradeobj: data.tradeobj
           });
         });
       });
@@ -2023,10 +2023,10 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
       if (prop) {
         var pid = prop.id;
         prop.owner = newOwner;
-        game.propertyOwners[pid] = origfbid;
+        game.propertyOwners[pid] = originfbid;
         origPlay.properties[pid] = prop;
         delete destPlay.properties[pid];
-        checkMonopoly(game, origfbid, pid);
+        checkMonopoly(game, originfbid, pid);
       }
     }
   }
