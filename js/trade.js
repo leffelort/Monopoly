@@ -58,12 +58,11 @@ function displayPlayers() {
 }
 
 function socketSetup() {
-  setupPage();
-
   socket.on('reopen', function() {
     window.scrollTo(0,1);
     socket.emit('getGame', {});
   });
+  
   socket.on('getGame', function (game) {
     game = game.game;
     players = game.players;
@@ -73,25 +72,29 @@ function socketSetup() {
     }
     displayPlayers();
   });
+  
   socket.on('tradeResponse', function (obj) {
     loadTradePanels();
-    // TODO handle trading starting stuffz
   });
+  
   socket.on('tradeUpdate', function (obj) {
     console.log("got update", obj);
     localStorage['originsockid'] = obj.originsockid;
     localStorage['destsockid'] = obj.destsockid;
     updateTradeValues(obj.tradeobj);
   });
+  
   socket.on('tradeFinalize', function (obj) {
     console.log("got a trade offer of", obj);
     var tradeobj = obj.tradeobj;
     // display prompt with info.
     displayTradeOffer(tradeobj);
   });
+  
   socket.on('tradeAccept', function (obj) {
     //window.location.replace("mobileHome.html");
   });
+  
   socket.on('tradeCancel', function (obj) {
     delete localStorage["agent"];
     delete localStorage["tofbid"];
@@ -101,49 +104,6 @@ function socketSetup() {
     delete localStorage["originsockid"];
     window.location.replace("mobileHome.html");
   });
-}
-
-if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
-  fbobj = JSON.parse(sessionStorage.user);
-  socket = io.connect(window.location.hostname);
-  socketSetup();
-  socket.emit('reopen', fbobj);
-} else {
-   // Load the SDK Asynchronously
-  (function(d){
-     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-     if (d.getElementById(id)) {return;}
-     js = d.createElement('script'); js.id = id; js.async = true;
-     js.src = "//connect.facebook.net/en_US/all.js";
-     ref.parentNode.insertBefore(js, ref);
-   }(document));
-
-  window.fbAsyncInit = function() {
-    FB.init({
-      appId      : '448108371933308', // App ID
-      channelUrl : '//localhost:11611/channel.html', // Channel File
-      status     : true, // check login status
-      cookie     : true, // enable cookies to allow the server to access the session
-      xfbml      : true  // parse XFBML
-    });
-
-    FB.getLoginStatus(function(response) {
-      if (response.status === 'connected') {
-        // connected
-        window.scrollTo(0, 1); // scroll past broswer bar
-        FB.api('/me', function(response){
-          fbobj = response;
-          socket = io.connect(window.location.hostname);
-          socketSetup();
-          socket.emit('reopen', response); // tell the server who we are.
-        });
-      } else {
-        // not_authorized
-        alert("You are not logged in");
-        window.location.replace("mobile.html");
-      }
-    });
-  };
 }
 
 function displayTradeOffer(tradeobj) {
@@ -343,15 +303,55 @@ function updateTradeValues(tradeobj) {
 }
 
 $(document).ready(function() {
-  $("#tradeleft, #traderight, .chatarea, .btn").hide();
-});
-
-function setupPage () {
   window.addEventListener('load', function() {
     new FastClick(document.body);
   }, false);
+  
+  $("#tradeleft, #traderight, .chatarea, .btn").hide();
+  
+  if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
+    fbobj = JSON.parse(sessionStorage.user);
+    socket = io.connect(window.location.hostname);
+    socketSetup();
+    socket.emit('reopen', fbobj);
+  } else {
+     // Load the SDK Asynchronously
+    (function(d){
+       var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+       if (d.getElementById(id)) {return;}
+       js = d.createElement('script'); js.id = id; js.async = true;
+       js.src = "//connect.facebook.net/en_US/all.js";
+       ref.parentNode.insertBefore(js, ref);
+     }(document));
 
-}
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '448108371933308', // App ID
+        channelUrl : '//localhost:11611/channel.html', // Channel File
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true  // parse XFBML
+      });
+
+      FB.getLoginStatus(function(response) {
+        if (response.status === 'connected') {
+          // connected
+          window.scrollTo(0, 1); // scroll past broswer bar
+          FB.api('/me', function(response){
+            fbobj = response;
+            socket = io.connect(window.location.hostname);
+            socketSetup();
+            socket.emit('reopen', response); // tell the server who we are.
+          });
+        } else {
+          // not_authorized
+          alert("You are not logged in");
+          window.location.replace("mobile.html");
+        }
+      });
+    };
+  }
+});
 
 function tradeFinalize() {
   if (localStorage['agent'] === "destination") {
@@ -428,9 +428,7 @@ function loadTradePanels() {
   });
 
   $(".cancelbtn").click(cancelClicked);
-
 }
-
 
 function tradeButtonHandler() {
   if ($(".selected").length !== 1) {
@@ -447,5 +445,4 @@ function tradeButtonHandler() {
   localStorage["destfbid"] = rightplayer.fbid;
   localStorage["tofbid"] = rightplayer.fbid;
   localStorage["agent"] = "origin";
-
 }

@@ -799,7 +799,7 @@ io.sockets.on('connection', function (socket) {
       socketsInGame(game.id, 'users', function (arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.destfbid) {
-            connections[arr[i].socketid].emit('tradeStart', {
+            safeSocketEmit(arr[i].socketid, 'tradeStart', {
               originfbid: data.originfbid,
               destfbid: data.destfbid
             });
@@ -814,9 +814,9 @@ io.sockets.on('connection', function (socket) {
       socketsInGame(game.id, 'users', function (arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.originfbid) {
-            connections[arr[i].socketid].emit('tradeResponse', {
-            destfbid: data.destfbid,
-            originfbid: data.originfbid
+            safeSocketEmit(arr[i].socketid, 'tradeResponse', {
+              destfbid: data.destfbid,
+              originfbid: data.originfbid
             });
           }
         }
@@ -885,7 +885,7 @@ io.sockets.on('connection', function (socket) {
       socketsInGame(game.id, 'users', function(arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.tofbid) {
-            connections[arr[i].socketid].emit('tradeCancel', {});
+            safeSocketEmit(arr[i].socketid, 'tradeCancel', {});
           }
         }
       });
@@ -897,7 +897,7 @@ io.sockets.on('connection', function (socket) {
       socketsInGame(game.id, 'users', function(arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.tofbid) {
-            connections[arr[i].socketid].emit('tradeFinalize', {
+            safeSocketEmit(arr[i].socketid, 'tradeFinalize', {
               tradeobj: data.tradeobj
             });
           }
@@ -913,7 +913,7 @@ io.sockets.on('connection', function (socket) {
         saveGame(game, function () {
           for (var i in arr) {
             if (arr[i].fbid === data.tofbid) {
-              connections[arr[i].socketid].emit('tradeAccept', {});
+              safeSocketEmit(arr[i].socketid, 'tradeAccept', {});
             }
           }
           sendToBoards(game.id, 'tradeAccept', {
@@ -930,7 +930,7 @@ io.sockets.on('connection', function (socket) {
       socketsInGame(game.id, 'users', function(arr) {
         for (var i in arr) {
           if (arr[i].fbid === data.tofbid) {
-            connections[arr[i].socketid].emit('tradeReject', {});
+            safeSocketEmit(arr[i].socketid, 'tradeReject', {});
           }
         }
       });
@@ -1073,9 +1073,9 @@ function endTurn(game) {
   } else endTurn(game);
 }
 
-function passGo(game, socketid,fbid) {
+function passGo(game, socketid, fbid) {
   credit(game, socketid, 200, fbid);
-  connections[socketid].emit('passGo!', {
+  safeSocketEmit(socketid, 'passGo!', {
     fbid: fbid,
     money: game.players[fbid].money,
     amount: 200,
@@ -1192,7 +1192,7 @@ function handleConstruction(space, socketid, fbid){
     console.log('handling construction case');
     var prop = game.players[fbid].properties[space];
     if ((prop === undefined) || (prop === null)) {
-      connections[socketid].emit('houseBuy', {
+      safeSocketEmit(socketid, 'houseBuy', {
         space: space,
         fbid: fbid,
         success: false,
@@ -1202,7 +1202,7 @@ function handleConstruction(space, socketid, fbid){
     }
     if ((prop.monopoly) && (!prop.hotel)) { //able
       if (!ensureBuildingParity(game, space, fbid, true)) {
-        connections[socketid].emit('houseBuy', {
+        safeSocketEmit(socketid, 'houseBuy', {
           space: space,
           fbid: fbid,
           success: false,
@@ -1220,7 +1220,7 @@ function handleConstruction(space, socketid, fbid){
             prop.numHouses = 0;
             prop.hotel = true;
             saveGame(game, function () {
-              connections[socketid].emit('houseBuy', {
+              safeSocketEmit(socketid, 'houseBuy', {
                 space: space,
                 fbid: fbid,
                 success: true
@@ -1234,7 +1234,7 @@ function handleConstruction(space, socketid, fbid){
               });
             });
           } else {
-            connections[socketid].emit('houseBuy', {
+            safeSocketEmit(socketid, 'houseBuy', {
               space: space,
               fbid: fbid,
               success: false,
@@ -1242,7 +1242,7 @@ function handleConstruction(space, socketid, fbid){
             });
           }
         } else {
-          connections[socketid].emit('houseBuy', {
+          safeSocketEmit(socketid, 'houseBuy', {
             space:space,
             fbid: fbid,
             success: false,
@@ -1257,7 +1257,7 @@ function handleConstruction(space, socketid, fbid){
             game.availableHouses = (game.availableHouses - 1);
             prop.numHouses = (prop.numHouses + 1);
             saveGame(game, function () {
-              connections[socketid].emit('houseBuy', {
+              safeSocketEmit(socketid, 'houseBuy', {
                 space: space,
                 fbid: fbid,
                 success: true
@@ -1271,7 +1271,7 @@ function handleConstruction(space, socketid, fbid){
               });
             });
           } else {
-            connections[socketid].emit('houseBuy', {
+            safeSocketEmit(socketid, 'houseBuy', {
               space:space,
               fbid: fbid,
               success: false,
@@ -1279,7 +1279,7 @@ function handleConstruction(space, socketid, fbid){
             });
           }
         } else {
-          connections[socketid].emit('houseBuy', {
+          safeSocketEmit(socketid, 'houseBuy', {
             space: space,
             fbid: fbid,
             success: false,
@@ -1288,7 +1288,7 @@ function handleConstruction(space, socketid, fbid){
         }
       }
     } else {
-      connections[socketid].emit('houseBuy', {
+      safeSocketEmit(socketid, 'houseBuy', {
         space: space,
         fbid: fbid,
         success: false,
@@ -1303,7 +1303,7 @@ function handleDemolition(space, socketid, fbid) {
     console.log('handling demolition case');
     var prop = game.players[fbid].properties[space];
     if ((prop === undefined) || (prop === null)) {
-      connections[socketid].emit('houseSell', {
+      safeSocketEmit(socketid, 'houseSell', {
         space: space,
         fbid: fbid,
         success: false,
@@ -1313,7 +1313,7 @@ function handleDemolition(space, socketid, fbid) {
     }
     if ((prop.monopoly) && ((prop.numHouses > 0)||(prop.hotel))) { //able
       if (!ensureBuildingParity(game, space, fbid, false)) {
-        connections[socketid].emit('houseSell', {
+        safeSocketEmit(socketid, 'houseSell', {
           space: space,
           fbid: fbid,
           success: false,
@@ -1330,7 +1330,7 @@ function handleDemolition(space, socketid, fbid) {
           prop.numHouses = 4;
           prop.hotel = false;
           saveGame(game, function () {
-            connections[socketid].emit('houseSell', {
+            safeSocketEmit(socketid, 'houseSell', {
               space: space,
               fbid: fbid,
               success: true
@@ -1344,7 +1344,7 @@ function handleDemolition(space, socketid, fbid) {
             });
           });
         } else {
-          connections[socketid].emit('houseSell', {
+          safeSocketEmit(socketid, 'houseSell', {
             space: space,
             fbid: fbid,
             success: false,
@@ -1357,7 +1357,7 @@ function handleDemolition(space, socketid, fbid) {
         game.availableHouses = (game.availableHouses + 1);
         prop.numHouses = (prop.numHouses - 1);
         saveGame(game, function () {
-          connections[socketid].emit('houseSell', {
+          safeSocketEmit(socketid, 'houseSell', {
             space: space,
             fbid: fbid,
             success: true
@@ -1372,7 +1372,7 @@ function handleDemolition(space, socketid, fbid) {
         });
       }
     } else {
-      connections[socketid].emit('houseSell', {
+      safeSocketEmit(socketid, 'houseSell', {
         space: space,
         fbid: fbid,
         success: false,
@@ -1565,7 +1565,7 @@ function collectRent(game, space, socketid, tenant, roll) {
     console.log('debiting failed, is that right?');
     return;
   }
-  connections[socketid].emit('payingRent', {
+  safeSocketEmit(socketid, 'payingRent', {
     owner: owner,
     tenant: tenant,
     space: space,
@@ -1585,9 +1585,8 @@ function collectRent(game, space, socketid, tenant, roll) {
 
 function propertyMortgage(game, property, socketid, fbid, success) {
   console.log("Mortgaging property " + property.id);
-  var sock = connections[socketid];
   saveGame(game, function() {
-    sock.emit('propertyMortgage', {
+    safeSocketEmit(socketid, 'propertyMortgage', {
       property: property,
       fbid: fbid,
       success: success
@@ -1596,9 +1595,8 @@ function propertyMortgage(game, property, socketid, fbid, success) {
 }
 
 function propertyUnmortgage(game, property, socketid, fbid, success) {
-  var sock = connections[socketid];
   saveGame(game, function() {
-    sock.emit('propertyUnmortgage', {
+    safeSocketEmit(socketid, 'propertyUnmortgage', {
       property: property,
       fbid: fbid,
       success: success
@@ -1608,12 +1606,11 @@ function propertyUnmortgage(game, property, socketid, fbid, success) {
 
 function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
-  var sock = connections[socketid];
   saveGame(game, function() {
-    sock.emit('propertyBuy', {
-    'property' : property,
-    fbid: fbid
-    }); //naming convention?
+    safeSocketEmit(socketid, 'propertyBuy', {
+      property : property,
+      fbid: fbid
+    });
   });
 }
 
@@ -1626,7 +1623,7 @@ function sendToJail(game, socketid, fbid) {
     fbid: fbid,
     initial: initial
   });
-  connections[socketid].emit('goToJail', {
+  safeSocketEmit(socketid, 'goToJail', {
     reason: "Go to Jail"
   });
 }
@@ -1777,7 +1774,7 @@ function handleChance(game, socketid, fbid) {
       return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('chance');
-      connections[socketid].emit('jailCard', {
+      safeSocketEmit(socketid, 'jailCard', {
         fbid: fbid,
         type: 'Chance'
       });
@@ -1831,7 +1828,7 @@ function handleCommChest(game, socketid, fbid) {
       } else return;
     } else if (id === 12) { //GOoJF card
       game.players[fbid].jailCards.push('commChest');
-      connections[socketid].emit('jailCard', {
+      safeSocketEmit(socketid, 'jailCard', {
         fbid: fbid,
         type: 'Community Chest'
       });
@@ -1917,7 +1914,7 @@ function inDefault(game, socketid, amt, fbid, target) {
   game.players[fbid].debt = amt;
   game.players[fbid].debtor = target;
   saveGame(game, function() {
-    connections[socketid].emit('inDefault', {
+    safeSocketEmit(socketid, 'inDefault', {
       amt: amt,
       fbid: fbid
     });
@@ -1927,12 +1924,12 @@ function inDefault(game, socketid, amt, fbid, target) {
 
 function credit(game,socketid, amt, fbid) {
   game.players[fbid].money = game.players[fbid].money + amt;
-  connections[socketid].emit('credit', {fbid : fbid, amt: amt});
+  safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
   if (game.players[fbid].inDefault) {
     if ((game.players[fbid].money) > (game.players[fbid].debt)) {
       var suc = forceDebit(game,socketid,game.players[fbid].debt, fbid, game.players[fbid].debtor);
       if (suc) {
-        connections[socketid].emit('outOfDebt', {
+        safeSocketEmit(socketid, 'outOfDebt', {
           fbid: fbid,
           debt: amt,
         });
@@ -1963,7 +1960,7 @@ function debit(game, socketid, amt, fbid, reason) {
     return false; // not enough money;
   } else {
     game.players[fbid].money = Number(Number(game.players[fbid].money) - Number(amt));
-    connections[socketid].emit('debit', {
+    safeSocketEmit(socketid, 'debit', {
       fbid : fbid,
       amt: amt,
       reason: reason
@@ -1973,17 +1970,19 @@ function debit(game, socketid, amt, fbid, reason) {
 }
 
 function updateTrade(originsocket, destsocket, obj, agent){
-  var socket;
   if (agent === 'origin') {
-    socket = connections[destsocket];
+    safeSocketEmit(destsocket, 'tradeUpdate', {
+      originsockid: originsocket,
+      destsockid: destsocket,
+      tradeobj: obj
+    });
   } else {
-    socket = connections[originsocket];
+    safeSocketEmit(originsocket, 'tradeUpdate', {
+      originsockid: originsocket,
+      destsockid: destsocket,
+      tradeobj: obj
+    });
   }
-  socket.emit('tradeUpdate', {
-    originsockid: originsocket,
-    destsockid: destsocket,
-    tradeobj: obj
-  });
 }
 
 function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
@@ -2066,11 +2065,19 @@ function startGame(gameID) {
   });
 }
 
+function safeSocketEmit(socketid, emitStr, emitArgs) {
+  if (socketid !== undefined && connections[socketid] !== undefined) {
+    safeSocketEmit(socketid, emitStr, emitArgs);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function sendToPlayers(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
-      if (connections[sockets[i].socketid] !== undefined)
-        connections[sockets[i].socketid].emit(emitString, emitArgs);
+      safeSocketEmit(sockets[i].socketid, emitString, emitArgs);
     }
   });
 }
@@ -2078,8 +2085,7 @@ function sendToPlayers(gameID, emitString, emitArgs) {
 function sendToBoards(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'boards', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
-      if (connections[sockets[i].socketid] !== undefined)
-        connections[sockets[i].socketid].emit(emitString, emitArgs);
+      safeSocketEmit(sockets[i].socketid, emitString, emitArgs);
     }
   });
 }
@@ -2088,8 +2094,7 @@ function sendToOthers(gameID, emitString, emitArgs, senderID) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
       if (sockets[i].socketid !== senderID) {
-        if (connections[sockets[i].socketid] !== undefined)
-          connections[sockets[i].socketid].emit(emitString, emitArgs);
+        safeSocketEmit(sockets[i].socketid, emitString, emitArgs);
       }
     }
   });
