@@ -207,6 +207,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#dddddd', end
   top: 86%;
   text-align: center;
   width: 100%;
+  z-index: 42;
 }
 
 .chattext {
