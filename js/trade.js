@@ -150,7 +150,20 @@ function displayTradeOffer(tradeobj) {
   var destofferprops = tradeobj.destofferprops;
   var originoffermoney = tradeobj.originoffermoney;
   var originofferprops = tradeobj.originofferprops;
-  // display shit
+  // TODO : actually display the trade being made.
+  displayPrompt("Do you accept this trade?", fucntion(resp) {
+    if (resp) {
+      socket.emit('tradeAccept', {
+        tradeobj: tradeobj,
+        destfbid: localStorage['destfbid'],
+        originfbid: localStorage['originfbid']
+      });
+    } else {
+      socket.emit('tradeReject', {
+        tofbid: localStorage['tofbid']
+      });
+    }
+  });
 }
 
 function displayProperties(properties, propDiv, clickable) {
