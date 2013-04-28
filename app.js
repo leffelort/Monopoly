@@ -1928,15 +1928,17 @@ function credit(game,socketid, amt, fbid) {
   safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
   if (game.players[fbid].inDefault) {
     if ((game.players[fbid].money) > (game.players[fbid].debt)) {
-      var suc = forceDebit(game,socketid,game.players[fbid].debt, fbid, game.players[fbid].debtor);
+      var det = game.players[fbid].debt;
+      var suc = forceDebit(game,socketid,det, fbid, game.players[fbid].debtor);
       if (suc) {
         safeSocketEmit(socketid, 'outOfDebt', {
           fbid: fbid,
-          debt: amt,
+          debt: det,
         });
       game.players[fbid].debt = 0;
       game.players[fbid].debtor = "";
       game.players[fbid].inDefault = false;
+      credit(game,socketid,det,fbid);
       endTurn(game); //may be an issue in the future, be wary.
       } else console.log('serious credit problems');
     }
