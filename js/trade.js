@@ -157,7 +157,8 @@ function displayTradeOffer(tradeobj) {
       socket.emit('tradeAccept', {
         tradeobj: tradeobj,
         destfbid: localStorage['destfbid'],
-        originfbid: localStorage['originfbid']
+        originfbid: localStorage['originfbid'],
+        tofbid: localStorage['tofbid']
       });
     } else {
       socket.emit('tradeReject', {
