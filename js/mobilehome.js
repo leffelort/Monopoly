@@ -356,7 +356,7 @@ function displayPrompt(msg, callback, choice) {
                          .addClass("promptbox")
                          .html("<p>&#10003;</p>");
   boxes.append(yesbox);
-  if (choice !== undefined && !choice) {
+  if (choice === undefined || choice) {
     var nobox = $("<div>").attr("id", "nobox")
                         .addClass("promptbox")
                         .html("<p>&#10060;</p>");
