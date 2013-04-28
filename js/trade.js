@@ -92,6 +92,12 @@ function socketSetup() {
   });
   
   socket.on('tradeAccept', function (obj) {
+    delete localStorage["agent"];
+    delete localStorage["tofbid"];
+    delete localStorage["destfbid"];
+    delete localStorage["originfbid"];
+    delete localStorage["destsockid"];
+    delete localStorage["originsockid"];
     window.location.replace("mobileHome.html");
   });
   
