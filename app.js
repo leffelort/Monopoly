@@ -1908,14 +1908,18 @@ function netWorth(game, socketid, amt, fbid) {
     var prop = game.players[fbid].properties[pid];
     if (prop) {
       var pCost = (prop.card.price / 2);
-      var gCost = (prop.card.housecost / 2);
-      var rCost = (prop.card.hotelcost / 2);
-      var hNum = prop.numHotels;
-      var hot = prop.hotel;
-      if (hot) {
-        worth = (worth + (4 * gCost) + rCost + pCost);
+      if ((!isUtility(prop.id)) && (!isRailroad(prop.id))){ 
+        var gCost = (prop.card.housecost / 2);
+        var rCost = (prop.card.hotelcost / 2);
+        var hNum = prop.numHotels;
+        var hot = prop.hotel;
+        if (hot) {
+          worth = (worth + (4 * gCost) + rCost + pCost);
+        } else {
+          worth = (worth + (hNum * gCost)) + pCost;
+        }
       } else {
-        worth = (worth + (hNum * gCost)) + pCost;
+        worth = worth + pCost;
       }
     }
   }
