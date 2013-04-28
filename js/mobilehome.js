@@ -330,6 +330,7 @@ function setupSockets() {
 }
 
 function displayPrompt(msg, callback, choice) {
+  console.log(choice);
   if (callback === undefined) {
     callback = function(bool) {
       console.log(bool);

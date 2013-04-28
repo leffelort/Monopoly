@@ -86,6 +86,7 @@ function socketSetup() {
     updateTradeValues(obj.tradeobj);
   });
   socket.on('tradeFinalize', function (obj) {
+    console.log("got a trade offer of", obj);
     var tradeobj = obj.tradeobj;
     // display prompt with info.
     displayTradeOffer(tradeobj);
@@ -316,7 +317,6 @@ function displayPrompt(msg, callback) {
 }
 
 function updateTradeValues(tradeobj) {
-  console.log('I know I should be updating but I choose not to.', tradeobj);
   if (tradeobj.kind === "money") {
     $("#tradeleft .moneyInput").val(tradeobj.value);
   } else {
@@ -356,27 +356,36 @@ function tradeFinalize() {
     console.log("opponent cannot send final trade offer");
     return;
   }
-  var leftselectedprops = $("#tradeleft .propertyCell.selected").toArray();
-  var rightselectedprops = $("#traderight .propertyCell.selected").toArray();
+  var leftselectedprops = $("#tradeleft .propertyCell.selected");
+  var rightselectedprops = $("#traderight .propertyCell.selected");
   var originoffermoney = $("#tradeleft .moneyInput").val();
   var destoffermoney = $("#traderight .moneyInput").val();
   var destofferprops = [];
   var originofferprops = [];
-  for (propdiv in leftselectedprops) {
-    var prop = propDatabase[$(propdiv).children(".propname").html()];
+  for (var divid = 0; divid < leftselectedprops.length; divid++) {
+    var propdiv = leftselectedprops[divid];
+    var propname = $(propdiv).children(".propname").html();
+    if (propname === undefined) continue;
+    var prop = propDatabase[propname];
     originofferprops[prop.id] = prop;
   }
-  for (propdiv in rightselectedprops) {
-    var prop = propDatabase[$(propdiv).children(".propname").html()];
+  console.log("finished the first loop");
+  for (var divid = 0; divid < leftselectedprops.length; divid++) {
+    var propdiv = rightselectedprops[divid];
+    var propname = $(propdiv).children(".propname").html();
+    if (propname === undefined) continue;
+    var prop = propDatabase[propname];
     destofferprops[prop.id] = prop;
   }
+  var tradeobj = {
+      "destoffermoney": destoffermoney,
+      "originoffermoney": originoffermoney,
+      "originofferprops": originofferprops,
+      "destofferprops": destofferprops
+    }
+  console.log("sending a trade offer of ", tradeobj);
   socket.emit('tradeFinalize', {
-    tradeobj: {
-      destoffermoney: destoffermoney,
-      originoffermoney: originoffermoney,
-      originofferprops: originofferprops,
-      destofferprops: destofferprops
-    },
+    tradeobj: tradeobj,
     tofbid: localStorage["tofbid"]
   });
 }
