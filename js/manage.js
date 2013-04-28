@@ -18,6 +18,7 @@ function socketSetup() {
 
   socket.on('reopen', function (data){
     inDefault = data.inDefault;
+    console.log("inDefault = " + inDefault);
     setupPage();
   });
 
@@ -149,25 +150,27 @@ function setupHouseButtons() {
   if (current_prop.monopoly === true) {
     $("#houseminusbtn").removeClass("unavailable");
     $("#houseplusbtn").removeClass("unavailable");
-    $("#houseplusbtn").click(function() {
-      socket.emit('houseBuy', {
-        space: current_prop.id,
-        fbid: fbobj.id
-      });
-    });
     $("#houseminusbtn").click(function() {
       socket.emit('houseSell', {
         space: current_prop.id,
         fbid: fbobj.id
       });
     });
+    if (inDefault) {
+      // If in default, you can't buy houses ever
+      $("#houseplusbtn").addClass("unavailable");
+    } else {
+      $("#houseplusbtn").click(function() {
+        socket.emit('houseBuy', {
+          space: current_prop.id,
+          fbid: fbobj.id
+        });
+      });
+    }
   } else {
     $("#houseminusbtn").addClass("unavailable");
     $("#houseplusbtn").addClass("unavailable");
   }
-
-  // If in default, you can't buy houses ever
-  $("#houseplusbtn").addClass("unavailable");
 }
 
 function loadDetailedView(prop) {
