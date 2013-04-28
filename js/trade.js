@@ -359,8 +359,8 @@ function tradeFinalize() {
   }
   var leftselectedprops = $("#tradeleft .propertyCell.selected");
   var rightselectedprops = $("#traderight .propertyCell.selected");
-  var originoffermoney = $("#tradeleft .moneyInput").val();
-  var destoffermoney = $("#traderight .moneyInput").val();
+  var originoffermoney = Number($("#tradeleft .moneyInput").val());
+  var destoffermoney = Number($("#traderight .moneyInput").val());
   var destofferprops = [];
   var originofferprops = [];
   for (var divid = 0; divid < leftselectedprops.length; divid++) {

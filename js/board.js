@@ -216,18 +216,11 @@ function jailPlayer(fbid, initial) {
     .addClass("visible").addClass("currentTurn" + players[fbid]);
 }
 
-function updatePlayerMoney(fbid, money) {
-  $("#playermoney" + players[fbid]).html("Money: $" + money);
-}
-
-function debit(fbid, amt) {
-  var old = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
-  $("#playermoney" + players[fbid]).html("$" + (old - amt));
-}
-
 function transaction(fbid, amt) {
-  var old = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
-  $("#playermoney" + players[fbid]).html("$" + (old + amt));
+  var oldMoney = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
+  console.log("transaction: " + oldMoney + " + " + amt);
+  var newMoney = oldMoney + amt;
+  $("#playermoney" + players[fbid]).html("$" + newMoney);
 }
 
 function sellProperty(fbid, propid) {
@@ -447,7 +440,7 @@ function attachSocketHandlers() {
   socket.on('tradeAccept', function (data) {
     var originmoney, originprops, origintrade;
     var destmoney, destprops, desttrade;
-
+    console.log(data.tradeobj);
     // Transfer money
     if (data.tradeobj.originoffermoney > 0) {
       giveMoney(data.originfbid, data.destfbid, data.tradeobj.originoffermoney);
@@ -475,6 +468,8 @@ function attachSocketHandlers() {
         }
       }
     });
+    if (originprops === undefined) originprops = "";
+    
     data.tradeobj.destofferprops.forEach(function (prop, propid) {
       if (prop !== null) {
         giveProperty(data.destfbid, data.originfbid, propid);
@@ -485,6 +480,7 @@ function attachSocketHandlers() {
         }
       }
     });
+    if (destprops === undefined) destprops = "";
 
     // Construct event string
     if (originmoney !== "") {
