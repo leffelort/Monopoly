@@ -1496,6 +1496,12 @@ function collectRent(game, space, socketid, tenant, roll) {
     endTurn(game);
     return;
   }
+  
+  if (property.mortgaged) {
+    console.log("Property is mortgaged.");
+    endTurn(game);
+    return;
+  }
 
   // Figure out amount to pay based on the space.
   if (isUtility(space)) {
