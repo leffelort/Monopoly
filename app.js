@@ -1923,7 +1923,7 @@ function inDefault(game, socketid, amt, fbid, target) {
 
 
 function credit(game,socketid, amt, fbid) {
-  game.players[fbid].money = game.players[fbid].money + amt;
+  game.players[fbid].money = Number(game.players[fbid].money) + Number(amt);
   safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
   if (game.players[fbid].inDefault) {
     if ((game.players[fbid].money) > (game.players[fbid].debt)) {
@@ -1990,7 +1990,8 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   var dom = tradeobj.destoffermoney;
   var oop = tradeobj.originofferprops;
   var oom = tradeobj.originoffermoney;
-
+  console.log("oom", oom);
+  console.log("dom", dom);
 
   var suc = debit(game, socketid, oom, originfbid, destfbid);
   if (!suc) throw "should never not have money for trade";
