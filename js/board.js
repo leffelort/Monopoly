@@ -76,6 +76,10 @@ function refreshBoardState(game) {
       if (property !== null) {
         $("#space" + property.id + " .propertyown")
           .addClass("player" + playerNum);
+          
+        if (property.mortgaged) {
+          $("#space" + property.id + " .propertyown").addClass("mortgaged");
+        }
 
         if (property.hotel) {
           $("#space" + property.id + " .houses").removeClass("visible");
@@ -335,6 +339,14 @@ function hotelSell(propid) {
   $("#space" + propid + " .houses").addClass("visible");
 }
 
+function propertyMortgage(propid) {
+  $("#space" + propid + " .propertyown").addClass("mortgaged");
+}
+
+function propertyUnmortgage(propid) {
+  $("#space" + propid + " .propertyown").removeClass("mortgaged");
+}
+
 function attachSocketHandlers() {
   socket.on("boardReconnect", function (data) {
     if (!data.success) {
@@ -422,6 +434,20 @@ function attachSocketHandlers() {
     hotelSell(data.space);
     transaction(data.fbid, data.cost);
     displayEvent(playerNames[data.fbid] + " sold a hotel on " + data.propName);
+  });
+  
+  socket.on('propertyMortgage', function (data) {
+    transaction(data.fbid, data.cost);
+    propertyMortgage(data.property.id);
+    displayEvent(playerNames[data.fbid] + " mortgaged " + 
+      data.property.card.title);
+  });
+  
+  socket.on('propertyUnmortgage', function (data) {
+    transaction(data.fbid, data.cost * -1);
+    propertyUnmortgage(data.property.id);
+    displayEvent(playerNames[data.fbid] + " unmortgaged " + 
+      data.property.card.title);
   });
 
   socket.on('chance', function (data) {

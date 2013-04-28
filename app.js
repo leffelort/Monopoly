@@ -1592,6 +1592,12 @@ function propertyMortgage(game, property, socketid, fbid, success) {
       fbid: fbid,
       success: success
     });
+    sendToBoards(game.id, 'propertyMortgage', {
+      property: property,
+      fbid: fbid,
+      success: success,
+      cost: property.card.price / 2
+    });
   });
 }
 
@@ -1601,6 +1607,12 @@ function propertyUnmortgage(game, property, socketid, fbid, success) {
       property: property,
       fbid: fbid,
       success: success
+    });
+    sendToBoards(game.id, 'propertyUnmortgage', {
+      property: property,
+      fbid: fbid,
+      success: success,
+      cost: (property.card.price / 2) * 1.10
     });
   });
 }
