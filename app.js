@@ -1534,9 +1534,6 @@ function collectRent(game, space, socketid, tenant, roll) {
     switch(property.numHouses) {
       case 0:
         amt = property.card.rent;
-        if (property.mortgaged) {
-          amt = 0;
-        }
         if (property.monopoly) {
           amt = (property.card.rent * 2);
         }
