@@ -1094,7 +1094,6 @@ function handleSale(space, socketid, fbid) {
 
 function handleRoll(delta, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
-    console.log("Handling roll for player ", game.players[fbid]);
     console.log("Found a game??", game.id);
     game.doubles = dbls;
     if (dbls) {
