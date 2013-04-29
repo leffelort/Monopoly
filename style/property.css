@@ -186,6 +186,7 @@ td:nth-child(even) {
   color: red;
   letter-spacing: 5px;
   -webkit-transform: rotate(-45deg);
+  -moz-transform: rotate(-45deg);
   transform: rotate(-45deg);
   position: absolute;
   top: 30%;
