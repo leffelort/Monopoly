@@ -467,9 +467,13 @@ function loadTradePanels() {
     $("#traderight .playerProperties"),
     (fbobj.id !== rightplayer.fbid));
 
-  $(".acceptbtn").click(function() {
-    tradeFinalize();
-  });
+  if (localStorage["agent"] === "destination") {
+    $(".acceptbtn").remove()
+  } else {
+    $(".acceptbtn").click(function() {
+      tradeFinalize();
+    });
+  }
 
   $("#chatform").submit(function() {
     event.preventDefault();

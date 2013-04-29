@@ -26,6 +26,7 @@ function socketSetup() {
     if (res.success) {
       current_prop.mortgaged = true;
       console.log("property was mortgaged");
+      loadDetailedView(current_prop);
     } else {
       console.log("Could not mortgage");
     }
@@ -36,6 +37,7 @@ function socketSetup() {
     if (res.success) {
       console.log("property was UNmortgaged");
       current_prop.mortgaged = false;
+      loadDetailedView(current_prop);
     } else {
       console.log("Could not UNmortgage");
     }
@@ -181,6 +183,9 @@ function loadDetailedView(prop) {
   $("#propDetails").html(" ");
   var detailedView = $("<div>").addClass("propertyCard");
   var titleDeed = $("<div>").addClass("titleDeed");
+  var mortgaged = $("<div>").addClass("mortgaged").html("MORTGAGED");
+  if (prop.mortgaged) mortgaged.show();
+  titleDeed.append(mortgaged);
   var titleTextColor = "black";
   if (property.color === "blue" || property.color === "purple") {
     titleTextColor = "white";
@@ -284,8 +289,13 @@ function loadDetailedView(prop) {
   detailedView.append(titleDeed);
   detailedView.hide();
   $("#propDetails").append(detailedView);
-  var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
+  var widthPercent = (document.documentElement.clientWidth * 0.40) / 440;
+  var heightPercent = (document.documentElement.clientHeight) / 520;
+  var percentScale = (widthPercent > heightPercent) ? heightPercent : widthPercent;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
+  $("#propDetails .propertyCard").css("transform", "scale(" + percentScale + ")");
+  $("#propDetails .propertyCard").css("-ms-transform", "scale(" + percentScale + ")");
+
   detailedView.show();
   setupMortgageBtn(prop);
   setupHouseButtons();
@@ -334,7 +344,8 @@ function displayProperties(properties) {
       cur_cell.click(function() {
         $(".propertyCell.selected").removeClass("selected");
         cur_cell.addClass("selected");
-        loadDetailedView(propertyDatabase[cur_prop.card.title]);
+        var thisprop = propertyDatabase[cur_prop.card.title];
+        loadDetailedView(thisprop);
       });
     })();
 

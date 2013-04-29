@@ -64,10 +64,13 @@ function getProperties() {
   socket.emit("getProperties", {});
 }
 
-function loadDetailedView(property) {
+function loadDetailedView(property, isMortgaged) {
   $("#propDetails").html(" ");
   var detailedView = $("<div>").addClass("propertyCard");
   var titleDeed = $("<div>").addClass("titleDeed");
+  var mortgaged = $("<div>").addClass("mortgaged").html("MORTGAGED");
+  if (isMortgaged) mortgaged.show();
+  titleDeed.append(mortgaged);
   var titleTextColor = "black";
   if (property.color === "blue" || property.color === "purple") {
     titleTextColor = "white";
@@ -172,7 +175,7 @@ function loadDetailedView(property) {
   detailedView.hide();
   $("#propDetails").append(detailedView);
   var widthPercent = (document.documentElement.clientWidth * 0.40) / 440;
-  var heightPercent = (document.documentElement.clientHeight) / 500;
+  var heightPercent = (document.documentElement.clientHeight) / 520;
   var percentScale = (widthPercent > heightPercent) ? heightPercent : widthPercent;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
   $("#propDetails .propertyCard").css("transform", "scale(" + percentScale + ")");
@@ -226,7 +229,8 @@ function displayProperties(properties) {
       cur_cell.click(function() {
         $(".propertyCell.selected").removeClass("selected");
         cur_cell.addClass("selected");
-        loadDetailedView(propertyDatabase[cur_prop.card.title].card);
+        var thisprop = propertyDatabase[cur_prop.card.title]
+        loadDetailedView(thisprop.card, thisprop.mortgaged);
       });
     })();
     

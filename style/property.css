@@ -181,3 +181,21 @@ table.railroad {
 td:nth-child(even) {
   text-align: right;
 }
+
+.mortgaged {
+  color: red;
+  letter-spacing: 5px;
+  -webkit-transform: rotate(-45deg);
+  transform: rotate(-45deg);
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  font: 80px 'Kabel-Medium';
+  text-shadow: -2px 2px black;
+  -webkit-text-shadow: -2px 2px black;
+  -moz-text-shadow: -2px 2px black;
+  display: none;
+}
