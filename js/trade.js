@@ -118,7 +118,52 @@ function displayTradeOffer(tradeobj) {
   var originoffermoney = tradeobj.originoffermoney;
   var originofferprops = tradeobj.originofferprops;
   // TODO : actually display the trade being made.
-  displayPrompt("Do you accept this trade?", function(resp) {
+  var offer = players[localStorage['originfbid']].username.split(" ")[0] + " wants "
+  if (destoffermoney === 0 && destofferprops.length === 0) {
+    offer += "nothing";
+  }
+  if (destoffermoney !== 0) {
+    offer += "$" + destoffermoney;
+  }
+  if (destoffermoney !== 0 && destofferprops.length === 1) {
+    offer += " and ";
+  } else if (destoffermoney !== 0 && destofferprops.length > 1) {
+    offer += ", ";
+  }
+  for (var i = 0; i < destofferprops.length; i++) {
+    var destprop = destofferprops[i];
+    if (!destprop) continue;
+    if (i === destofferprops.length - 1) {
+      offer += destprop.card.title;
+    } else {
+      offer += destprop.card.title + ", ";
+    }
+  }
+  offer += " for ";
+  if (originoffermoney === 0 && originofferprops.length === 0) {
+    offer += "nothing";
+  }
+  if (originoffermoney !== 0) {
+    offer += "$" + originoffermoney;
+  }
+  if (originofferprops.length !== 0 && originoffermoney === 1) {
+    offer += " and ";
+  } else if (originoffermoney !== 0 && originofferprops.length > 1) {
+    offer += ", ";
+  }
+  if (originofferprops.length !== 0) {
+    for (var i = 0; i < originofferprops.length; i++) {
+      var originprop = originofferprops[i];
+      if (!originprop) continue;
+      if (i === originofferprops.length - 1) {
+        offer += originprop.card.title;
+      } else {
+        offer += originprop.card.title + ", "
+      }
+    }
+  }
+  offer += ". Do you accept?"
+  displayPrompt(offer, function(resp) {
     if (resp) {
       socket.emit('tradeAccept', {
         tradeobj: tradeobj,
@@ -376,8 +421,7 @@ function tradeFinalize() {
     var prop = propDatabase[propname];
     originofferprops[prop.id] = prop;
   }
-  console.log("finished the first loop");
-  for (var divid = 0; divid < leftselectedprops.length; divid++) {
+  for (var divid = 0; divid < rightselectedprops.length; divid++) {
     var propdiv = rightselectedprops[divid];
     var propname = $(propdiv).children(".propname").html();
     if (propname === undefined) continue;
@@ -444,7 +488,8 @@ function tradeButtonHandler() {
 
   socket.emit('tradeStart', {
     originfbid: leftplayer.fbid,
-    destfbid: rightplayer.fbid
+    destfbid: rightplayer.fbid,
+    requester: fbobj.first_name
   });
   localStorage["originfbid"] = leftplayer.fbid;
   localStorage["destfbid"] = rightplayer.fbid;

@@ -171,8 +171,12 @@ function loadDetailedView(property) {
   detailedView.append(titleDeed);
   detailedView.hide();
   $("#propDetails").append(detailedView);
-  var percentScale = (document.documentElement.clientWidth * 0.40) / 440;
+  var widthPercent = (document.documentElement.clientWidth * 0.40) / 440;
+  var heightPercent = (document.documentElement.clientHeight) / 500;
+  var percentScale = (widthPercent > heightPercent) ? heightPercent : widthPercent;
   $("#propDetails .propertyCard").css("-webkit-transform", "scale(" + percentScale + ")");
+  $("#propDetails .propertyCard").css("transform", "scale(" + percentScale + ")");
+  $("#propDetails .propertyCard").css("-ms-transform", "scale(" + percentScale + ")");
   detailedView.show();
   
   // Send currently viewed property to the server so the board can update

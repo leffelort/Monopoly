@@ -773,7 +773,8 @@ io.sockets.on('connection', function (socket) {
           if (arr[i].fbid === data.destfbid) {
             safeSocketEmit(arr[i].socketid, 'tradeStart', {
               originfbid: data.originfbid,
-              destfbid: data.destfbid
+              destfbid: data.destfbid,
+              requester: data.requester
             });
           }
         }
