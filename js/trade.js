@@ -197,7 +197,9 @@ function displayProperties(properties, propDiv, clickable) {
   }
   moneyCell.append(moneyInput);
   moneyInput.blur(function() {
-    if (this.value >= Number($("#traderight .playerMoney").html().split("$")[1])) {
+    if (isNaN(this.value)) {
+      this.value  = 0;
+    } else if (this.value >= Number($("#traderight .playerMoney").html().split("$")[1])) {
       this.value = 0;
     }
     socket.emit('tradeUpdate', {
