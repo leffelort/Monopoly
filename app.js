@@ -1453,6 +1453,8 @@ function collectRent(game, space, socketid, tenant, roll) {
   var owner = game.propertyOwners[space];
   var property;
   var amt, atom;
+  
+  console.log(owner);
 
   // Get property at the space landed on
   for (var ind in game.players[owner].properties) {
