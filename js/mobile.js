@@ -105,25 +105,27 @@ function getGameInfo(gameID) {
 }
 
 function createGameLobby() {
+  $("#title").hide();
   $("#waitingBtn").hide();
   // Populate game lobby with game info
   $("#gameTitle").html(currentGame.name);
   var index = 1;
   $("#gameLobby").html("");
-  var row;
+  var row = $("<div>").addClass("gameLobbyRow");;
   for (var id in currentGame.players) {
     var player = currentGame.players[id];
-    if (index % 2 === 1) {
-      row = $("<div>").addClass("gameLobbyRow");
-    }
+    // if (index % 2 === 1) {
+    //   row = $("<div>").addClass("gameLobbyRow");
+    // }
     var userSquare = $("<div>").addClass("userSquare");
-    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbid + "/picture?width=75&height=75"))
-              .append($("<h2>").html("Player " + index + ": " + player.username.split(" ")[0]));
+    userSquare.append($("<img>").attr("src", "https://graph.facebook.com/" + player.fbid + "/picture?width=50&height=50"))
+              .append($("<h2>").html(index + ": " + player.username.split(" ")[0]));
     row.append(userSquare);
-    if (index % 2 === 1)
-      $("#gameLobby").append(row);
+    // if (index % 2 === 1)
+    //   $("#gameLobby").append(row);
     index++;
   }
+  $("#gameLobby").append(row);
   $("#boardLobby").html("Number of boards connected: " + currentGame.numBoards);
   $("#phoneCode").html(currentGame.code);
   if (currentGame.numPlayers < 2 || currentGame.numBoards < 1) {
@@ -133,6 +135,7 @@ function createGameLobby() {
   } else {
     $("#startGameBtn")[0].removeAttribute("disabled");
   }
+  window.scrollTo(0,1);
 }
 
 function sendMessage() {
@@ -150,6 +153,7 @@ function sendMessage() {
 
 // HOME SCREEN
 function openHomeScreen(prevScreen) {
+  $("#title").show();
   prevScreen.hide();
   $("#homeScreen").show();
 }

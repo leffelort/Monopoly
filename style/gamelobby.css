@@ -142,15 +142,21 @@ h3 {
 }
 
 .gameLobbyRow {
-  width: 80%;
+  width: 95%;
   position: relative;
   text-align: center;
   margin: 10px auto;
 }
 
 .gameLobbyRow .userSquare {
+  height: 75px;
+  width: 25%;
+  display: inline-block;
+}
+
+.gameLobbyRow .desktopUserSquare {
   height: 110px;
-  width: 50%;
+  width: 25%;
   display: inline-block;
 }
 
@@ -166,9 +172,13 @@ h3 {
   bottom: 0;
   font: 15px 'Lato', Helvetica, Arial, sans-serif;
   text-align: center;
-  width: 50%;
+  width: 25%;
   padding: 0;
   margin: 0;
+}
+
+#gameTitle {
+  margin-top: 10px;
 }
 
 #gameLobby {
@@ -177,8 +187,17 @@ h3 {
   text-align: center;
 }
 
+#boardLobby {
+  font-size: 15px;
+}
+
 .playerSeat {
   width: 100%;
+}
+
+#phoneCode {
+  font: 20px 'Lato', Helvetica, Arial, sans-serif;
+  font-weight: bolder;
 }
 
 #chatWindow {

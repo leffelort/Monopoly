@@ -773,7 +773,8 @@ io.sockets.on('connection', function (socket) {
           if (arr[i].fbid === data.destfbid) {
             safeSocketEmit(arr[i].socketid, 'tradeStart', {
               originfbid: data.originfbid,
-              destfbid: data.destfbid
+              destfbid: data.destfbid,
+              requester: data.requester
             });
           }
         }
@@ -1065,11 +1066,12 @@ function passGo(game, socketid, fbid) {
 function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     var prop;
+    var temp;
     for (var index in game.availableProperties) {
       if (game.availableProperties[index] &&
         game.availableProperties[index].id === space) {
         prop = game.availableProperties[index];
-        delete game.availableProperties[index];
+        temp = index;
       }
     }
     console.log("I a gonna changa die monezzzz? " + game.players[fbid].money);
@@ -1079,7 +1081,7 @@ function handleSale(space, socketid, fbid) {
       prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
       game.players[fbid].properties[space] = prop;
       game.propertyOwners[space] = fbid;
-
+      delete game.availableProperties[temp];
       checkMonopoly(game, fbid, space);
       sendToBoards(game.id, 'propertySold', {
         property : space,

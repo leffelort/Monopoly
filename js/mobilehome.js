@@ -209,11 +209,10 @@ function setupSockets() {
       localStorage["agent"] = "destination";
       localStorage["tofbid"] = obj.originfbid;
     } else {
-      console.log("WAT DUCK.")
       localStorage["agent"] = "origin";
       localStorage["tofbid"] = obj.destfbid;
     }
-    displayPrompt("Wants to trade with you", function(resp) {
+    displayPrompt(obj.requester + " wants to trade with you. Do you want to trade?", function(resp) {
       if (resp) {
         socket.emit('tradeResponse', {
           destfbid: obj.destfbid,
