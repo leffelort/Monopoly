@@ -116,7 +116,7 @@ MongoClient.connect(mongoUri, {
   }, function (err, db) {
   if (err)
     throw err;
-  console.log("successfully connected to the database at uri " + mongoUri);
+  console.log("successfully connected to the database");
   client = db;
 
   dbIsOpen = true;
@@ -135,35 +135,6 @@ MongoClient.connect(mongoUri, {
 
    chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
 });
-
-/*
-mongo.Db.connect(mongoUri, function(err, db) {
-  if (err)
-    throw err;
-  console.log("successfully connected to the database.")
-  client = db;
-
-  dbIsOpen = true;
-  client.collection("users", function (e, u) {
-    if (e) throw e;
-    //u.drop();
-   });
-   client.collection("games", function (e,g) {
-    if (e) throw e;
-    //g.drop();
-   });
-   client.collection("boards", function (e,b) {
-    if (e) throw e;
-    //b.drop();
-   });
-
-   chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
-
-   client.on('close', function (error) {
-      console.log("DB closed D:");
-   });
-});
-*/
 
 // get a username for a given socket id
 function queryUser(sockid, callback) {
@@ -187,7 +158,6 @@ function queryUser(sockid, callback) {
     });
   }
 }
-
 
 function queryBoard(sockid, callback) {
   if (boardretry <= 0) {
@@ -430,7 +400,9 @@ var server = http.createServer(app);
 var io = require('socket.io').listen(server);
 
 // reduce unnecessary logging
-//io.set('log level', 1);
+if (process.env.NODE_ENV === "production") {
+  io.set('log level', 1);
+}
 
 server.listen(process.env.PORT || 11611);
 
