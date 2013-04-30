@@ -9,6 +9,7 @@ var eventUpdateFreq = 500;
 var eventTimer = 0;
 var eventDuration = 3000;
 
+// navigation functions
 var goToRoll = function() {
   window.location.replace("roll.html");
 }
@@ -51,8 +52,8 @@ function displayEvent(eventStr) {
   eventQueue.push(eventStr);
 }
 
-// @TODO: Need to update this with actual information about the current state
-// of the player in the game once the database supports it.
+// this function is poorly named. It loads all player data and sets up
+// the header of the mobile home page. 
 function loadFBData() {
   var infodiv = $("#playerinfo");
   infodiv.empty();
@@ -66,9 +67,7 @@ function loadFBData() {
   info.append(moneydisp);
 
 
-  // @TODO This is really messy, but it's how I was adding
-  //        new get out of jail free cards.
-  //
+  // add get out of jail free cards.
   if (me.jailCards !== undefined && me.jailCards.length !== 0) {
     for (var i = 0; i < me.jailCards.length; i++) {
       var jailcard = me.jailCards[i];
@@ -97,8 +96,10 @@ function loadFBData() {
   // add the profile picture and offset it to line it up with the roll button.
   // The + 2 is for the image border.
   var profilepic = $("<img>").attr("src", picurl).css("left", $("#rollbtn").offset().left + 2);
-  infodiv.append(profilepic)
-         .append(info);
+  var playercircle = $("<div>").addClass("playercircle")
+                               .addClass("player" + (me.playerNumber + 1))
+                               .css("left", $("#rollbtn").offset().left + 2 + ppd - 15);
+  infodiv.append(profilepic, playercircle, info)
   //infodiv.append(getoutcards);
   //getoutcards.css("right", $(window).width() - $("#tradebtn").offset().left - $("#tradebtn").width() - 2);
 
@@ -115,6 +116,7 @@ function loadFBData() {
     $("#tradebtn").removeClass("disabled");
     enableButtons();
 
+    // are you in jail? You have to roll or pay.
     if (me.jailed) {
       if (me.jailCards.length > 0) {
         if (me.jailTime === 3) {
@@ -170,6 +172,9 @@ function loadFBData() {
   window.scrollTo(0, 1);
 }
 
+// hide the jail card temporarily when it is used.
+// the jail card is deleted from the player object and
+// will not show up next time.
 function hideJailCard(cardtype) {
   if (cardtype === "chance") {
     $("#getoutchance").css("display", "none");
@@ -178,13 +183,18 @@ function hideJailCard(cardtype) {
   }
 }
 
+// set up the socket events
 function setupSockets() {
+  // once we have told the server who we are,
+  // as the server for our own data.
   socket.on('reopen', function(resp) {
     if (resp.success) {
       socket.emit('getme', {});
     }
   });
   
+  // each time it's another player's turn, this event is fired
+  // to update the mobile screen.
   socket.on('nextTurn', function(obj) {
     socket.emit('getme', {});
     if (obj.fbid === fbobj.id) {
@@ -192,6 +202,8 @@ function setupSockets() {
     }
   });
   
+  // get our data from the server. Once this has happened,
+  // reload the entire page.
   socket.on('getme', function(resp) {
     if (resp === undefined) {
       alert("YOU CAN'T SIT WITH US!");
@@ -202,6 +214,7 @@ function setupSockets() {
     loadFBData();
   });
   
+  // someone want's to trade with you!
   socket.on('tradeStart', function (obj) {
     localStorage["destfbid"] = obj.destfbid;
     localStorage["originfbid"] = obj.originfbid;
@@ -227,6 +240,7 @@ function setupSockets() {
     });
   });
 
+  // you need to pay money to get out of default :(
   socket.on('inDefault', function (obj) {
     var promptStr = "You owe $" + obj.amt + " and don't have enough money to pay. You must sell assets to pay your debt.";
     displayPrompt(promptStr, function () {
@@ -234,6 +248,7 @@ function setupSockets() {
     }, false);
   });
   
+  // prompt to buy a property. Shouldn't actually happen on mobile home.
   socket.on('propertyBuy', function(prop) {
     var promptText = "Would you like to purchase " + prop.card.title;
     promptText += " for $" + prop.card.price;
@@ -242,12 +257,14 @@ function setupSockets() {
     });
   });
 
+  // you paid someone rent
   socket.on('payingRent', function (socketdata) {
     displayEvent("You paid $" + socketdata.amount + " in rent.");
     var old = Number($(".moneydisp").html().replace("$", ""));
     $(".moneydisp").html("$" + (old - socketdata.amount));
   });
 
+  // you lost money :(
   socket.on('debit', function (socketdata) {
     if (socketdata.reason !== undefined) {
       displayEvent("You paid $" + socketdata.amt + " for " + socketdata.reason);
@@ -258,6 +275,7 @@ function setupSockets() {
     $(".moneydisp").html("$" + (old - socketdata.amt));
   });
 
+  // you got money! WOO PAY DAY :D
   socket.on('credit', function (socketdata) {
     if (socketdata.reason !== undefined) {
       displayEvent("You received $" + socketdata.amt + " for " + socketdata.reason);
@@ -268,22 +286,26 @@ function setupSockets() {
     $(".moneydisp").html("$" + (old + socketdata.amt));
   });
 
+  // WOAH ya passed go!
   socket.on('passGo!', function (socketdata) {
     displayEvent("You collect $" + socketdata.amount + " for " + socketdata.reason);
     var old = Number($(".moneydisp").html().replace("$", ""));
     $(".moneydisp").html("$" + (old + socketdata.amount));
   });
 
+  // You've done your time kid, now go out back into the world and enjoy yourself.
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent("You got out of Jail!");
   });
   
+  // you've gone bankrupt.
   socket.on('bankrupt', function (socketdata) {
     displayPrompt("You went bankrupt! :(", function () {
       window.location.replace("/mobile.html");
     }, false);
   });
   
+  // The game is over!
   socket.on('gameOver', function (socketdata) {
     displayPrompt("Game over!", function () {
       window.location.replace("/mobile.html");
@@ -291,6 +313,9 @@ function setupSockets() {
   });
 }
 
+// display a prompt to the user. If choice is false
+// only display a check, otherwise display an accept
+// and reject button.
 function displayPrompt(msg, callback, choice) {
   console.log(choice);
   if (callback === undefined) {

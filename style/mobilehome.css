@@ -107,6 +107,29 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
   position: absolute;
 }
 
+#playerinfo .playercircle {
+  width: 15px;
+  height: 15px;
+  border-radius: 15px;
+  position: absolute;
+  top: 57px;
+  left: 55px;
+  border: 2px solid black;
+}
+
+.playercircle.player1 {
+  background-color: #EF3A24;
+}
+.playercircle.player2 {
+  background-color: #FDE703;
+}
+.playercircle.player3 {
+  background-color: #274EA1;
+}
+.playercircle.player4 {
+  background-color: #590C38;
+}
+
 #gameButtons {
   text-align: center;
   width: 100%;

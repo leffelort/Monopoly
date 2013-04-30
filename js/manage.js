@@ -1,12 +1,14 @@
-var propertyDatabase = {};
+var propertyDatabase = {}; // local storage of properties
 var setupPage;
-var socket;
-var fbobj;
-var current_prop;
-var inDefault;
+var socket; // player socket
+var fbobj; // facebook object with facebook user data
+var current_prop; // current property being looked at
+var inDefault; // if you need to sell to get out of default
+var spaceTitle = {}; // maps spaces to titles for properties
 
 
 function socketSetup() {
+  // returns only those properties owned by the socket holder
   socket.on('getMyProperties', function(props){
     props.sort(function(a,b) {
       if (!a) return 1;
@@ -16,12 +18,15 @@ function socketSetup() {
     displayProperties(props);
   });
 
+  // once we have told the server our new socket, set up the
+  // rest of the page.
   socket.on('reopen', function (data){
     inDefault = data.inDefault;
     console.log("inDefault = " + inDefault);
     setupPage();
   });
 
+  // Player has clicked "mortgage property"
   socket.on('propertyMortgage', function(res) {
     if (res.success) {
       current_prop.mortgaged = true;
@@ -33,6 +38,7 @@ function socketSetup() {
     setupMortgageBtn();
   });
 
+  // attempts to mortgage the selected property
   socket.on('propertyUnmortgage', function(res) {
     if (res.success) {
       console.log("property was UNmortgaged");
@@ -44,32 +50,39 @@ function socketSetup() {
     setupMortgageBtn();
   });
 
+  // attempts to buy a house on the selected property
   socket.on('houseBuy', function(res) {
     if (res.success) {
+      propertyDatabase[spaceTitle[res.space]].numHouses++;
       console.log("you bought a house!");
     } else {
       console.log("LOL SUCKS you didn't buy a house cause, ", res.reason);
     }
   });
 
+  // attempts to sell a house on the current property
   socket.on('houseSell', function(res) {
     if (res.success) {
+      propertyDatabase[spaceTitle[res.space]].numHouses--;
       console.log("you sold a house!");
     } else {
       console.log("LOL SUCKS you didn't sell a house cause, ", res.reason);
     }
   });
 
+  // once you are out of debt, go back to the home screen.
   socket.on('outOfDebt', function (data) {
     window.location.replace("mobileHome.html");
   });
   
+  // if you are totally bankrupt, leave the game.
   socket.on('bankrupt', function (socketdata) {
     displayPrompt("You went bankrupt! :(", function () {
       window.location.replace("/mobile.html");
     }, false);
   });
   
+  // the game is over, go back to the home screen
   socket.on('gameOver', function (socketdata) {
     displayPrompt("Game over!", function () {
       window.location.replace("/mobile.html");
@@ -77,12 +90,23 @@ function socketSetup() {
   });
 }
 
+// if we have cached facebook data, use it. Otherwise load the SDK 
+// and update fbobj with the response from facebook.
 if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   fbobj = JSON.parse(sessionStorage.user);
   socket = io.connect(window.location.hostname);
   socketSetup();
   socket.emit('reopen', fbobj);
 } else {
+    // Load the FB SDK Asynchronously
+  (function(d){
+     var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+     if (d.getElementById(id)) {return;}
+     js = d.createElement('script'); js.id = id; js.async = true;
+     js.src = "//connect.facebook.net/en_US/all.js";
+     ref.parentNode.insertBefore(js, ref);
+   }(document));
+
   window.fbAsyncInit = function() {
     FB.init({
       appId      : '448108371933308', // App ID
@@ -110,19 +134,11 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   };
 }
 
-// Load the FB SDK Asynchronously
-(function(d){
-   var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
-   if (d.getElementById(id)) {return;}
-   js = d.createElement('script'); js.id = id; js.async = true;
-   js.src = "//connect.facebook.net/en_US/all.js";
-   ref.parentNode.insertBefore(js, ref);
- }(document));
-
 function getProperties() {
   socket.emit("getMyProperties", {});
 }
 
+// callback for when the mortgage button is clicked.
 function mortgageHandler(prop) {
   $("#mortgagebtn").unbind();
   if (prop.mortgaged === true) {
@@ -141,6 +157,8 @@ function mortgageHandler(prop) {
   setupMortgageBtn();
 }
 
+// call this each time the detailed view is loaded to check
+// what action the mortgage button should take.
 function setupMortgageBtn() {
   if (current_prop.numHouses > 0 || current_prop.hotel === true) {
     $("#mortgagebtn").addClass("unavailable")
@@ -158,6 +176,8 @@ function setupMortgageBtn() {
   });
 }
 
+// call this each time the detailed view is load to change
+// what the house buttons will do (buy / sell / grayed out)
 function setupHouseButtons() {
   $("#houseminusbtn").unbind();
   $("#houseplusbtn").unbind();
@@ -187,6 +207,7 @@ function setupHouseButtons() {
   }
 }
 
+// loads the deatiled view of the property (aka the property card)
 function loadDetailedView(prop) {
   current_prop = prop;
   enablePropertyOptions();
@@ -232,7 +253,7 @@ function loadDetailedView(prop) {
     details.append($("<div>").addClass("copyright")
                 .html("&copy;1935 Hasbro, Inc."));
 
-  } else if (property.color === "utility") {
+  } else if (property.color === "utility") { // duquesne light or PWSA
     if (property.title.indexOf("Light") != -1) {
       titleDeed.append($("<div>").addClass("electricImg"));
     } else {
@@ -319,7 +340,7 @@ function loadDetailedView(prop) {
   });
 }
 
-// @TODO: Make sure the properties display current data
+// display a list of properties on the left hand side
 function displayProperties(properties) {
   var propDiv = $("#propList");
   for (var i = 0; i < properties.length; i++) {
@@ -328,6 +349,7 @@ function displayProperties(properties) {
 
     var card = prop.card;
     propertyDatabase[card.title] = prop;
+    spaceTitle[prop.id] = card.title;
     var cell = $("<div>").addClass("propertyCell");
     cell.append($("<div>").addClass("stripe")
                 .addClass(card.color));
