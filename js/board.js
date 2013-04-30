@@ -227,9 +227,41 @@ function transaction(fbid, amt) {
   $("#playermoney" + players[fbid]).html("$" + newMoney);
 }
 
+// Bankrupt player's money
+function bankruptMoney(fbid) {
+  $("#playermoney" + players[fbid]).html("Bankrupt");
+}
+
+function bankruptProps(fbid, target) {
+  // Go through every space, if it's owned by fbid, give it to target
+  // If target is undefined, give prop to bank
+  for (var i = 0; i < 39; i++) {
+    var prop = $("#space" + i + " .propertyown.player" + players[fbid]);
+    if (prop !== undefined) {
+      if (target !== undefined) {
+        giveProperty(fbid, target, i);
+      } else {
+        buyProperty(fbid, i);
+      }
+    }
+  }
+}
+
+// Bank sells property propid to player fbid.
 function sellProperty(fbid, propid) {
   console.log("propertySold: " + fbid);
   $("#space" + propid + " .propertyown").addClass("player" + players[fbid]);
+}
+
+// Bank takes property propid from player fbid (on bankruptcy to the bank)
+function buyProperty(fbid, propid) {
+  // Remove houses/hotels first
+  $("#space" + propid + " .houses").addClass("visible");
+  $("#space" + propid + " .house").removeClass("visible");
+  $("#space" + propid + " .hotel").removeClass("visible");
+  
+  $("#space" + propid + " .propertyown")
+    .removeClass("mortgaged").removeClass("player" + players[fbid]);
 }
 
 // transfers ownership of property propid from origin to dest.
@@ -350,7 +382,7 @@ function propertyUnmortgage(propid) {
 function attachSocketHandlers() {
   socket.on("boardReconnect", function (data) {
     if (!data.success) {
-      alert("Error reconnecting.");
+      alert("The game is over.");
       window.location.replace("/desktop.html");
     } else {
       socket.emit('boardstate', {});
@@ -539,6 +571,23 @@ function attachSocketHandlers() {
     var eventStr = playerNames[data.originfbid] + " traded " + origintrade +
       " to " + playerNames[data.destfbid] + " for " + desttrade;
     displayEvent(eventStr);
+  });
+  
+  socket.on('bankrupt', function (data) {
+    bankruptMoney(data.fbid);
+    bankruptProps(data.fbid, data.target);
+    if (data.target === undefined) {
+      displayEvent(playerNames[data.fbid] + " has gone bankrupt, giving all assets to the bank!");
+    } else {
+      displayEvent(playerNames[data.fbid] + " has gone bankrupt, giving all assets to " + playerNames[data.target]);
+    }
+  });
+  
+  socket.on('gameOver', function (data) {
+    displayEvent("Game Over! " + playerNames[data.winner] + " wins!");
+    
+    // delete localStorage
+    delete localStorage["cmuopoly_boardID"];
   });
 }
 

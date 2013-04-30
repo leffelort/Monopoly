@@ -379,6 +379,7 @@ function deleteGame(game) {
     if (error) throw error;
     games.remove({id: game.id}, function(error) {
       if (error) throw error;
+      phoneCodeGen.return(game.code);
       delete game;
       console.log("successfully removed game from the database");
     });
@@ -654,18 +655,22 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('boardReconnect', function (data) {
-    var boar = monopoly.newBoard(data.id);
-    boar.socketid = socket.id;
-    socketToBoardId[socket.id] = data.id;
-    saveObjectToDB('boards', boar, function() {
-      queryBoard(socket.id, function (board) {
-        boar.gameInProgress = board.gameInProgress;
-        socket.emit('boardReconnect', {
-          success: true,
-          gameID: board.gameInProgress
+    if (data.id !== undefined && data.id !== "") {
+      var boar = monopoly.newBoard(data.id);
+      boar.socketid = socket.id;
+      socketToBoardId[socket.id] = data.id;
+      saveObjectToDB('boards', boar, function() {
+        queryBoard(socket.id, function (board) {
+          boar.gameInProgress = board.gameInProgress;
+          socket.emit('boardReconnect', {
+            success: true,
+            gameID: board.gameInProgress
+          });
         });
       });
-    });
+    } else {
+      socket.emit('boardReconnect', { success: false });
+    }
   });
 
   socket.on('houseBuy', function(data) {
@@ -1826,9 +1831,18 @@ function handleCommChest(game, socketid, fbid) {
 }
 
 function endGame(game) {
-  sendToPlayers('gameOver', {});
-  sendToBoards('gameOver', {});
-  console.log('Game over. Do something. Todo.');
+  // Get player who wins
+  var winner;
+  for (var fbid in game.players) {
+    if (!game.players[fbid].bankrupt) {
+      winner = fbid;
+      break;
+    }
+  }
+  sendToPlayers(game.id, 'gameOver', { winner: winner });
+  sendToBoards(game.id, 'gameOver', { winner: winner });
+  // Delete the game from the database
+  deleteGame(game);
 }
 
 function bankrupt(game, socketid, fbid, target) {
@@ -1870,11 +1884,20 @@ function bankrupt(game, socketid, fbid, target) {
   for (var i in game.players) {
     if (!game.players[i].bankrupt) temp++;
   }
-
-  if (temp < 2) endGame(game);
+  
+  sendToBoards(game.id, 'bankrupt', {
+    fbid: fbid,
+    target: target
+  });
+  
   //check to make sure there are players left.
-
-  endTurn(game);
+  if (temp < 2) {
+    endGame(game);
+  } else {
+    // Send bankrupt event
+    safeSocketEmit(socketid, 'bankrupt', {});
+    endTurn(game);
+  }
 }
 
 function netWorth(game, socketid, amt, fbid) {
@@ -1926,11 +1949,11 @@ function credit(game,socketid, amt, fbid) {
           fbid: fbid,
           debt: det,
         });
-      game.players[fbid].debt = 0;
-      game.players[fbid].debtor = "";
-      game.players[fbid].inDefault = false;
-      credit(game,socketid,det,fbid);
-      endTurn(game); //may be an issue in the future, be wary.
+        game.players[fbid].debt = 0;
+        game.players[fbid].debtor = "";
+        game.players[fbid].inDefault = false;
+        credit(game,socketid,det,fbid);
+        endTurn(game); //may be an issue in the future, be wary.
       } else console.log('serious credit problems');
     }
   }

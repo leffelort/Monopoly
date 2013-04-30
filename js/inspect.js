@@ -49,6 +49,18 @@ function socketSetup() {
   socket.on('reopen', function(){
     setupPage();
   });
+  
+  socket.on('bankrupt', function (socketdata) {
+    displayPrompt("You went bankrupt! :(", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
+  
+  socket.on('gameOver', function (socketdata) {
+    displayPrompt("Game over!", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
 }
 
 // Load the FB SDK Asynchronously

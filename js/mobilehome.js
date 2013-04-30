@@ -277,6 +277,18 @@ function setupSockets() {
   socket.on('getOutOfJail', function (socketdata) {
     displayEvent("You got out of Jail!");
   });
+  
+  socket.on('bankrupt', function (socketdata) {
+    displayPrompt("You went bankrupt! :(", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
+  
+  socket.on('gameOver', function (socketdata) {
+    displayPrompt("Game over!", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
 }
 
 function displayPrompt(msg, callback, choice) {

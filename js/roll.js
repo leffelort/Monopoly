@@ -52,6 +52,18 @@ function socketSetup() {
       window.location.replace("manage.html");
     }, false);
   });
+  
+  socket.on('bankrupt', function (socketdata) {
+    displayPrompt("You went bankrupt! :(", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
+  
+  socket.on('gameOver', function (socketdata) {
+    displayPrompt("Game over!", function () {
+      window.location.replace("/mobile.html");
+    }, false);
+  });
 }
 
 
