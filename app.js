@@ -922,6 +922,7 @@ io.sockets.on('connection', function (socket) {
         var suc = debit(game, socket.id, 50, data.fbid);
         if (suc) {
           game.players[data.fbid].jailed = false;
+          game.players[data.fbid].jailTime = 0;
           sendToBoards(game.id, 'getOutOfJail', {
             fbid: data.fbid,
             debit: 50
@@ -931,6 +932,7 @@ io.sockets.on('connection', function (socket) {
       } else {
         var card = game.players[data.fbid].jailCards.shift();
         game.players[data.fbid].jailed = false;
+        game.players[data.fbid].jailTime = 0;
         if (card === "chance") {
           chanceCommChestDeck.returnChanceJailCard(game);
         } else {
@@ -1719,7 +1721,7 @@ function handleChance(game, socketid, fbid) {
       } else {
         end = card.space;
       }
-      game.players[fbid].space = card.space;
+      game.players[fbid].space = end;
       var delta = ((end-initial) % 40)
       if (end < initial) {
         passGo(game, socketid, fbid);
@@ -1938,23 +1940,25 @@ function inDefault(game, socketid, amt, fbid, target) {
 
 
 function credit(game,socketid, amt, fbid) {
-  game.players[fbid].money = Number(game.players[fbid].money) + Number(amt);
-  safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
-  if (game.players[fbid].inDefault) {
-    if ((game.players[fbid].money) > (game.players[fbid].debt)) {
-      var det = game.players[fbid].debt;
-      var suc = forceDebit(game,socketid,det, fbid, game.players[fbid].debtor);
-      if (suc) {
-        safeSocketEmit(socketid, 'outOfDebt', {
-          fbid: fbid,
-          debt: det,
-        });
-        game.players[fbid].debt = 0;
-        game.players[fbid].debtor = "";
-        game.players[fbid].inDefault = false;
-        credit(game,socketid,det,fbid);
-        endTurn(game); //may be an issue in the future, be wary.
-      } else console.log('serious credit problems');
+  if (fbid !== undefined) {
+    game.players[fbid].money = Number(game.players[fbid].money) + Number(amt);
+    safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
+    if (game.players[fbid].inDefault) {
+      if ((game.players[fbid].money) > (game.players[fbid].debt)) {
+        var det = game.players[fbid].debt;
+        var suc = forceDebit(game,socketid,det, fbid, game.players[fbid].debtor);
+        if (suc) {
+          safeSocketEmit(socketid, 'outOfDebt', {
+            fbid: fbid,
+            debt: det,
+          });
+          credit(game, socketid, det, game.players[fbid].debtor);
+          game.players[fbid].debt = 0;
+          game.players[fbid].debtor = "";
+          game.players[fbid].inDefault = false;
+          endTurn(game); //may be an issue in the future, be wary.
+        } else console.log('serious credit problems');
+      }
     }
   }
 }

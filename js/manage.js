@@ -385,9 +385,13 @@ var setupPage = function() {
     "max-height" : document.documentElement.clientHeight,
     "width" : document.documentElement.clientWidth - $("#propList").width()
   });
-  $("#backbtn").click(function(){
-    window.location.replace("mobileHome.html");
-  });
+  if (inDefault) {
+    $("#backBtn").addClass("unavailable");
+  } else {
+    $("#backbtn").click(function(){
+      window.location.replace("mobileHome.html");
+    });
+  }
   disablePropertyOptions();
   window.scrollTo(0, 1);
   // get property data from the database.
