@@ -1846,7 +1846,7 @@ function endGame(game) {
 
 function bankrupt(game, socketid, fbid, target) {
   var player = game.players[fbid];
-  if (target === undefined) {
+  if (target === undefined || target === "") {
     for (var pid in player.properties) {
       var prop = player.properties[pid];
       if (prop) {
@@ -1899,24 +1899,31 @@ function bankrupt(game, socketid, fbid, target) {
   }
 }
 
-function netWorth(game, socketid, amt, fbid) {
-  var worth = game.players[fbid].money;
+function netWorth(game, fbid) {
+  //console.log("networth(",game.id,fbid,")");
+  var worth = Number(game.players[fbid].money);
   for (var pid in game.players[fbid].properties) {
     var prop = game.players[fbid].properties[pid];
     if (prop) {
-      var pCost = (prop.card.price / 2);
-      if ((!isUtility(prop.id)) && (!isRailroad(prop.id))){ 
-        var gCost = (prop.card.housecost / 2);
-        var rCost = (prop.card.hotelcost / 2);
-        var hNum = prop.numHotels;
-        var hot = prop.hotel;
-        if (hot) {
-          worth = (worth + (4 * gCost) + rCost + pCost);
+     // console.log("worth",worth);
+     // console.log("propid", prop.id);
+      if (!prop.mortgaged){
+        var pCost = (Number(prop.card.price) / 2);
+        if ((!isUtility(prop.id)) && (!isRailroad(prop.id))){          
+          var gCost = (Number(prop.card.housecost) / 2);
+          var rCost = (Number(prop.card.hotelcost) / 2);
+          var hNum = Number(prop.numHouses);
+          var hot = prop.hotel;
+          //console.log("vars", pCost, gCost, rCost, hNum, hot);
+         // console.log((worth + (hNum*gCost) + pCost));
+          if (hot) {
+            worth = (worth + (4 * gCost) + rCost + pCost);
+          } else {
+            worth = (worth + (hNum * gCost) + pCost);
+          }
         } else {
-          worth = (worth + (hNum * gCost)) + pCost;
+          worth = (worth + pCost);
         }
-      } else {
-        worth = worth + pCost;
       }
     }
   }
@@ -1949,11 +1956,24 @@ function credit(game,socketid, amt, fbid) {
             fbid: fbid,
             debt: det,
           });
-          credit(game, socketid, det, game.players[fbid].debtor);
+          //the right socketevent? 
+          sendToBoards(game.id, 'debit', {
+            fbid: fbid,
+            amount: det,
+            reason: "an outstanding debt."
+          });
+          if ((game.players[fbid].debtor) && (game.players[fbid].debtor !== "")) {
+            sendToBoards(game.id, 'credit', {
+              fbid: game.players[fbid].debtor,
+              amount: det,
+              reason: "collecting a debt."
+            });
+            credit(game, socketid, det, game.players[fbid].debtor);
+          }
           game.players[fbid].debt = 0;
           game.players[fbid].debtor = "";
           game.players[fbid].inDefault = false;
-          endTurn(game); //may be an issue in the future, be wary.
+          endTurn(game); 
         } else console.log('serious credit problems');
       }
     }
@@ -1964,8 +1984,8 @@ function forceDebit(game, socketid, amt, fbid, target) {
   console.log("forcedebit!");
   var suc = debit(game,socketid,amt,fbid);
   if (!suc) {
-      console.log("netWorth: ", (netWorth(game, socketid, amt, fbid)));
-      if ((netWorth(game, socketid, amt, fbid) - amt < 0)) {
+      console.log("netWorth: ", (netWorth(game, fbid)));
+      if ((netWorth(game, fbid) - amt < 0)) {
         bankrupt(game, socketid, fbid, target);
       }
       else inDefault(game, socketid, amt, fbid, target);
