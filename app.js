@@ -1,7 +1,5 @@
-//pmarino todo: check inDefault to make sure it works after frontend created
-//              handleTrade();
-//              gameOver(game) should determine who has one
-//              quit(game,socketid, fbid);
+//pmarino todo: sendToBoards() when crediting after inDefault
+//              comment
 
 // ========================
 // ==== Express server ====
@@ -1364,7 +1362,6 @@ function handleDemolition(space, socketid, fbid) {
 }
 
 
-//tyler's not going to like this function...
 function checkMonopoly(game, fbid, space) {
   var propertyOwners = game.propertyOwners;
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
