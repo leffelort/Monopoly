@@ -1,0 +1,17 @@
+{
+  "name" : "CMUOPOLY",
+  "version" : "1.0.0",
+  "description" : "a multiplayer online verison of the classic Monopoly board game",
+  "repository" : {
+    "type" : "git",
+    "url" : "git://github.com/thedrick/Monopoly.git"
+  },
+  "dependencies" : {
+    "express" : "3.1.1",
+    "express-useragent" : "0.0.7",
+    "mongodb" : "1.2.14",
+    "shortid" : "1.0.9",
+    "socket.io" : "0.9.14",
+    "underscore" : "1.4.4"
+  }
+}
