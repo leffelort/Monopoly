@@ -54,56 +54,63 @@ function refreshBoardState(game) {
     var picurl = "https://graph.facebook.com/" + player.fbid + "/picture?width=" + ppd + "&height=" + ppd;
     $("#playericon" + playerNum).attr("src", picurl);
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + playerNames[player.fbid]);
-    $("#playermoney" + playerNum).html("$" + player.money);
-    
-    // Update player's position on the board
-    $(".playerpiece" + playerNum).removeClass("visible");
-    if (player.space === 10) {
-      if (player.jailed) {
-        $("#space" + player.space + " #jail .playerpiece" + playerNum)
-          .addClass("visible");
-      } else {
-        $("#space" + player.space + " .justVisiting .playerpiece" + playerNum)
-          .addClass("visible");
-      }
+        
+    if (!player.bankrupt) {
+      $("#playermoney" + playerNum).html("$" + player.money);
     } else {
-      $("#space" + player.space + " .playerpiece" + playerNum)
-        .addClass("visible");
-    }
-    if (player.playerNumber === game.currentTurn) {
-      if (player.space === 10 && !player.jailed) {
-        // special case just-visiting
-        $("#space" + player.space + " .playerpiece" + playerNum)
-          .addClass("currentTurn");
-      } else {
-        $("#space" + player.space + " .playerpiece" + playerNum)
-          .addClass("currentTurn" + players[fbid]);
-      }
+      $("#playermoney" + playerNum).html("Bankrupt");
     }
     
-    // update player's properties
-    player.properties.forEach(function (property) {
-      if (property !== null) {
-        $("#space" + property.id + " .propertyown")
-          .addClass("player" + playerNum);
-          
-        if (property.mortgaged) {
-          $("#space" + property.id + " .propertyown").addClass("mortgaged");
-        }
-
-        if (property.hotel) {
-          $("#space" + property.id + " .houses").removeClass("visible");
-          $("#space" + property.id + " .hotel").addClass("visible");
+    if (!player.bankrupt) {
+      // Update player's position on the board
+      $(".playerpiece" + playerNum).removeClass("visible");
+      if (player.space === 10) {
+        if (player.jailed) {
+          $("#space" + player.space + " #jail .playerpiece" + playerNum)
+            .addClass("visible");
         } else {
-          $("#space" + property.id + " .hotel").removeClass("visible");
+          $("#space" + player.space + " .justVisiting .playerpiece" + playerNum)
+            .addClass("visible");
+        }
+      } else {
+        $("#space" + player.space + " .playerpiece" + playerNum)
+          .addClass("visible");
+      }
+      if (player.playerNumber === game.currentTurn) {
+        if (player.space === 10 && !player.jailed) {
+          // special case just-visiting
+          $("#space" + player.space + " .playerpiece" + playerNum)
+            .addClass("currentTurn");
+        } else {
+          $("#space" + player.space + " .playerpiece" + playerNum)
+            .addClass("currentTurn" + players[fbid]);
+        }
+      }
+    
+      // update player's properties
+      player.properties.forEach(function (property) {
+        if (property !== null) {
+          $("#space" + property.id + " .propertyown")
+            .addClass("player" + playerNum);
+          
+          if (property.mortgaged) {
+            $("#space" + property.id + " .propertyown").addClass("mortgaged");
+          }
 
-          var houses = $("#space" + property.id + " .houses");
-          for (var i = 1; i <= property.numHouses; i++) {
-            $("#space" + property.id + " .house" + i).addClass("visible");
+          if (property.hotel) {
+            $("#space" + property.id + " .houses").removeClass("visible");
+            $("#space" + property.id + " .hotel").addClass("visible");
+          } else {
+            $("#space" + property.id + " .hotel").removeClass("visible");
+
+            var houses = $("#space" + property.id + " .houses");
+            for (var i = 1; i <= property.numHouses; i++) {
+              $("#space" + property.id + " .house" + i).addClass("visible");
+            }
           }
         }
-      }
-    });
+      });
+    }
   }
 
   // Populate chat/event logs
