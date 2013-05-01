@@ -13,6 +13,7 @@ var eventDuration = 3000;
 
 var ppd = 75;
 
+// Scales the board UI based on the client's width and height.
 function scaleBoard() {
   var height = Math.max(document.documentElement.clientHeight, 720);
   var scale = height / 2000;
@@ -35,6 +36,8 @@ function scaleBoard() {
   $(".logBox").css("max-height", scale * 2000 * 0.5 - 60);
 }
 
+// Refreshes the entire board state given game data from the server.
+// Only called when the page is loaded (or refreshed)
 function refreshBoardState(game) {
   console.log("refreshBoardState");
   // update players
@@ -48,6 +51,8 @@ function refreshBoardState(game) {
     $("#playericon" + playerNum).attr("src", picurl);
     $("#playertitle" + playerNum).html("Player " + playerNum + ": " + playerNames[player.fbid]);
     $("#playermoney" + playerNum).html("$" + player.money);
+    
+    // Update player's position on the board
     $(".playerpiece" + playerNum).removeClass("visible");
     if (player.space === 10) {
       if (player.jailed) {
@@ -71,7 +76,8 @@ function refreshBoardState(game) {
           .addClass("currentTurn" + players[fbid]);
       }
     }
-
+    
+    // update player's properties
     player.properties.forEach(function (property) {
       if (property !== null) {
         $("#space" + property.id + " .propertyown")
@@ -116,6 +122,7 @@ function refreshBoardState(game) {
   }
 }
 
+// updates the currently displayed game event in the center of the board.
 function updateGameEvents() {
   // If no event currently active, check queue
   if (currentEvent === undefined) {
@@ -138,12 +145,14 @@ function updateGameEvents() {
   }
 }
 
+// Pushes a new game event onto the queue
 function displayEvent(eventStr) {
   eventQueue.push(eventStr);
   addToEventLog(eventStr);
   saveEvent(eventStr);
 }
 
+// Adds an event to the board's event log. Called by displayEvent
 function addToEventLog(eventStr) {
   var log = $("#eventLog .logMessage").toArray();
   var li = $("<li>").addClass("logMessage");
@@ -155,6 +164,8 @@ function addToEventLog(eventStr) {
   $('#eventLog').scrollTop($('#eventLog')[0].scrollHeight);
 }
 
+// Saves an event to local storage, so if the board is refreshed we can retrieve
+// it later.
 function saveEvent(eventStr) {
   if (localStorage["cmuopoly_eventLog"] !== "") {
     var eventLog = JSON.parse(localStorage["cmuopoly_eventLog"]);
@@ -165,6 +176,7 @@ function saveEvent(eventStr) {
   }
 }
 
+// Adds a chat message to the board's chat window.
 function addChatMessage(fbid, message) {
   var log = $("#chatLog .logMessage").toArray();
   var li = $("<li>").addClass("logMessage");
@@ -176,9 +188,9 @@ function addChatMessage(fbid, message) {
   li.append(sender).append(messageText);
   $("#chatLog").append(li);
   $('#chatLog').scrollTop($('#chatLog')[0].scrollHeight);
-
 }
 
+// Saves a chat message to local storage.
 function saveChatMessage(fbid, message) {
   var msg = { fbid: fbid, message: message };
   if (localStorage["cmuopoly_chatLog"] !== "") {
@@ -190,6 +202,7 @@ function saveChatMessage(fbid, message) {
   }
 }
 
+// Moves a player's piece from space initial to space end.
 function movePlayer(fbid, initial, end) {
   console.log("movePlayer: ", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
@@ -210,6 +223,7 @@ function movePlayer(fbid, initial, end) {
   }
 }
 
+// Moves a player from space initial to jail.
 function jailPlayer(fbid, initial) {
   console.log("jailPlayer:", fbid);
   $("#space" + initial + " .playerpiece" + players[fbid])
@@ -220,6 +234,7 @@ function jailPlayer(fbid, initial) {
     .addClass("visible").addClass("currentTurn" + players[fbid]);
 }
 
+// Updates player fbid's money by amt
 function transaction(fbid, amt) {
   var oldMoney = Number($("#playermoney" + players[fbid]).html().replace("$", ""));
   console.log("transaction: " + oldMoney + " + " + amt);
@@ -232,6 +247,8 @@ function bankruptMoney(fbid) {
   $("#playermoney" + players[fbid]).html("Bankrupt");
 }
 
+// Bankrupt a player's properties, giving them to either the bank or 
+// player target
 function bankruptProps(fbid, target) {
   // Go through every space, if it's owned by fbid, give it to target
   // If target is undefined, give prop to bank
@@ -276,6 +293,8 @@ function giveMoney(origin, dest, amt) {
   transaction(dest, amt);
 }
 
+// Triggers the next players turn, shrinking the previd's piece and enlarging
+// fbid's piece.
 function nextTurn(previd, fbid) {
   if ($("#space10 .playerpiece" + players[previd]).hasClass("visible")) {
     if ($("#jail .playerpiece" + players[previd]).hasClass("visible")) {
@@ -304,6 +323,7 @@ function nextTurn(previd, fbid) {
   displayEvent(playerNames[fbid] + "'s turn!");
 }
 
+// Displays property that player fbid is looking at
 function inspectProperty(fbid, propid) {
   if (propid === undefined) {
     $("#playerinspect" + players[fbid]).empty();
@@ -325,6 +345,7 @@ function inspectProperty(fbid, propid) {
   }
 }
 
+// Adds a house on property propid
 function houseBuy(propid) {
   var visibleHouses = $("#space" + propid + " .house.visible").toArray();
   switch (visibleHouses.length) {
@@ -343,6 +364,7 @@ function houseBuy(propid) {
   }
 }
 
+// Removes a house on property propid
 function houseSell(propid) {
   var visibleHouses = $("#space" + propid + " .house.visible").toArray();
   switch (visibleHouses.length) {
@@ -361,24 +383,29 @@ function houseSell(propid) {
   }
 }
 
+// Adds a hotel on property propid
 function hotelBuy(propid) {
   $("#space" + propid + " .houses").removeClass("visible");
   $("#space" + propid + " .hotel").addClass("visible");
 }
 
+// Sells a hotel on property propid
 function hotelSell(propid) {
   $("#space" + propid + " .hotel").removeClass("visible");
   $("#space" + propid + " .houses").addClass("visible");
 }
 
+// mortgages property propid, reducing the opacity of the playerown bar
 function propertyMortgage(propid) {
   $("#space" + propid + " .propertyown").addClass("mortgaged");
 }
 
+// Unmortgages property propid, restoring the playerown bar to full opacity
 function propertyUnmortgage(propid) {
   $("#space" + propid + " .propertyown").removeClass("mortgaged");
 }
 
+// Attaches socket handlers for all game events to keep the board updated
 function attachSocketHandlers() {
   socket.on("boardReconnect", function (data) {
     if (!data.success) {
@@ -579,7 +606,7 @@ function attachSocketHandlers() {
     if (data.target === undefined) {
       displayEvent(playerNames[data.fbid] + " has gone bankrupt, giving all assets to the bank!");
     } else {
-      displayEvent(playerNames[data.fbid] + " has gone bankrupt, giving all assets to " + playerNames[data.target]);
+      displayEvent(playerNames[data.fbid] + " has gone bankrupt, giving all assets to " + playerNames[data.target] + "!");
     }
   });
   
@@ -588,6 +615,8 @@ function attachSocketHandlers() {
     
     // delete localStorage
     delete localStorage["cmuopoly_boardID"];
+    delete localStorage["cmuopoly_chatLog"];
+    delete localStorage["cmuopoly_eventLog"];
   });
 }
 
