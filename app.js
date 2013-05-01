@@ -1,5 +1,27 @@
-//pmarino todo: sendToBoards() when crediting after inDefault
-//              comment
+// 15-237 Final Project: Monopoly
+// by Andrew Mittereder, Peter Marino, Tyler Hedrick
+// 30 April 2013
+
+/*
+ * Notes: Please note that a 'user' represents specifically
+ * someone who is connected to the game, and is primarily used 
+ * when handline game genesis and when referring to socket info. 
+ * A 'player' represents the person's in game information, such 
+ * as their money and properties.  
+ */
+
+// ========================
+// == Globals & Includes ==
+// ========================
+var shortID = require("shortid");
+var monopoly = require("./monopoly.js");
+var phoneCodeGen = require("./phoneCodeGen.js"); //written by amittere
+var _ = require("underscore");
+//sometimes mongo needs a few chances to get it right. 
+var retry = 5; 
+var boardretry = 5;
+// Map of game id's to pending games
+var currentGames = {};
 
 // ========================
 // ==== Express server ====
@@ -8,16 +30,12 @@ var express = require("express");
 var useragent = require("express-useragent");
 var app = express();
 var fs = require("fs");
-var shortID = require("shortid");
-var monopoly = require("./monopoly.js");
-var phoneCodeGen = require("./phoneCodeGen.js");
-var _ = require("underscore");
-var retry = 5;
-var boardretry = 5;
 
 app.use(express.bodyParser());
 app.use(useragent.express());
 
+//Allows the server to route top level domain
+//requests to the correct platform page.
 app.get('/', function (req, res) {
   if (req.useragent.isMobile) {
     res.sendfile("mobile.html");
@@ -27,15 +45,16 @@ app.get('/', function (req, res) {
   }
 });
 
+/* AJAX Calls are used when sockets can't be --
+ * eg when pages are redirecting and such 
+ */ 
 app.configure(function(){
   app.use(express.static(__dirname));
 });
 
-// Map of game id's to Game objects
-var currentGames = {};
-
-// called from the client when someone clicks the "host game" button
-// on the main screen.
+/* hostgame allows for the creation of a newgame
+ * on the clientside.
+ */
 app.post("/hostGame", function (req, resp) {
   var gameName = req.body.gameName;
   var numPlayers = Number(req.body.numPlayers);
@@ -43,25 +62,24 @@ app.post("/hostGame", function (req, resp) {
   var phoneCode = phoneCodeGen.generate();
   currentGames[gameID] = monopoly.newGame(gameID, phoneCode, gameName,
     numPlayers);
-
   getPropertiesFromDatabase(function (arr) {
     for (var i = 0; i < 40; i++) {
       var card = arr[i];
       if (card) {
         var prop = monopoly.newProperty(card);
         currentGames[gameID].availableProperties[card.space] = prop;
-      } else {
-        // currentGames[gameID].availableProperties[i] = null;
       }
     }
   });
-
   resp.send({
     success: true,
     id: gameID
   });
 });
 
+/* returns a specfic game's information for use 
+ * when users are joining & hosting games.
+ */
 app.get("/game/:id", function (req, resp) {
   var gameID = req.params.id;
   var game = currentGames[gameID];
@@ -76,7 +94,7 @@ app.get("/game/:id", function (req, resp) {
   }
 });
 
-// reuturn a list of all properties
+// Return a list of all properties.
 app.get("/properties", function(req, resp) {
   var userid = req.body.userid;
   var gameid = req.body.gameid;
@@ -92,6 +110,12 @@ app.get("/properties", function(req, resp) {
 // ======= Database =======
 // ========================
 
+/*
+ * The below is all functions that allow for the 
+ * database to be connected to and the functions 
+ * that we use to manipulate it throughout. 
+ */ 
+
 var MongoClient = require('mongodb').MongoClient;
 
 var mongoUri = process.env.MONGOURI || "mongodb://cmuopoly:dp32Kx102Y7ol3Q5_GleoWlDgmFb1m2Tm51jiVyeQi4-@ds041157.mongolab.com:41157/cmuopoly";
@@ -99,7 +123,6 @@ var dbIsOpen = false;
 var client = undefined;
 var chanceCommChestDeck = undefined;
 console.log("Your MONGOURI is ", mongoUri);
-
 MongoClient.connect(mongoUri, {
     db: {},
     server: {
@@ -118,6 +141,11 @@ MongoClient.connect(mongoUri, {
   client = db;
 
   dbIsOpen = true;
+  
+  /* The below was for cleaning the database out 
+   * during dev and testing. Remains to ensure these 
+   * collections can be opened.    
+   */
   client.collection("users", function (e, u) {
     if (e) throw e;
     //u.drop();
@@ -130,14 +158,21 @@ MongoClient.connect(mongoUri, {
     if (e) throw e;
     //b.drop();
    });
-
+   
    chanceCommChestDeck = require('./chanceCommChestDeck.js')(client);
 });
 
-// get a username for a given socket id
+/*
+ * queryUser() takes a socketid in order to find
+ * the User object in the database that corresponds 
+ * to this socket. Often we get socket events that we 
+ * need to associate with a User in order to complete a task.
+ * A callback assures no race conditions.
+ */
 function queryUser(sockid, callback) {
-  if (retry <= 0) {
-    callback(undefined);
+  if (retry <= 0) { //can't find anything
+    callback(undefined);  
+    //pass back undefined and error check on the other end.
   } else {
     console.log("queryUser: sockid=", sockid, " retry=", retry);
     client.collection("users", function(error, users) {
@@ -157,6 +192,10 @@ function queryUser(sockid, callback) {
   }
 }
 
+/*
+ * queryBoard() acts as above in queryUser, but with
+ * the boards collection instead. 
+ */
 function queryBoard(sockid, callback) {
   if (boardretry <= 0) {
     callback(undefined);
@@ -179,8 +218,12 @@ function queryBoard(sockid, callback) {
   }
 }
 
-
-// get back the game the player at socket id is a part of
+/*
+ *  queryGame() is similar to the above.
+ *  Almost always, when we get a socket event
+ *  we need to change the game state, so we begin
+ *  by querying for that game in the games collection.
+ */
 function queryGame(sockid, callback) {
   retry = 5;
   console.log("queryGame: sockid=", sockid);
@@ -195,6 +238,11 @@ function queryGame(sockid, callback) {
   });
 }
 
+/*
+ * queryGameFromBoard() is a partner function to
+ * the one above -- sometimes it's a mobile client sending
+ * us a socketevent, sometimes it's a board  client.
+ */
 function queryGameFromBoard(sockid, callback) {
   console.log("queryGameFromBoard: sockid=", sockid);
   queryBoard(sockid, function(board) {
@@ -209,9 +257,15 @@ function queryGameFromBoard(sockid, callback) {
   });
 }
 
-// get the list of ALL property objects for a given game.
+/*
+ * Aptly, getPropertiesForGame() gets the list 
+ * of ALL property objects for a given game.
+ * (this includes their house info, etc). Used in inspect.
+ */
 function getPropertiesForGame(sockid, callback) {
   queryGame(sockid, function(game) {
+    //union the properties that are still available (unowned)
+    //with the ones owned by each player.
     var props = game.availableProperties;
     for (var fbid in game.players) {
       var player = game.players[fbid];
@@ -224,9 +278,12 @@ function getPropertiesForGame(sockid, callback) {
 }
 
 //DON'T USE THIS. READ ONLY, ONLY USED IN THE SOCKET.ON("GETME") HANDLER. - pmarino
-// this is a copy and paste of queryGame because... I didn't know how else
-// to do it for some reason? Calling queryGame wasn't working for whatever
-// reason but that might just be me being dumb. - thedrick
+/*
+ * queryPlayer() is needed for getting player information, but 
+ * in order to avoid difficulties with saving, race conditions, &etc,
+ * we only edit player information within its specific game object
+ * and so this function is never used when updating player info.
+ */ 
 function queryPlayer(sockid, callback) {
   var p;
   queryUser(sockid, function(user) {
@@ -252,6 +309,12 @@ function queryPlayer(sockid, callback) {
   });
 }
 
+/*
+ * socketsInGame() allows us to return all objects
+ * in a collection that have their gameid the same as given.
+ * This allows us to access other sockets besides the 
+ * player who is currently moving. 
+ */
 function socketsInGame(gameid, cxn, callback) {
   console.log("socketsInGame: gameid=" + gameid + " cxn=" + cxn);
   client.collection(cxn, function(error, collect) {
@@ -267,16 +330,19 @@ function socketsInGame(gameid, cxn, callback) {
   });
 }
 
+/*
+ * getPropertiesFromDatabase() merely returns
+ * the property info contained on each card
+ * and as such, is used to build the availableProprties[] 
+ * at the beginning of each game.  
+ */
 function getPropertiesFromDatabase(onOpen) {
-
   client.collection('properties', onPropertyCollectionReady);
-
   function logger(error, result) {
     if (error)
       throw error;
     console.log(result);
   }
-
   function onPropertyCollectionReady(error, propertyCollection) {
     if (error)
       throw error;
@@ -286,10 +352,11 @@ function getPropertiesFromDatabase(onOpen) {
   }
 }
 
-// this is actually the save user function, but I figured
-// we might use it for more than just users. It updates a socket id
-// if one is provided, adds to the database if objs is not already
-// there, and does nothing otherwise
+/*
+ * saveObjectToDB() saves an object to a general collection. 
+ * If the object already exists (in the case of users,boards)
+ * it updates the existing object with the new socketid.
+ */
 function saveObjectToDB(collection, obj, cback) {
   console.log("saving object");
   client.collection(collection, function(error, collec) {
@@ -303,7 +370,6 @@ function saveObjectToDB(collection, obj, cback) {
           if (err)
             throw err;
           cback();
-          //console.log(res);
         });
       } else if (obj.socketid !== undefined) {
         console.log("Updating socket id for obj: " + obj.socketid);
@@ -314,16 +380,18 @@ function saveObjectToDB(collection, obj, cback) {
           console.log("finished.");
           cback();
         });
-       // collec.find({}).toArray(function(x,y) { if (x) throw x; console.log("t" + y);});
       } else {
         console.log("object already exists in database");
         cback();
       }
-      //cback();
     });
   });
 }
 
+/*
+ * updateCurrentGame() allows us to update a user's object
+ * that exist in the database with the game it is associated with. 
+ */
 function updateCurrentGame(playerid, gameid, callback) {
   console.log("updating player + " + playerid + " with game id " + gameid);
   client.collection("users", function(error, users) {
@@ -336,6 +404,10 @@ function updateCurrentGame(playerid, gameid, callback) {
   });
 }
 
+/*
+ * updateCurrentGameBoard() does the same as the above function,
+ * but for board objects instead of user objects.  
+ */
 function updateCurrentGameBoard(boardid, gameid, callback) {
   console.log("updating board + " + boardid + " with game id " + gameid);
   client.collection("boards", function(error, boards) {
@@ -348,8 +420,11 @@ function updateCurrentGameBoard(boardid, gameid, callback) {
   });
 }
 
-// save's a game's current state to the databse. Overwrites
-// a games previous state if it existed.
+/*
+ * saveGame() takes a game, which it then saves to the database
+ * and overwrites any existing save information for that game.
+ * It takes a callback to eliminate the chance of race conditions. 
+ */
 function saveGame(game, callback) {
   console.log("saving game");
   client.collection("games", function(error, games) {
@@ -359,7 +434,6 @@ function saveGame(game, callback) {
       if (arr.length === 0) {
         games.insert(game, function(error, result) {
           if (error) throw error;
-          //console.log(result);
         });
       } else {
         games.update({id: game.id}, game, function(error) {
@@ -371,7 +445,10 @@ function saveGame(game, callback) {
   });
 }
 
-// deletes game from the database.
+/*
+ *  deleteGame() understandably deletes a game from the DB
+ *  and is used when games end.
+ */
 function deleteGame(game) {
   client.collection("games", function(error, games) {
     if (error) throw error;
@@ -384,6 +461,9 @@ function deleteGame(game) {
   });
 }
 
+/*
+ * closeDb() closes the database connection. 
+ */
 function closeDb() {
   dbIsOpen = false;
   client.close();
@@ -394,6 +474,11 @@ function closeDb() {
 // === Socket.io server ===
 // ========================
 
+/*
+ * All of our socket server information, from getting
+ * the server started to all of our socket event handlers. 
+ */
+
 var http = require('http');
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
@@ -402,43 +487,35 @@ var io = require('socket.io').listen(server);
 if (process.env.NODE_ENV === "production") {
   io.set('log level', 1);
 }
-
 server.listen(process.env.PORT || 11611);
 
-var connections = {};
+var connections = {}; //an array of socketid -> socket for all sockets
 var socketToPlayerId = {};
 var socketToBoardId = {};
 
 io.sockets.on('connection', function (socket) {
-  connections[socket.id] = socket;
-
-  // reopen and login do the exact same thing in that they
-  // update the server on player's logged in and which socket
-  // that player corresponds to.
-  socket.on('reopen', function (data) {
-    userMaintain(socket, data, function() {
-      queryGame(socket.id, function (game) {
-        socket.emit('reopen', {
-          success: true,
-          inDefault: game.players[data.id].inDefault
-        });
-      })
-    });
-  });
-
+  connections[socket.id] = socket; //save the socket
+  
+  /*
+   * login handles the case where a user logs in
+   * for the first time.   
+   */
   socket.on('login', function (data) {
     userMaintain(socket, data, function() {
       socket.emit('login', { success: true });
     });
   });
 
+  /*
+   * handles the case when a user begins hosting a game. 
+   */
   socket.on('hostgame', function (data) {
     retry = 5;
     var game = currentGames[data.gameID];
     if (game !== undefined && game.host === undefined) {
       game.host = monopoly.newPlayer(data.username, data.fbid);
-      game.numPlayers++;
-      game.host.playerNumber = (game.numPlayers - 1); //ie 0 indexed.
+      game.numPlayers++; 
+      game.host.playerNumber = (game.numPlayers - 1); //because 0 indexed.
       game.host.gameInProgress = game.id;
       game.players[data.fbid] = game.host;
       updateCurrentGame(data.fbid, game.id, function() {
@@ -451,6 +528,9 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * handles when a user joins an existing game. 
+   */
   socket.on('joingame', function (data) {
     retry = 5;
     var gameFound = false;
@@ -472,6 +552,7 @@ io.sockets.on('connection', function (socket) {
           });
         }
         else {
+          //success case, add them to the game.
           var player = monopoly.newPlayer(data.username, data.fbid);
           game.numPlayers++;
           player.playerNumber = (game.numPlayers - 1);
@@ -483,6 +564,7 @@ io.sockets.on('connection', function (socket) {
                 success: true,
                 gameID: game.id
               });
+              //Tell the other members of the game.
               sendToOthers(gameID, 'newplayer', {
                 player: player,
                 gameID: game.id,
@@ -506,6 +588,9 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * handles the case when a board joins an existing game. 
+   */
   socket.on('boardjoin', function (data) {
     connections[socket.id] = socket;
     var gameFound = false;
@@ -515,6 +600,7 @@ io.sockets.on('connection', function (socket) {
         gameFound = true;
         game.numBoards++;
         var boardID = shortID.generate();
+        //create unique identifier
         var board = monopoly.newBoard(boardID);
         board.socketid = socket.id;
         board.gameInProgress = game.id;
@@ -527,6 +613,7 @@ io.sockets.on('connection', function (socket) {
               gameID: game.id,
               boardID: board.id
             });
+            //tell the other members of the lobby
             sendToPlayers(game.id, 'boardjoin', {
               gameID: game.id,
               number: game.numBoards
@@ -547,7 +634,25 @@ io.sockets.on('connection', function (socket) {
       });
     }
   });
+  
+  /*
+   *  handles the (frequent) case where a user is redirected
+   * and opens a new socket. this updates their user object.
+   */
+  socket.on('reopen', function (data) {
+    userMaintain(socket, data, function() {
+      queryGame(socket.id, function (game) {
+        socket.emit('reopen', {
+          success: true,
+          inDefault: game.players[data.id].inDefault
+        });
+      })
+    });
+  });
 
+  /*
+   * handles the case where boards leave a game lobby
+   */
   socket.on('boardleave', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
@@ -566,6 +671,9 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * handles the case where a user leaves a game lobby 
+   */
   socket.on('leavegame', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
@@ -595,6 +703,10 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * allows for players to say when they are ready to
+   * begin -- when all players send this event, the game starts.   
+   */
   socket.on('playerWaiting', function (data) {
     var username = data.username;
     var code = data.code;
@@ -612,6 +724,9 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * chatMessages that are sent during actual gameplay. 
+   */
   socket.on('gameChat', function(data) {
     queryGame(socket.id, function (game) {
       sendToBoards(game.id, 'chatmessage', {
@@ -621,6 +736,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * chatMessages that are sent during game creation
+   */
   socket.on('chatmessage', function (data) {
     var game = currentGames[data.gameID];
     if (game !== undefined) {
@@ -632,18 +750,27 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * returns a player's info for display on the mobileHome. 
+   */
   socket.on('getme', function () {
     queryPlayer(socket.id, function(res){
       socket.emit('getme', res);
     });
   });
 
+  /*
+   * returns a list of all properties for the inspect view. 
+   */
   socket.on('getProperties', function() {
     getPropertiesForGame(socket.id, function(props) {
       socket.emit('getProperties', props);
     });
   });
 
+  /*
+   * returns a list of properties owned by specific player for the manage view. 
+   */
   socket.on('getMyProperties', function() {
     getPropertiesForGame(socket.id, function(props) {
       queryPlayer(socket.id, function(player) {
@@ -652,6 +779,10 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * handles the case when a board needs to refresh the page for some reason
+   * and needs to have its socket info updated.   
+   */
   socket.on('boardReconnect', function (data) {
     if (data.id !== undefined && data.id !== "") {
       var boar = monopoly.newBoard(data.id);
@@ -671,23 +802,35 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * handles the case where a player attempts to buy a house/hotel. 
+   */
   socket.on('houseBuy', function(data) {
     console.log('trying to buy a house, yo');
     handleConstruction(data.space, socket.id, data.fbid);
-    //todo emit?
   });
 
+  /*
+   * handles the case where a player attempts to sell a house/hotel. 
+   */
   socket.on('houseSell', function(data) {
     console.log('trying to sell a house, yo');
     handleDemolition(data.space, socket.id, data.fbid);
   });
 
+  /*
+   * handles the case where someone rolls the dice. 
+   */
   socket.on('diceroll', function(data) {
     handleRoll(data.result, data.doubles, socket.id, data.fbid);
     console.log("We got a roll of " + data.result + " from socket " + socket.id);
     socket.emit('diceroll', {success: (data.result !== undefined)});
   });
 
+  /*
+   * handles when a player has decided whether or not to buy the 
+   * property they just landed on.   
+   */
   socket.on('propertyBuy', function (data) {
     if (data.result) {
       handleSale(data.space, socket.id, data.fbid);
@@ -699,12 +842,15 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+  /*
+   * handles the case where a property is requested to be mortgaged. 
+   */
   socket.on('propertyMortgage', function (data) {
     queryGame(socket.id, function (game) {
       console.log("Got the game, now going to try and mortgage");
       var owner = game.propertyOwners[data.space];
       if (owner !== data.fbid) {
-        console.log("Well shit, you're trying to mortgage something you don't own!");
+        console.log("Well, you're trying to mortgage something you don't own!");
         propertyMortgage(game, prop, socket.id, data.fbid, false);
       } else {
         var prop = game.players[data.fbid].properties[data.space];
@@ -720,6 +866,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * handles the case when a player wants to unmortgage something. 
+   */
   socket.on('propertyUnmortgage', function(data) {
     queryGame(socket.id, function (game) {
       var owner = game.propertyOwners[data.space];
@@ -743,6 +892,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * gives back the state of the game to board client
+   */
   socket.on('boardstate', function (data) {
     queryGameFromBoard(socket.id, function (game) {
       socket.emit('boardstate', {
@@ -752,7 +904,9 @@ io.sockets.on('connection', function (socket) {
     })
   });
 
-// used for the client to get the current game
+  /*
+   * gives back the state of the game to mobile client 
+   */
   socket.on('getGame', function (data){
     queryGame(socket.id, function (game) {
       socket.emit('getGame', {
@@ -762,6 +916,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * just lets the board know a mobile client is inspecting a property. 
+   */
   socket.on('inspectProperty', function (data) {
     // route request to the boards
     queryGame(socket.id, function (game) {
@@ -769,6 +926,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * route a trade request to the player in question. 
+   */
   socket.on('tradeStart', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
@@ -785,6 +945,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   *  route the response to the trade request.
+   */
   socket.on('tradeResponse', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
@@ -800,6 +963,10 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * handle the case when someone changes their trade offer and 
+   * update the other party.   
+   */
   socket.on('tradeUpdate', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function (arr) {
@@ -818,44 +985,11 @@ io.sockets.on('connection', function (socket) {
         updateTrade(originsockid, destsockid, data.tradeobj, data.agent);
       });
     });
-
-  /*
-    if (data.originsockid && data.destsockid) {
-      console.log("both are non-null");
-      updateTrade(data.originsockid, data.destsockid, data.tradeobj, data.agent);
-    } else {
-      if (data.agent === 'origin') {
-        if (data.destsockid) {
-          updateTrade(socket.id, data.destsockid, data.tradeobj, data.agent);
-        } else {
-          queryGame(socket.id, function(game) {
-            socketsInGame(game.id, 'users', function (arr) {
-              for (var i in arr) {
-                if (arr[i].fbid === data.destfbid) {
-                  updateTrade(socket.id, arr[i].socketid, data.tradeobj, data.agent);
-                }
-              }
-            });
-          });
-        }
-      } else {
-        if (data.originsockid) {
-          updateTrade(data.originsockid, socket.id, data.tradeobj, data.agent);
-        } else {
-          queryGame(socket.id, function(game) {
-            socketsInGame(game.id, 'users', function (arr) {
-              for (var i in arr) {
-                if (arr[i].fbid === data.originfbid) {
-                  updateTrade(arr[i].socketid, socket.id, data.tradeobj, data.agent);
-                }
-              }
-            });
-          });
-        }
-      }
-    } */
   });
 
+  /*
+   * let the other player know the first player has canceled the trade.   
+   */
   socket.on('tradeCancel', function(data){
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -868,6 +1002,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * route the final offer to the other party.  
+   */
   socket.on('tradeFinalize', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -882,6 +1019,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * actually complete the trade and let both parties know it was successful. 
+   */
   socket.on('tradeAccept', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -902,6 +1042,10 @@ io.sockets.on('connection', function (socket) {
       });
     });
   });
+  
+  /*
+   *  route the rejection of the first party's trade to the second party.
+   */
   socket.on('tradeReject', function(data) {
     queryGame(socket.id, function(game) {
       socketsInGame(game.id, 'users', function(arr) {
@@ -914,6 +1058,10 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * handle the case when a player exits jail, whether that be via
+   * goojf card or bail.   
+   */
   socket.on('getOutOfJail', function (data) {
     queryGame(socket.id, function (game) {
       if (data.paid) {
@@ -946,6 +1094,10 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * handles the case where a player chooses to try to roll doubles to get
+   * out of jail.   
+   */
   socket.on('serveJailTime', function (data) {
     queryGame(socket.id, function (game) {
       game.players[data.fbid].jailTime++;
@@ -953,6 +1105,9 @@ io.sockets.on('connection', function (socket) {
     });
   });
 
+  /*
+   * deletes socket information if a socket disconnects. 
+   */
   socket.on('disconnect', function () {
     console.log("trying to disconnect socket");
     var fbid = socketToPlayerId[socket.id];
@@ -1013,10 +1168,15 @@ io.sockets.on('connection', function (socket) {
   });
 });
 
+// ========================
+// ==== Gameplay Logic  ===
+// ========================
 
-//------------------------
-// GAME FUNCTIONALITY
-//------------------------
+/*
+ *  endTurn() checks a few last minute things such as number of dbls
+ *  and who has the next turn, then saves the game and lets the
+ *  board and players know who should go next.
+ */
 function endTurn(game) {
   var previd;
   for (var index in game.players) {
@@ -1024,24 +1184,24 @@ function endTurn(game) {
       previd = game.players[index].fbid;
     }
   }
-
   if (!game.doubles || game.players[previd].jailed ||
       game.players[previd].wasJailed) {
+    //logic for handling when a player rolls doubles thrice and 
+    //is sent to jail for 'speeding'
     game.currentTurn = ((game.currentTurn + 1) % game.numPlayers);
     game.players[previd].numDbls = 0;
     game.players[previd].wasJailed = false;
   }
-
   var fbid;
   for (var index in game.players) {
     if (game.players[index].playerNumber === game.currentTurn) {
       fbid = game.players[index].fbid;
     }
   }
-
   if (fbid === undefined) throw ("endTurn exn", game.currentTurn);
-
   if (!game.players[fbid].bankrupt) {
+    //if the player who deserves the next turn is bankrupt (out of
+    //the game), then skip them and continue to the next person.
     saveGame(game, function(){
       sendToBoards(game.id, 'nextTurn', {
         previd: previd,
@@ -1052,6 +1212,10 @@ function endTurn(game) {
   } else endTurn(game);
 }
 
+/*
+ * passGo() credits a person for passing go $200 and 
+ * lets them and the boards know what is occurring. 
+ */
 function passGo(game, socketid, fbid) {
   credit(game, socketid, 200, fbid);
   safeSocketEmit(socketid, 'passGo!', {
@@ -1068,26 +1232,33 @@ function passGo(game, socketid, fbid) {
   });
 }
 
+/*
+ * handleSale() does the heavy-lifting for when a player buys a property. 
+ */
 function handleSale(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     var prop;
     var temp;
+    
     for (var index in game.availableProperties) {
+      //find property.
       if (game.availableProperties[index] &&
         game.availableProperties[index].id === space) {
         prop = game.availableProperties[index];
         temp = index;
       }
     }
-    console.log("I a gonna changa die monezzzz? " + game.players[fbid].money);
+    
     var suc = debit(game, socketid, prop.card.price, fbid);
-    console.log("Did da moniez change? " + game.players[fbid].money);
     if (suc) {
+      //if the money was taken correctly
       prop.owner = game.players[fbid].username.split(" ")[0]; // get the first name
       game.players[fbid].properties[space] = prop;
       game.propertyOwners[space] = fbid;
+      //set the new owner, and delete it from available.
       delete game.availableProperties[temp];
       checkMonopoly(game, fbid, space);
+      //make sure to check if this creates a monopoly.
       sendToBoards(game.id, 'propertySold', {
         property : space,
         propName: prop.card.title,
@@ -1096,33 +1267,42 @@ function handleSale(space, socketid, fbid) {
       });
     }
     endTurn(game);
+    //turn is over.
   });
 }
 
+/*
+ * handleRoll() does the work when a player is moving. 
+ */
 function handleRoll(delta, dbls, socketid, fbid) {
   queryGame(socketid, function(game){
-    console.log("Found a game??", game.id);
     game.doubles = dbls;
+    
     if (dbls) {
+      //handles the 'speeding' rules
       var numDbls = ++game.players[fbid].numDbls;
-      console.log("rolled doubles " + numDbls);
       if (numDbls === 3) {
         sendToJail(game, socketid, fbid);
         endTurn(game);
         return;
       }
     }
+    
     if (game.players[fbid].jailed) {
+      //if the player was in jail, check for doubles else end their turn.
       if (dbls) {
         sendToBoards(game.id, 'getOutOfJail', { fbid: fbid, debit: 0 });
         game.players[fbid].jailed = false;
         game.players[fbid].wasJailed = true;
+        game.players[fbid].jailTime = 0;
       } else {
         sendToBoards(game.id, 'stayInJail', { fbid: fbid });
         endTurn(game);
         return;
       }
     }
+    //check where they were, compute where they're going, 
+    //and check if they've passed GO.
     var initial = game.players[fbid].space;
     game.players[fbid].space = ((game.players[fbid].space + delta) % 40);
     sendToBoards(game.id, 'movePlayer', {
@@ -1132,23 +1312,31 @@ function handleRoll(delta, dbls, socketid, fbid) {
       delta : delta,
       end: game.players[fbid].space
     });
-    // saveGame(game);
     if (game.players[fbid].space < delta) passGo(game, socketid,fbid);
+    
     handleSpace(game, socketid, game.players[fbid].space, fbid, delta);
+    //handle any event that occurs by them landing on this space.
   });
 }
 
-function ensureBuildingParity(game, space, fbid, buildFlag) { //buildFlag is true when adding a house, false when selling a house
-  var delta = 1;
-  if (!buildFlag) delta = -1;
+/*
+ *  this makes sure you're following monopoly build rules -- that you
+ *  can't have four houses on one property and zero on another (max difference
+ *  between any two properties in a monopoly === 1)
+ */
+function ensureBuildingParity(game, space, fbid, buildFlag) { 
+  //buildFlag is true when adding a house, false when selling a house
+  var delta = 1; //are you trying to make the number greater
+  if (!buildFlag) delta = -1; //or smaller on that property
   var prop = game.players[fbid].properties[space];
-  if ((prop === null) || (prop === undefined)) return false; //wat.
+  if ((prop === null) || (prop === undefined)) return false; 
+  //should never happen.
 
   var target = (game.players[fbid].properties[space].numHouses + delta)
   if (prop.hotel) {
     target = target+5;
+    //hotel acts as 'fifth' house
   }
-
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
   var group = _.reduce(colors, function(l, r) {
     if (_.contains (l, space)) return l;
@@ -1161,16 +1349,21 @@ function ensureBuildingParity(game, space, fbid, buildFlag) { //buildFlag is tru
     if (game.players[fbid].properties[group[spaceid]].hotel) temp = (temp+5);
     if ((Math.abs(target - temp)) > 1) {
       return false;
+      //if the difference between any two is greater than one
     }
   }
   return true;
 }
 
+/*
+ * handleConstruction() does the work when a house or hotel is bought 
+ */
 function handleConstruction(space, socketid, fbid){
   queryGame(socketid, function(game) {
     console.log('handling construction case');
     var prop = game.players[fbid].properties[space];
     if ((prop === undefined) || (prop === null)) {
+      //can't find the property in your array
       safeSocketEmit(socketid, 'houseBuy', {
         space: space,
         fbid: fbid,
@@ -1179,8 +1372,9 @@ function handleConstruction(space, socketid, fbid){
       });
       return;
     }
-    if ((prop.monopoly) && (!prop.hotel)) { //able
+    if ((prop.monopoly) && (!prop.hotel)) { 
       if (!ensureBuildingParity(game, space, fbid, true)) {
+        //not building with parity.
         safeSocketEmit(socketid, 'houseBuy', {
           space: space,
           fbid: fbid,
@@ -1198,6 +1392,7 @@ function handleConstruction(space, socketid, fbid){
             game.availableHouses = (game.availableHouses + 4);
             prop.numHouses = 0;
             prop.hotel = true;
+            //successful
             saveGame(game, function () {
               safeSocketEmit(socketid, 'houseBuy', {
                 space: space,
@@ -1213,6 +1408,7 @@ function handleConstruction(space, socketid, fbid){
               });
             });
           } else {
+            //debit failed
             safeSocketEmit(socketid, 'houseBuy', {
               space: space,
               fbid: fbid,
@@ -1221,6 +1417,7 @@ function handleConstruction(space, socketid, fbid){
             });
           }
         } else {
+          //trying to buy more hotels than are available
           safeSocketEmit(socketid, 'houseBuy', {
             space:space,
             fbid: fbid,
@@ -1233,6 +1430,7 @@ function handleConstruction(space, socketid, fbid){
           var cost = prop.card.housecost;
           var suc = debit(game, socketid, cost, fbid);
           if (suc) {
+            //successful
             game.availableHouses = (game.availableHouses - 1);
             prop.numHouses = (prop.numHouses + 1);
             saveGame(game, function () {
@@ -1250,6 +1448,7 @@ function handleConstruction(space, socketid, fbid){
               });
             });
           } else {
+            //debit fails
             safeSocketEmit(socketid, 'houseBuy', {
               space:space,
               fbid: fbid,
@@ -1258,6 +1457,7 @@ function handleConstruction(space, socketid, fbid){
             });
           }
         } else {
+          //no houses available 
           safeSocketEmit(socketid, 'houseBuy', {
             space: space,
             fbid: fbid,
@@ -1267,6 +1467,7 @@ function handleConstruction(space, socketid, fbid){
         }
       }
     } else {
+      //can't build anymore or don't own all three
       safeSocketEmit(socketid, 'houseBuy', {
         space: space,
         fbid: fbid,
@@ -1277,6 +1478,10 @@ function handleConstruction(space, socketid, fbid){
   });
 }
 
+/*
+ * handleDemolition() does the work for when a house is
+ * trying to be sold. Similar to the above.
+ */
 function handleDemolition(space, socketid, fbid) {
   queryGame(socketid, function(game) {
     console.log('handling demolition case');
@@ -1361,7 +1566,11 @@ function handleDemolition(space, socketid, fbid) {
   });
 }
 
-
+/*
+ * checkMonopoly() checks the color group of the space
+ * specified to see if the whole group is owned by the same person,
+ * and sets the monopoly flags accordingly. 
+ */
 function checkMonopoly(game, fbid, space) {
   var propertyOwners = game.propertyOwners;
   var colors = [[1,3],[6,8,9],[11,13,14],[16,18,19],[21,23,24],[26,27,29],[31,32,34],[37,39]];
@@ -1380,13 +1589,12 @@ function checkMonopoly(game, fbid, space) {
       game.players[fbid].properties[space].monopoly = result;
     });
   }
-  /*
-  for (var index in group) {
-    game.players[fbid].properties[group[index]].monopoly = result;
-  }
-  */
 }
 
+/*
+ * isOwnable and the below functions merely return a bool
+ * if the condition is met -- in this case, if it's a buyable property. 
+ */
 function isOwnable(space) {
   console.log("inside is ownable with space " + space);
   var properties = [1,3,6,8,9,11,13,14,16,18,19,21,23,24,26,27,29,31,32,34,37,39]
@@ -1396,23 +1604,39 @@ function isOwnable(space) {
   return (total > -3);
 }
 
+/*
+ * returns true if it's a chance space. 
+ */
 function isChance(space) {
   return (space === 7 || space === 22 || space === 36);
 }
+/*
+ * returns true if it's a community chest space. 
+ */
 function isCommChest(space) {
   return (space === 2 || space === 17 || space === 33);
 }
+/*
+ * returns true if it's a tax space. 
+ */
 function isTax(space) {
   return (space === 4 || space === 38);
 }
+/*
+ * returns true if it's a corner space. 
+ */
 function isCorner(space) {
   return (space % 10 === 0);
 }
-
+/*
+ * returns true if it's a railroad space. 
+ */
 function isRailroad(space) {
   return ((space % 5 === 0) && (space % 10 !== 0) && (space !== 0));
 }
-
+/*
+ * returns the number of railroads owned by a player. 
+ */
 function numRailroadsOwned(game, owner) {
   var railroads = [5,15,25,35];
   var result = 0;
@@ -1423,11 +1647,15 @@ function numRailroadsOwned(game, owner) {
   });
   return result;
 }
-
+/*
+ * returns true if ths space is a utility space. 
+ */
 function isUtility(space) {
   return (space === 12 || space === 28);
 }
-
+/*
+ * returns true if the player owns both utilities. 
+ */
 function isUtilityMonopoly(game, owner, space) {
   if (space === 12) {
     return (game.propertyOwners[28] === owner);
@@ -1437,9 +1665,10 @@ function isUtilityMonopoly(game, owner, space) {
   }
   return false;
 }
-
+/*
+ * returns true if the property has already been purchased.
+ */
 function isOwned(game, space) {
-  console.log("inside is owned with space " + space);
   var avails = game.availableProperties;
   for (var idx in avails) {
     if (avails[idx] && avails[idx].id === space) {
@@ -1448,12 +1677,18 @@ function isOwned(game, space) {
   }
   return true;
 }
-
+/*
+ * returns true if the property is not owned by the player 
+ */
 function isOwnedByOther(game, space, fbid) {
   return (isOwned(game, space)) &&
     (game.propertyOwners[space] !== game.players[fbid]);
 }
 
+/*
+ * collectRent() handles the process for transferring rent
+ * money between two players.  
+ */
 function collectRent(game, space, socketid, tenant, roll) {
   var owner = game.propertyOwners[space];
   var property;
@@ -1513,11 +1748,14 @@ function collectRent(game, space, socketid, tenant, roll) {
   } else {
     switch(property.numHouses) {
       case 0:
+        //if no houses, straight rent
         amt = property.card.rent;
         if (property.monopoly) {
+          //doubled when monopoly is owned.
           amt = (property.card.rent * 2);
         }
         if (property.hotel) {
+          //hotel is the hotel amount
           amt = property.card.hotel;
         }
         break;
@@ -1538,10 +1776,10 @@ function collectRent(game, space, socketid, tenant, roll) {
     }
   }
 
-  var exn = "atomicity exn, collectRent(" + game + ", " + space + ", " + socketid + ");";
   var suc = forceDebit(game, socketid, amt, tenant, owner);
-  if (suc) credit(game, socketid, amt, owner); //socketid??
+  if (suc) credit(game, socketid, amt, owner); 
   else {
+    //the case of when a player is in default or bankrupt.
     console.log('debiting failed, is that right?');
     return;
   }
@@ -1563,6 +1801,9 @@ function collectRent(game, space, socketid, tenant, roll) {
   endTurn(game);
 }
 
+/*
+ * handles the work when a property is being mortgaged. 
+ */
 function propertyMortgage(game, property, socketid, fbid, success) {
   console.log("Mortgaging property " + property.id);
   saveGame(game, function() {
@@ -1580,6 +1821,9 @@ function propertyMortgage(game, property, socketid, fbid, success) {
   });
 }
 
+/*
+ * handles the case when a property is being unmortgaged. 
+ */
 function propertyUnmortgage(game, property, socketid, fbid, success) {
   saveGame(game, function() {
     safeSocketEmit(socketid, 'propertyUnmortgage', {
@@ -1596,6 +1840,9 @@ function propertyUnmortgage(game, property, socketid, fbid, success) {
   });
 }
 
+/*
+ * handles the case when a property is being purchased from the bank. 
+ */
 function propertyBuy(game, property, socketid, fbid) {
   console.log("Trying to buy property " + property.id);
   saveGame(game, function() {
@@ -1606,6 +1853,9 @@ function propertyBuy(game, property, socketid, fbid) {
   });
 }
 
+/*
+ * a function to relocate the user to jail. 
+ */
 function sendToJail(game, socketid, fbid) {
   var jail = 10;
   var initial = game.players[fbid].space;
@@ -1620,6 +1870,9 @@ function sendToJail(game, socketid, fbid) {
   });
 }
 
+/*
+ * handles tax payments. 
+ */
 function handleTax(game, space, socketid, fbid){
   var amt;
   if (space === 38) {
@@ -1639,6 +1892,7 @@ function handleTax(game, space, socketid, fbid){
     amt = 200;
     var suc = forceDebit(game, socketid, amt, fbid);
     if (!suc) {
+      //default or bankruptcy case
       console.log('could not pay tax');
       return;
     }
@@ -1653,6 +1907,10 @@ function handleTax(game, space, socketid, fbid){
   }
 }
 
+/*
+ * the workhorse of the game -- splits up the space into 
+ * each type of space events and calls the necessary functions. 
+ */
 function handleSpace(game, socketid, space, fbid, roll) {
   console.log("inside handle space with space " + space);
   if (isOwnable(space)) {
@@ -1670,7 +1928,7 @@ function handleSpace(game, socketid, space, fbid, roll) {
         amount: 200,
         reason: "landing on Go"
       });
-      // do we want double money for landing on go???
+      // double money for landing on go
     }
     if (space === 20) {
       credit(game,socketid,500, fbid);
@@ -1679,7 +1937,7 @@ function handleSpace(game, socketid, space, fbid, roll) {
         amount: 500,
         reason: "landing on Free Parking"
       });
-      // do we want free parking to be a straight $500??
+      // free parking is a straight $500
     }
     if (space === 30) {
       sendToJail(game, socketid, fbid);
@@ -1697,9 +1955,13 @@ function handleSpace(game, socketid, space, fbid, roll) {
   }
 }
 
+/*
+ *  handles the specific chance cards.
+ */
 function handleChance(game, socketid, fbid) {
   chanceCommChestDeck.drawChance(game, function(card) {
-    var id = card.id;
+    //draws a card
+    var id = card.id; 
     sendToBoards(game.id, 'chance', {
         fbid: fbid,
         text: card.text
@@ -1775,6 +2037,9 @@ function handleChance(game, socketid, fbid) {
   });
 }
 
+/*
+ * same as above with community chest. 
+ */
 function handleCommChest(game, socketid, fbid) {
   chanceCommChestDeck.drawCommChest(game, function(card) {
     var id = card.id;
@@ -1829,6 +2094,9 @@ function handleCommChest(game, socketid, fbid) {
   });
 }
 
+/*
+ * handles the case where the game is truly over.
+ */
 function endGame(game) {
   // Get player who wins
   var winner;
@@ -1844,12 +2112,16 @@ function endGame(game) {
   deleteGame(game);
 }
 
+/*
+ * handles the case when one player is out of the game. 
+ */
 function bankrupt(game, socketid, fbid, target) {
   var player = game.players[fbid];
   if (target === undefined || target === "") {
     for (var pid in player.properties) {
       var prop = player.properties[pid];
       if (prop) {
+        //transfer all the properties to the bank
         prop.owner = "Unowned";
         game.availableHouses = (game.availableHouses + prop.numHouses)
         prop.numHouses = 0;
@@ -1862,6 +2134,7 @@ function bankrupt(game, socketid, fbid, target) {
       }
     }
   } else {
+    //transfer all the properties to the player owed.
     var newOwner = game.players[target].username.split(" ")[0];
     for (var pid in player.properties) {
       var prop = player.properties[pid];
@@ -1872,7 +2145,7 @@ function bankrupt(game, socketid, fbid, target) {
         checkMonopoly(game, target, pid);
       }
     }
-    credit(game,socketid,player.money,target); //socketid?
+    credit(game,socketid,player.money,target); //transfer $
   }
   player.properties = {};
   player.money = 0;
@@ -1899,23 +2172,26 @@ function bankrupt(game, socketid, fbid, target) {
   }
 }
 
+/*
+ *  calculates the total worth of a player for bankruptcy check
+ */
 function netWorth(game, fbid) {
-  //console.log("networth(",game.id,fbid,")");
   var worth = Number(game.players[fbid].money);
+  //start with money
   for (var pid in game.players[fbid].properties) {
     var prop = game.players[fbid].properties[pid];
     if (prop) {
-     // console.log("worth",worth);
-     // console.log("propid", prop.id);
       if (!prop.mortgaged){
+        //if the property is mortgaged, no worth added
+        //else add half the cost.
         var pCost = (Number(prop.card.price) / 2);
-        if ((!isUtility(prop.id)) && (!isRailroad(prop.id))){          
+        if ((!isUtility(prop.id)) && (!isRailroad(prop.id))){
+          //if the property is built on, add half of the 
+          //development worth
           var gCost = (Number(prop.card.housecost) / 2);
           var rCost = (Number(prop.card.hotelcost) / 2);
           var hNum = Number(prop.numHouses);
           var hot = prop.hotel;
-          //console.log("vars", pCost, gCost, rCost, hNum, hot);
-         // console.log((worth + (hNum*gCost) + pCost));
           if (hot) {
             worth = (worth + (4 * gCost) + rCost + pCost);
           } else {
@@ -1930,6 +2206,10 @@ function netWorth(game, fbid) {
   return worth;
 }
 
+/*
+ * handles the case where you are being forced to sell or 
+ * mortgage to pay a debt you haven't paid. 
+ */
 function inDefault(game, socketid, amt, fbid, target) {
   game.players[fbid].inDefault = true;
   game.players[fbid].debt = amt;
@@ -1942,12 +2222,17 @@ function inDefault(game, socketid, amt, fbid, target) {
   });
 }
 
-
+/*
+ * function to increase a player's money. 
+ */
 function credit(game,socketid, amt, fbid) {
   if (fbid !== undefined) {
     game.players[fbid].money = Number(game.players[fbid].money) + Number(amt);
     safeSocketEmit(socketid, 'credit', {fbid : fbid, amt: amt});
+    //simply add the money
     if (game.players[fbid].inDefault) {
+      //however, if the player is inDefault, and this transaction
+      //now allows them to pay the debt, then take care of that
       if ((game.players[fbid].money) > (game.players[fbid].debt)) {
         var det = game.players[fbid].debt;
         var suc = forceDebit(game,socketid,det, fbid, game.players[fbid].debtor);
@@ -1956,7 +2241,6 @@ function credit(game,socketid, amt, fbid) {
             fbid: fbid,
             debt: det,
           });
-          //the right socketevent? 
           sendToBoards(game.id, 'debit', {
             fbid: fbid,
             amount: det,
@@ -1968,8 +2252,10 @@ function credit(game,socketid, amt, fbid) {
               amount: det,
               reason: "collecting a debt."
             });
+            //pay the man.
             credit(game, socketid, det, game.players[fbid].debtor);
           }
+          //update player info.
           game.players[fbid].debt = 0;
           game.players[fbid].debtor = "";
           game.players[fbid].inDefault = false;
@@ -1980,6 +2266,11 @@ function credit(game,socketid, amt, fbid) {
   }
 }
 
+/*
+ * a robust function to handle the removal of some amount of money from 
+ * the player. This is used in the case where the debit is not optional,
+ * ie, that if unable to paid, the player must lose the game.
+ */
 function forceDebit(game, socketid, amt, fbid, target) {
   console.log("forcedebit!");
   var suc = debit(game,socketid,amt,fbid);
@@ -1993,6 +2284,12 @@ function forceDebit(game, socketid, amt, fbid, target) {
   return suc;
 }
 
+/*
+ * a function to handle the removal of some amount of money from
+ * the player. This is used in the case where the debit is optional,
+ * that is, if they don't have enough money then they are not forced
+ * to lose but merely cannot complete the action. 
+ */
 function debit(game, socketid, amt, fbid, reason) {
   if ((game.players[fbid].money - amt) < 0) {
     return false; // not enough money;
@@ -2007,6 +2304,9 @@ function debit(game, socketid, amt, fbid, reason) {
   }
 }
 
+/*
+ * updateTrade() routes an update to a trade correctly.
+ */
 function updateTrade(originsocket, destsocket, obj, agent){
   if (agent === 'origin') {
     safeSocketEmit(destsocket, 'tradeUpdate', {
@@ -2023,6 +2323,11 @@ function updateTrade(originsocket, destsocket, obj, agent){
   }
 }
 
+/*
+ *  handleTrade() actually completes the trade -- it transfers 
+ * money between the players and transfers ownership of the 
+ * corresponding properties.
+ */
 function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   var dop = tradeobj.destofferprops;
   var dom = tradeobj.destoffermoney;
@@ -2030,11 +2335,13 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   var oom = tradeobj.originoffermoney;
   console.log("oom", oom);
   console.log("dom", dom);
-
+  
+  //one side's money.
   var suc = debit(game, socketid, oom, originfbid, destfbid);
   if (!suc) throw "should never not have money for trade";
   credit(game,socketid, oom, destfbid);
 
+  //the other side's money.
   suc = debit(game, socketid, dom, destfbid, originfbid);
   if (!suc) throw "should never not have money for trade";
   credit(game, socketid, dom, originfbid);
@@ -2045,7 +2352,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   for (var i in oop) {
     if (oop[i]) {
       var newOwner = destPlay.username.split(" ")[0];
-      var prop = origPlay.properties[i]; //i or oop[i]? depends how dop
+      var prop = origPlay.properties[i];
       var pid = prop.id;
       if (prop) {
         prop.owner = newOwner;
@@ -2060,7 +2367,7 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
   for (var i in dop) {
     if (dop[i]) {
       var newOwner = origPlay.username.split(" ")[0];
-      var prop = destPlay.properties[i]; //i or dop[i]? depends how dop
+      var prop = destPlay.properties[i];
       if (prop) {
         var pid = prop.id;
         prop.owner = newOwner;
@@ -2074,7 +2381,10 @@ function handleTrade(game, tradeobj, originfbid, destfbid, socketid){
 }
 
 
-
+/*
+ * userMaintain takes a socket and facebook data to
+ * create a user object and then save it to the db. 
+ */
 function userMaintain(socket, data, cback) {
   console.log("userMaintain " + socket.id);
   var user = {};
@@ -2091,6 +2401,10 @@ function userMaintain(socket, data, cback) {
   socketToPlayerId[socket.id] = user.id;
 }
 
+/*
+ * startGame gets the pending game ready 
+ * and then tells its players. 
+ */
 function startGame(gameID) {
   var game = currentGames[gameID];
   game.currentTurn = 0;
@@ -2104,6 +2418,9 @@ function startGame(gameID) {
   });
 }
 
+/*
+ * a version of socketEmit that has some error checking. 
+ */
 function safeSocketEmit(socketid, emitStr, emitArgs) {
   if (socketid !== undefined && connections[socketid] !== undefined) {
     connections[socketid].emit(emitStr, emitArgs);
@@ -2113,6 +2430,9 @@ function safeSocketEmit(socketid, emitStr, emitArgs) {
   }
 }
 
+/*
+ * sends an emit message to all player sockets in a game. 
+ */
 function sendToPlayers(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
@@ -2121,6 +2441,9 @@ function sendToPlayers(gameID, emitString, emitArgs) {
   });
 }
 
+/*
+ * sends an emit message to all board sockets in a game. 
+ */
 function sendToBoards(gameID, emitString, emitArgs) {
   socketsInGame(gameID, 'boards', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
@@ -2129,6 +2452,10 @@ function sendToBoards(gameID, emitString, emitArgs) {
   });
 }
 
+/*
+ * sends an emit message to all players except the given
+ * player in a game. 
+ */
 function sendToOthers(gameID, emitString, emitArgs, senderID) {
   socketsInGame(gameID, 'users', function(sockets) {
     for (var i = 0; i < sockets.length; i++) {
