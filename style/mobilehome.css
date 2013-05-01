@@ -31,27 +31,32 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#008227', end
 
 
 @media only screen and (max-width : 320px) {
-#portraitcover {
+  #shouldbelandscape {
     width: 100%;
     height: 100%;
-    z-index: 200;
     position: absolute;
     top: 0;
     left: 0;
-    background-color: #ddd;
+    background-color: #eee;
+    text-align: center;    
   }
-  
-  #portraitcover p {
-    width: 80%;
-    margin: 20% auto;
-    display: block;
-    text-align: center;
+  #shouldbelandscape p {
+    width: 90%;
+    font: 20px 'Kabel-Regular', Helvetica, Arial, sans-serif;
+    color: black;
+    margin: 0 auto;
+  }
+  #content {
+    display: none;
   }
 }
 
 @media only screen and (min-width: 321px) {
-  #portraitcover {
+  #shouldbelandscape {
     display: none;
+  }
+  #content {
+    display: visible;
   }
 }
 
