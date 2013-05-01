@@ -1,3 +1,7 @@
+// 15-237 Final Project: Monopoly
+// by Andrew Mittereder, Peter Marino, Tyler Hedrick
+// 30 April 2013
+
 // This will be populated with list of games from the server as JSON objects
 var gameList = [];
 var currentGame;
@@ -7,8 +11,9 @@ var selectedGameIndex;
 var socket;
 var boardID;
 
-var gameCode; //need this to be a global for now :/ ~pjm
+var gameCode;
 
+// Function called when a code is submitted. Joins the game lobby
 function joinGame() {
   gameCode = Number($("#codeInput").val());
 
@@ -24,6 +29,7 @@ function joinGame() {
   $("#codeInput").val("");
 }
 
+// Function called when a board leaves a game lobby.
 function leaveGame() {
   var gameID = currentGame.id;
   currentGame = undefined;
@@ -34,13 +40,14 @@ function leaveGame() {
   openHomeScreen($("#gameLobbyScreen"));
 }
 
-// GAME LOBBY
+// Opens the game lobby screen, hiding the previous screen prevScreen
 function openGameLobbyScreen(prevScreen, gameID) {
   prevScreen.hide();
   $("#gameLobbyScreen").show();
   getGameInfo(gameID);
 }
 
+// AJAX call to get the current game lobby state from the server
 function getGameInfo(gameID) {
   $.ajax({
     type: "get",
@@ -55,6 +62,7 @@ function getGameInfo(gameID) {
   });
 }
 
+// Creates the game lobby based on data received from the server
 function createGameLobby() {
   $("#waitingBtn").hide();
   // Populate game lobby with game info
@@ -75,12 +83,13 @@ function createGameLobby() {
   $("#phoneCode").html(currentGame.code);
 }
 
-// HOME SCREEN
+// Opens the home screen, hiding the previous screen.
 function openHomeScreen(prevScreen) {
   prevScreen.hide();
   $("#homeScreen").show();
 }
 
+// Attaches events to all buttons related to game lobbies
 function attachButtonEvents() {
   $("#joinBtn").click(function (event) {
     openJoinScreen();
@@ -101,6 +110,7 @@ function attachButtonEvents() {
   });
 }
 
+// Attaches socket handlers for all necessary events
 function attachSocketHandlers() {
   socket.on('boardjoin', function (socketdata) {
     console.log(socketdata);

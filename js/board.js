@@ -1,3 +1,7 @@
+// 15-237 Final Project: Monopoly
+// by Andrew Mittereder, Peter Marino, Tyler Hedrick
+// 30 April 2013
+
 var socket;
 var boardID;
 
