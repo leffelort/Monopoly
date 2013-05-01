@@ -7,6 +7,8 @@ var leftplayer;
 var rightplayer;
 var propDatabase = {};
 
+// the cancel button was clicked. Clear local cache of all
+// relevant data and send the other player a tradeCancel command
 function cancelClicked() {
   socket.emit('tradeCancel', {
     tofbid: localStorage['tofbid']
@@ -20,6 +22,7 @@ function cancelClicked() {
   window.location.replace("mobileHome.html");
 }
 
+// displays a list of players to select from at the beginning.
 function displayPlayers() {
   playerSelect = $("#playerSelect");
   playerSelect.html(" ");
@@ -57,12 +60,15 @@ function displayPlayers() {
   }
 }
 
+// setup the socket events 
 function socketSetup() {
+  // let the server update our socketid before continuing on.
   socket.on('reopen', function() {
     window.scrollTo(0,1);
     socket.emit('getGame', {});
   });
   
+  // get the current game to access data like players and their properties
   socket.on('getGame', function (game) {
     game = game.game;
     players = game.players;
@@ -73,10 +79,12 @@ function socketSetup() {
     displayPlayers();
   });
   
+  // someone has responded yes to our trade request.
   socket.on('tradeResponse', function (obj) {
     loadTradePanels();
   });
   
+  // update the trade view with new information (selections or money changes)
   socket.on('tradeUpdate', function (obj) {
     console.log("got update", obj);
     localStorage['originsockid'] = obj.originsockid;
@@ -84,6 +92,7 @@ function socketSetup() {
     updateTradeValues(obj.tradeobj);
   });
   
+  // you got a trade offer 
   socket.on('tradeFinalize', function (obj) {
     console.log("got a trade offer of", obj);
     var tradeobj = obj.tradeobj;
@@ -91,6 +100,7 @@ function socketSetup() {
     displayTradeOffer(tradeobj);
   });
   
+  // your offer has been accepted!
   socket.on('tradeAccept', function (obj) {
     delete localStorage["agent"];
     delete localStorage["tofbid"];
@@ -101,6 +111,7 @@ function socketSetup() {
     window.location.replace("mobileHome.html");
   });
   
+  // the trade has been cancelled.
   socket.on('tradeCancel', function (obj) {
     delete localStorage["agent"];
     delete localStorage["tofbid"];
@@ -112,6 +123,8 @@ function socketSetup() {
   });
 }
 
+// display the trade offer to the opponent and have him / her
+// accept or reject.
 function displayTradeOffer(tradeobj) {
   var destoffermoney = tradeobj.destoffermoney;
   var destofferprops = tradeobj.destofferprops;
@@ -179,6 +192,9 @@ function displayTradeOffer(tradeobj) {
   });
 }
 
+
+// display the properties given a property div (left or right) and
+// allows players to select them depending on the property owner.
 function displayProperties(properties, propDiv, clickable) {
   var moneyCell = $("<div>").addClass("propertyCell")
                             .addClass("moneyCell");
