@@ -363,18 +363,20 @@ function displayPrompt(msg, callback, choice) {
   });
 }
 
+// enable actions buttons when it is your turn
 function enableButtons() {
   $("#rollbtn").click(goToRoll);
   $("#managebtn").click(goToManage);
   $("#tradebtn").click(goToTrade);
 }
-
+// disable buttons when it is not your turn.
 function disableButtons(){
   $("#rollbtn").unbind(goToRoll);
   $("#managebtn").unbind(goToManage);
   $("#tradebtn").unbind(goToTrade);
 }
 
+// send a message to the centralized chat
 function sendMessage() {
   var message = $("#chatBox").val().trim();
   if (message !== "") {
@@ -387,12 +389,11 @@ function sendMessage() {
 }
 
 $(document).ready(function() {
+  // make clicks feel more native.
   window.addEventListener('load', function() {
     new FastClick(document.body);
   }, false);
 
-  // hacky way to resize the view properly.
-  var initialHeight = $("#gameButtons").height();
   $("#inspectbtn").click(goToInspect);
   $("#chatform").submit(function (event) {
     event.preventDefault();
@@ -403,6 +404,7 @@ $(document).ready(function() {
   setInterval(updateGameEvents, eventUpdateFreq);
   
   // Initialize things
+  // check for cached facebook data, otherwise grab it from the SDK.
   if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
     window.fbobj = JSON.parse(sessionStorage.user);
     socket = io.connect(window.location.hostname);

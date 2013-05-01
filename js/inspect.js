@@ -3,7 +3,8 @@ var setupPage;
 var socket;
 var fbid;
 
-
+// Check local storage for the user's facebook information. If it doesn't
+// exist load it from the SDK
 if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   fbobj = JSON.parse(sessionStorage.user);
   socket = io.connect(window.location.hostname);
@@ -37,6 +38,7 @@ if (sessionStorage !== undefined && sessionStorage.user !== undefined) {
   };
 }
 
+// setup socket events for the inspect screen.
 function socketSetup() {
   socket.on('getProperties', function(props){
     props.sort(function(a,b) {
@@ -46,16 +48,19 @@ function socketSetup() {
     });
     displayProperties(props);
   });
+  // don't allow the user to 
   socket.on('reopen', function(){
     setupPage();
   });
   
+  // you are bankrupt!
   socket.on('bankrupt', function (socketdata) {
     displayPrompt("You went bankrupt! :(", function () {
       window.location.replace("/mobile.html");
     }, false);
   });
   
+  // da game is ovah.
   socket.on('gameOver', function (socketdata) {
     displayPrompt("Game over!", function () {
       window.location.replace("/mobile.html");
