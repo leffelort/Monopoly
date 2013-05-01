@@ -878,7 +878,7 @@ io.sockets.on('connection', function (socket) {
       } else {
         var prop = game.players[data.fbid].properties[data.space];
         if (prop.mortgaged === false ||  // isn't mortgaged
-            game.players[data.fbid].money < (prop.card.price / 2) * 1.10) {
+            game.players[data.fbid].money < Math.round((prop.card.price / 2) * 1.10)) {
               // not enough money
           console.log("It's either ummortgaged or we don't have enough money");
           propertyUnmortgage(game, prop, socket.id, data.fbid, false);
@@ -886,7 +886,7 @@ io.sockets.on('connection', function (socket) {
         }
         console.log("Unmortgaging the property");
         prop.mortgaged = false;
-        var suc = debit(game, socket.id, (prop.card.price / 2) * 1.10, data.fbid);
+        var suc = debit(game, socket.id, Math.round((prop.card.price / 2) * 1.10), data.fbid);
         if (suc) propertyUnmortgage(game, prop, socket.id, data.fbid, true);
       }
     });
@@ -1835,7 +1835,7 @@ function propertyUnmortgage(game, property, socketid, fbid, success) {
       property: property,
       fbid: fbid,
       success: success,
-      cost: (property.card.price / 2) * 1.10
+      cost: Math.round((property.card.price / 2) * 1.10)
     });
   });
 }
